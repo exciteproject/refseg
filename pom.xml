@@ -21,5 +21,15 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+	<dependency>
+		<groupId>cc.mallet</groupId>
+		<artifactId>mallet</artifactId>
+		<version>2.0.8RC3</version>
+	</dependency>
+	<dependency>
+		<groupId>cc.mallet</groupId>
+		<artifactId>mallet-deps</artifactId>
+		<version>2.0.8RC3</version>
+	</dependency>
   </dependencies>
 </project>
