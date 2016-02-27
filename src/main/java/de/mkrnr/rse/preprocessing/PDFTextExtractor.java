@@ -71,8 +71,6 @@ public class PDFTextExtractor {
 
             String text = pdfTextStripper.getText(pdDocument);
 
-            pdDocument.close();
-
             return text;
 
         } catch (FileNotFoundException e) {
