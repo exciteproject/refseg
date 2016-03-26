@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import cc.mallet.util.CharSequenceLexer;
@@ -14,28 +15,47 @@ import cc.mallet.util.CharSequenceLexer;
 /**
  * A class for labeling tokens based on the XML tags that they appear in.
  */
-public class XMLTargetExtractor {
+public class CoraTargetExtractor {
 
     public static void main(String[] args) {
         Pattern tokenPattern = Pattern.compile("\\S+");
 
-        XMLTargetExtractor xmlTargetExtractor = new XMLTargetExtractor(tokenPattern);
+        String[] relevantTags = new String[1];
+        relevantTags[0] = "author";
+        CoraTargetExtractor xmlTargetExtractor = new CoraTargetExtractor(tokenPattern, relevantTags, "other");
         xmlTargetExtractor.extractTargets(new File(args[0]), new File(args[1]));
+        // xmlTargetExtractor.extractTargetsInDir(new File(args[0]), new
+        // File(args[1]));
     }
 
-    CharSequenceLexer lexer;
+    private CharSequenceLexer lexer;
+    private HashSet<String> relevantTags;
+    private String untaggedLabel;
+    private boolean filterTags;
 
-    public XMLTargetExtractor(Pattern regex) {
+    public CoraTargetExtractor(Pattern regex) {
         this.lexer = new CharSequenceLexer(regex);
+        this.filterTags = false;
+    }
+
+    public CoraTargetExtractor(Pattern regex, String[] relevantTags, String untaggedLabel) {
+        this.lexer = new CharSequenceLexer(regex);
+
+        this.relevantTags = new HashSet<String>();
+        for (String relevantTag : relevantTags) {
+            this.relevantTags.add(relevantTag);
+        }
+        this.untaggedLabel = untaggedLabel;
+        this.filterTags = true;
     }
 
     public void extractTargets(File inputFile, File outputFile) {
+        System.out.println(inputFile.getAbsolutePath());
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-
                 this.lexer.setCharSequence(line);
                 String currentTag = null;
                 while (this.lexer.hasNext()) {
@@ -58,14 +78,14 @@ public class XMLTargetExtractor {
                             currentTag = tokenString.substring(1, tokenString.length() - 1);
                         }
                     } else {
-                        if (currentTag == null) {
-                            bufferedWriter.write(tokenString + " " + "UNDEFINED" + "\n");
+                        if ((currentTag == null) || (this.filterTags && !this.relevantTags.contains(currentTag))) {
+                            bufferedWriter.write(tokenString + " " + this.untaggedLabel + "\n");
+
                         } else {
                             bufferedWriter.write(tokenString + " " + currentTag + "\n");
                         }
                     }
                 }
-                System.out.println();
             }
             bufferedWriter.close();
             bufferedReader.close();
@@ -75,6 +95,13 @@ public class XMLTargetExtractor {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public void extractTargetsInDir(File inputDir, File outputDir) {
+        outputDir.mkdirs();
+        for (File inputFile : inputDir.listFiles()) {
+            this.extractTargets(inputFile,
+                    new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+        }
     }
 }
