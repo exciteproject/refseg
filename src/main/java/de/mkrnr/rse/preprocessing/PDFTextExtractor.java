@@ -1,7 +1,9 @@
 package de.mkrnr.rse.preprocessing;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 
 import org.apache.pdfbox.cos.COSDocument;
@@ -18,9 +20,12 @@ public class PDFTextExtractor {
     public static void main(String[] args) throws FileNotFoundException, IOException {
         String filePath = args[0];
 
+        String inputDirectory = args[1];
+        String outputDirectory = args[2];
         PDFTextExtractor pdfTextExtractor = new PDFTextExtractor();
-        String text = pdfTextExtractor.extractText(new File(filePath));
-        System.out.println(text);
+        // String text = pdfTextExtractor.extractText(new File(filePath));
+        // System.out.println(text);
+        pdfTextExtractor.extractTextFromDirectory(new File(inputDirectory), new File(outputDirectory));
     }
 
     private Boolean sortByPosition;
@@ -74,10 +79,8 @@ public class PDFTextExtractor {
             return text;
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
             return null;
         } catch (IOException e) {
-            e.printStackTrace();
             return null;
         } finally {
             if (pdDocument != null) {
@@ -87,6 +90,34 @@ public class PDFTextExtractor {
                 } catch (IOException e) {
                     e.printStackTrace();
                     return null;
+                }
+            }
+        }
+    }
+
+    public void extractTextFromDirectory(File inputDirectory, File outputDirectory) {
+        if (!inputDirectory.isDirectory()) {
+            throw new IllegalArgumentException("inputDirectory is not a directory");
+        }
+
+        if (!outputDirectory.exists()) {
+            outputDirectory.mkdirs();
+        }
+
+        for (File inputFile : inputDirectory.listFiles()) {
+            // TODO: set 1 with parameters
+            String currentPDF = this.extractText(inputFile, 2);
+            String outputFileName = inputFile.getName().replaceAll("\\.pdf", ".txt");
+            File outputFile = new File(outputDirectory.getAbsolutePath() + File.separator + outputFileName);
+
+            if (currentPDF != null) {
+                try {
+                    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+                    bufferedWriter.write(currentPDF);
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
                 }
             }
         }
