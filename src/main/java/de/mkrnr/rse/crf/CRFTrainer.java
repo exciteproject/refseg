@@ -10,6 +10,7 @@ import cc.mallet.fst.PerClassAccuracyEvaluator;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.InstanceList;
+import de.mkrnr.rse.eval.TransducerTrainerEvaluator;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.util.InstanceListBuilder;
@@ -38,7 +39,7 @@ public class CRFTrainer {
         crfTrainer.trainByLabelLikelihood(trainingFile, testingFile, true);
 
         System.out.println("Evaluation:");
-        CRFEvaluator crfEvaluator = new CRFEvaluator(serialPipes, crfTrainer.getTrainer());
+        TransducerTrainerEvaluator crfEvaluator = new TransducerTrainerEvaluator(serialPipes, crfTrainer.getTrainer());
         crfEvaluator.evaluate(trainingFile, testingFile);
 
     }

@@ -1,4 +1,4 @@
-package de.mkrnr.rse.crf;
+package de.mkrnr.rse.eval;
 
 import java.io.File;
 
@@ -9,13 +9,13 @@ import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.InstanceList;
 import de.mkrnr.rse.util.InstanceListBuilder;
 
-public class CRFEvaluator {
+public class TransducerTrainerEvaluator {
 
     private SerialPipes serialPipes;
 
     private TransducerTrainer trainer;
 
-    public CRFEvaluator(SerialPipes serialPipes, TransducerTrainer trainer) {
+    public TransducerTrainerEvaluator(SerialPipes serialPipes, TransducerTrainer trainer) {
         this.serialPipes = serialPipes;
         this.trainer = trainer;
     }
