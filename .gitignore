@@ -5,3 +5,4 @@
 
 *.viterbi
 /all.log
+/output/
