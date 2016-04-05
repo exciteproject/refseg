@@ -1,4 +1,4 @@
-package de.mkrnr.rse.crf;
+package de.mkrnr.rse.train;
 
 import java.io.File;
 import java.util.ArrayList;
