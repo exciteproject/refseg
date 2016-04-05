@@ -49,7 +49,7 @@ public class TestPipe {
         // pipes.add(new FeaturesInWindow("PREV-", -1, 1));
         // pipes.add(new FeaturesInWindow("NEXT-", 1, 2));
 
-        pipes.add(new LastNamePipe("LASTNAME", new File(args[1])));
+        pipes.add(new NamePipe("LASTNAME", new File(args[1])));
 
         // works
         pipes.add(new RegexPipe("CAPITALIZED", Pattern.compile("[^\\p{L}]*\\p{Lu}.*")));

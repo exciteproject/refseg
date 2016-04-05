@@ -20,16 +20,25 @@ public class XMLAuthorExtractor {
     public static void main(String[] args) {
         Pattern tokenPattern = Pattern.compile("\\S+");
 
-        XMLAuthorExtractor xmlTargetExtractor = new XMLAuthorExtractor(tokenPattern, "other", true);
-        xmlTargetExtractor.extractAuthors(new File(args[0]), new File(args[1]));
-        // xmlTargetExtractor.extractTargetsInDir(new File(args[0]), new
+        XMLAuthorExtractor xmlTargetExtractor = new XMLAuthorExtractor(tokenPattern, "other", false);
+        // xmlTargetExtractor.extractAuthors(new File(args[0]), new
         // File(args[1]));
+        xmlTargetExtractor.extractAuthorsInDir(new File(args[0]), new File(args[1]), ".*-done.txt");
     }
 
     private CharSequenceLexer lexer;
     private String untaggedLabel;
     private boolean setLastMark;
 
+    /**
+     *
+     * @param regex:
+     *            used by a lexer to split the strings into tokens
+     * @param untaggedLabel:
+     *            label that is assigned when a string is not surrounded by tag
+     * @param setLastMark:
+     *            if true: marks the last author element as such
+     */
     public XMLAuthorExtractor(Pattern regex, String untaggedLabel, boolean setLastMark) {
         this.lexer = new CharSequenceLexer(regex);
         this.untaggedLabel = untaggedLabel;
@@ -37,7 +46,6 @@ public class XMLAuthorExtractor {
     }
 
     private void extractAuthorContent(String authorContent, BufferedWriter bufferedWriter) {
-        System.out.println(authorContent);
         CharSequenceLexer localLexer = new CharSequenceLexer(this.lexer.getPattern());
         localLexer.setCharSequence(authorContent);
 
@@ -53,10 +61,14 @@ public class XMLAuthorExtractor {
                 // match end tag
                 if (tokenString.matches("</.*>")) {
                     // check if closing tag matches the current tag
-                    if (currentTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
-                        currentTag = null;
-                    } else {
-                        throw new IllegalStateException("XML is not well formatted: " + authorContent);
+                    try {
+                        if (currentTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
+                            currentTag = null;
+                        } else {
+                            throw new IllegalStateException("XML is not well formatted: " + authorContent);
+                        }
+                    } catch (NullPointerException e) {
+                        throw new NullPointerException("empty element in author content: " + authorContent);
                     }
                 } else {
                     currentTag = tokenString.substring(1, tokenString.length() - 1);
@@ -153,20 +165,19 @@ public class XMLAuthorExtractor {
         }
     }
 
-    public void extractAuthorsInDir(File inputDir, File outputDir) {
+    public void extractAuthorsInDir(File inputDir, File outputDir, String fileNameRegularExpression) {
         outputDir.mkdirs();
         for (File inputFile : inputDir.listFiles()) {
-            this.extractAuthors(inputFile,
-                    new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+            if (inputFile.getName().matches(fileNameRegularExpression)) {
+                this.extractAuthors(inputFile,
+                        new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+            }
         }
     }
 
     public String preprocessLine(String line) {
-        System.out.println("---");
-        System.out.println(line);
         line = line.replaceAll("<", " <");
         line = line.replaceAll(">", "> ");
-        System.out.println(line);
         return line;
     }
 

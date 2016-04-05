@@ -30,7 +30,7 @@ public class OAIPaperExtractor {
         OAIPaperExtractor oaiPaperExtractor = new OAIPaperExtractor();
         // oaiPaperExtractor.writeRandomArticles(new File(args[0]), new
         // File(args[1]));
-        oaiPaperExtractor.downloadArticles(0, 249, new File(args[1]), new File(args[2]));
+        oaiPaperExtractor.downloadArticles(250, 499, new File(args[1]), new File(args[2]));
 
     }
 
@@ -46,6 +46,7 @@ public class OAIPaperExtractor {
         int articleIndex = 0;
         for (Object articleObject : articles) {
             if (articleIndex < startIndex) {
+                articleIndex++;
                 continue;
             }
             if (articleIndex > endIndex) {
@@ -56,11 +57,11 @@ public class OAIPaperExtractor {
                 String[] keySplit = key.split("/");
 
                 String pdfName = keySplit[keySplit.length - 1];
+                System.out.println("current index: " + articleIndex);
                 System.out.println("download: " + pdfName);
                 try {
                     FileUtils.copyURLToFile(new URL(article.getString(key)),
                             new File(outputDirectory.getAbsolutePath() + File.separator + pdfName));
-                    articleIndex++;
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (JSONException e) {
@@ -68,6 +69,7 @@ public class OAIPaperExtractor {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                articleIndex++;
             }
         }
     }

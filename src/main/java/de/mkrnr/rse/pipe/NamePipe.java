@@ -19,13 +19,13 @@ import cc.mallet.types.TokenSequence;
  * A Pipe that adds a feature with the value true if the token was found in a
  * data base for last names.
  */
-public class LastNamePipe extends Pipe implements Serializable {
+public class NamePipe extends Pipe implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private static final int CURRENT_SERIAL_VERSION = 1;
 
-    String featureName;
+    private String featureName;
 
     private HashSet<String> lastNames;
 
@@ -36,7 +36,7 @@ public class LastNamePipe extends Pipe implements Serializable {
      * @param lastNameFile
      *            a file containing one last name per line
      */
-    public LastNamePipe(String featureName, File lastNameFile) {
+    public NamePipe(String featureName, File lastNameFile) {
         this.featureName = featureName;
 
         this.lastNames = new HashSet<String>();
