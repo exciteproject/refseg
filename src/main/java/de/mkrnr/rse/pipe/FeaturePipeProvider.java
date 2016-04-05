@@ -24,15 +24,17 @@ public class FeaturePipeProvider {
         // this.featurePipes.put(lastNamePipeLabel, new
         // NamePipe(lastNamePipeLabel, lastNameFile));
 
-        this.createRegexFeaturePipes();
+        this.createFeaturePipes();
     }
 
     private void addRegexPipe(String featureName, String pattern) {
         this.featurePipes.put(featureName, new RegexPipe(featureName, Pattern.compile(pattern)));
     }
 
-    private void createRegexFeaturePipes() {
+    private void createFeaturePipes() {
         this.featurePipes = new HashMap<String, Pipe>();
+
+        // add featurePipes that use a RegexPipe
 
         // matches tokens where the first letter is capitalized
         this.addRegexPipe("CAPITALIZED", "[^\\p{L}]*\\p{Lu}.*");
@@ -42,6 +44,12 @@ public class FeaturePipeProvider {
 
         // matches tokens that end with a period
         this.addRegexPipe("ENDSWITHPERIOD", ".*\\.");
+
+        // matches tokens that contain exactly one period
+        this.addRegexPipe("PERIOD", "[^\\.]*\\.[^\\.]*");
+
+        // matches tokens that contain multiple periods
+        this.addRegexPipe("PERIODS", ".*\\..*\\..*");
 
         // matches tokens that end with a comma
         this.addRegexPipe("ENDSWITHCOMMA", ".*\\,");
