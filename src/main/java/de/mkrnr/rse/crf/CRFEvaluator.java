@@ -7,7 +7,7 @@ import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.InstanceList;
-import de.mkrnr.rse.crf.util.InstanceListBuilder;
+import de.mkrnr.rse.util.InstanceListBuilder;
 
 public class CRFEvaluator {
 

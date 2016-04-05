@@ -10,9 +10,9 @@ import cc.mallet.fst.PerClassAccuracyEvaluator;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.InstanceList;
-import de.mkrnr.rse.crf.util.InstanceListBuilder;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
+import de.mkrnr.rse.util.InstanceListBuilder;
 
 public class CRFTrainer {
 

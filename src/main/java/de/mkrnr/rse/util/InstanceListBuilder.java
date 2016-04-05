@@ -1,4 +1,4 @@
-package de.mkrnr.rse.crf.util;
+package de.mkrnr.rse.util;
 
 import java.io.BufferedReader;
 import java.io.File;
