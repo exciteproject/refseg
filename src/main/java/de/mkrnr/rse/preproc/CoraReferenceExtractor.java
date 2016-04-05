@@ -1,4 +1,4 @@
-package de.mkrnr.rse.preprocessing;
+package de.mkrnr.rse.preproc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
