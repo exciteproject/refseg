@@ -60,13 +60,16 @@ public class FeaturePipeProvider {
         // matches tokens with more than one number
         this.addRegexPipe("NUMBERS", ".*\\d+\\D+\\d+.*");
 
-        this.addRegexPipe("BRACKETS", "\\[.*\\]");
+        this.addRegexPipe("BRACKETS", ".*\\[.*\\].*");
+
+        this.addRegexPipe("BRACES", ".*\\(.*\\).*");
 
         String monthNames = "(?ui)(January|February|March|April|May|June|July|August|September|October|November|December)";
         String monthAbbreviations = "((?ui)(Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)[.]?)";
 
         // matches tokens that contain a month name
-        this.addRegexPipe("MONTH", ".*((" + monthNames + ")|(" + monthAbbreviations + ")).*");
+        this.addRegexPipe("MONTH", "([^\\p{L}]*|.*[^\\p{L}]+)((" + monthNames + ")|(" + monthAbbreviations
+                + "))([^\\p{L}]*|[^\\p{L}]+.*)");
 
         int year = Calendar.getInstance().get(Calendar.YEAR);
         int decadeNumber = (year / 10) % 10;
@@ -74,8 +77,9 @@ public class FeaturePipeProvider {
 
         // matches tokens that match a year between 1599 and the current year
         // with surrounding non-digit chars
-        this.addRegexPipe("YEAR",
-                "[^\\p{IsDigit}]*(1[5-9][0-9][0-9]|20[0-" + decadeNumber + "][0-" + yearNumber + "])[^\\p{IsDigit}]*");
+        this.addRegexPipe("YEAR", "\\D*(1[6-9][0-9][0-9]|20[0-" + decadeNumber + "][0-" + yearNumber + "])\\D*");
+
+        // TODO add DATE
 
     }
 

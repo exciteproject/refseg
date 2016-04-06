@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -42,7 +43,7 @@ public class FeaturePipeProviderTest {
 
     private ArrayList<Boolean> expectedResults;
 
-    private void compareResults(String result, String featureName) {
+    private void checkResults(String result, String featureName) {
         String[] resultSplit = result.split("\\n");
 
         for (int i = 0; i < resultSplit.length; i++) {
@@ -50,28 +51,35 @@ public class FeaturePipeProviderTest {
         }
     }
 
-    private String runPipe(Pipe pipe) {
-        // generate inputString for the pipe from tests
+    private String createTestString() {
         String inputString = "";
         for (String testString : this.testStrings) {
             inputString += testString + "\n";
         }
         inputString = inputString.replaceFirst("\n$", "");
+        return inputString;
+    }
+
+    private String runPipe(String featureName) {
+        // create testString
+        String testString = this.createTestString();
 
         // set pipes
+        Pipe featurePipe = featurePipeProvider.getPipe(featureName);
+
         ArrayList<Pipe> pipes = new ArrayList<Pipe>();
 
         pipes.add(new Input2CharSequence("UTF-8"));
         pipes.add(new SimpleTaggerSentence2TokenSequence());
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         PrintStream printStream = new PrintStream(byteArrayOutputStream);
-        pipes.add(pipe);
+        pipes.add(featurePipe);
         pipes.add(new TokenSequence2FeatureVectorSequence());
         pipes.add(new PrintInput(printStream));
 
         InstanceList instanceList = new InstanceList(new SerialPipes(pipes));
         instanceList.addThruPipe(
-                new LineGroupIterator(new BufferedReader(new InputStreamReader(IOUtils.toInputStream(inputString))),
+                new LineGroupIterator(new BufferedReader(new InputStreamReader(IOUtils.toInputStream(testString))),
                         Pattern.compile("^\\s*$"), true));
         String output = "";
         try {
@@ -102,6 +110,76 @@ public class FeaturePipeProviderTest {
     }
 
     @Test
+    public void testBraces() {
+        String featureName = "BRACES";
+
+        this.setTest("(Test)", true);
+        this.setTest("(test)", true);
+        this.setTest("(42)", true);
+        this.setTest("(42).", true);
+        this.setTest("(42),", true);
+        this.setTest("()", true);
+        this.setTest("(())", true);
+        this.setTest("(()", true);
+        this.setTest("())", true);
+        this.setTest("test(test)test", true);
+        this.setTest("(test)test", true);
+        this.setTest("4(test)2", true);
+
+        this.setTest("Test", false);
+        this.setTest("]test[", false);
+        this.setTest(")test(", false);
+        this.setTest(")test(", false);
+        this.setTest("(test", false);
+        this.setTest("test)", false);
+        this.setTest("test(", false);
+        this.setTest("(test", false);
+        this.setTest(")test", false);
+        this.setTest(")(", false);
+        this.setTest("((", false);
+        this.setTest("))", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testBrackets() {
+        String featureName = "BRACKETS";
+
+        this.setTest("[Test]", true);
+        this.setTest("[test]", true);
+        this.setTest("[42]", true);
+        this.setTest("[42].", true);
+        this.setTest("[42],", true);
+        this.setTest("[]", true);
+        this.setTest("[[]]", true);
+        this.setTest("[[]", true);
+        this.setTest("[]]", true);
+        this.setTest("test[test]test", true);
+        this.setTest("[test]test", true);
+        this.setTest("4[test]2", true);
+
+        this.setTest("Test", false);
+        this.setTest("(test)", false);
+        this.setTest("]test[", false);
+        this.setTest(")test(", false);
+        this.setTest("[test", false);
+        this.setTest("test]", false);
+        this.setTest("test[", false);
+        this.setTest("]test", false);
+        this.setTest("]test", false);
+        this.setTest("][", false);
+        this.setTest("[[", false);
+        this.setTest("]]", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
     public void testCapitalized() {
         String featureName = "CAPITALIZED";
 
@@ -122,9 +200,141 @@ public class FeaturePipeProviderTest {
         this.setTest("1234", false);
         this.setTest("_", false);
 
-        String result = this.runPipe(featurePipeProvider.getPipe(featureName));
+        String results = this.runPipe(featureName);
 
-        this.compareResults(result, featureName);
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testEndsWithComma() {
+        String featureName = "ENDSWITHCOMMA";
+
+        this.setTest("Test,", true);
+        this.setTest("test,", true);
+        this.setTest("Ö,", true);
+        this.setTest("ö,", true);
+        this.setTest(",", true);
+        this.setTest("1,", true);
+        this.setTest(",,", true);
+
+        this.setTest(",Test", false);
+        this.setTest(",test", false);
+        this.setTest(",t", false);
+        this.setTest(",.", false);
+        this.setTest(",)", false);
+        this.setTest(",]", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testEndsWithPeriod() {
+        String featureName = "ENDSWITHPERIOD";
+
+        this.setTest("Test.", true);
+        this.setTest("test.", true);
+        this.setTest("Ö.", true);
+        this.setTest("ö.", true);
+        this.setTest(".", true);
+        this.setTest("1.", true);
+        this.setTest("..", true);
+
+        this.setTest(".Test", false);
+        this.setTest(".test", false);
+        this.setTest(".t", false);
+        this.setTest(".,", false);
+        this.setTest(".)", false);
+        this.setTest(".]", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testMonth() {
+        String featureName = "MONTH";
+
+        this.setTest("June", true);
+        this.setTest("june", true);
+        this.setTest("JUNE", true);
+        this.setTest("Jun", true);
+        this.setTest("jUNE", true);
+        this.setTest("January.", true);
+        this.setTest(".May", true);
+        this.setTest("(Dec)", true);
+        this.setTest(")Dec(", true);
+        this.setTest("June(today)", true);
+        this.setTest("today(June)", true);
+        this.setTest("(toda)June(today)", true);
+        this.setTest("13-June", true);
+        this.setTest("13.December", true);
+        this.setTest("13December", true);
+        this.setTest("13December13", true);
+
+        this.setTest("test", false);
+        this.setTest("Junetest", false);
+        this.setTest("testjune", false);
+        this.setTest("juneapril", false);
+        this.setTest("Ju-ne", false);
+        this.setTest("jüne", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testNumber() {
+        String featureName = "NUMBER";
+
+        this.setTest("42", true);
+        this.setTest("4", true);
+        this.setTest("t3st", true);
+        this.setTest("42test", true);
+        this.setTest("test42", true);
+        this.setTest("(42)", true);
+        this.setTest("42.", true);
+
+        this.setTest("Test", false);
+        this.setTest("42.42", false);
+        this.setTest("42test42", false);
+        this.setTest(".", false);
+        this.setTest("fourtytwo", false);
+        this.setTest("!@#$%^&*()-=", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testNumbers() {
+        String featureName = "NUMBERS";
+
+        this.setTest("42.42", true);
+        this.setTest("42test42", true);
+        this.setTest("(42test42)", true);
+        this.setTest("(42-42)", true);
+        this.setTest("(42--42)", true);
+        this.setTest("(42-42-42)", true);
+
+        this.setTest("Test", false);
+        this.setTest("42", false);
+        this.setTest("4", false);
+        this.setTest("t3st", false);
+        this.setTest("42test", false);
+        this.setTest("test42", false);
+        this.setTest("(42)", false);
+        this.setTest("42.", false);
+        this.setTest("fourty.two", false);
+        this.setTest("!@#$%^&*()-=", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
     }
 
     @Test
@@ -146,9 +356,87 @@ public class FeaturePipeProviderTest {
         this.setTest("1nö", false);
         this.setTest("1-nö", false);
 
-        String result = this.runPipe(featurePipeProvider.getPipe(featureName));
+        String results = this.runPipe(featureName);
 
-        this.compareResults(result, featureName);
+        this.checkResults(results, featureName);
     }
 
+    @Test
+    public void testPeriod() {
+        String featureName = "PERIOD";
+
+        this.setTest("Test.", true);
+        this.setTest("test.", true);
+        this.setTest(".test", true);
+        this.setTest("te.st", true);
+        this.setTest(".t", true);
+        this.setTest(".", true);
+        this.setTest("!.", true);
+
+        this.setTest(".test.", false);
+        this.setTest("te.st.", false);
+        this.setTest("te..st", false);
+        this.setTest("..", false);
+        this.setTest(".!.", false);
+        this.setTest(".1.", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testPeriods() {
+        String featureName = "PERIODS";
+
+        this.setTest("Te.st.", true);
+        this.setTest(".test.", true);
+        this.setTest("..test", true);
+        this.setTest("te..st", true);
+        this.setTest(".t.", true);
+        this.setTest("..", true);
+        this.setTest(".1.", true);
+        this.setTest(".!.", true);
+
+        this.setTest("test.", false);
+        this.setTest("test.", false);
+        this.setTest("te.st", false);
+        this.setTest(".", false);
+        this.setTest("!.", false);
+        this.setTest(".,", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
+    public void testYear() {
+        String featureName = "YEAR";
+
+        int year = Calendar.getInstance().get(Calendar.YEAR);
+
+        this.setTest("2000", true);
+        this.setTest(String.valueOf(year), true);
+        this.setTest("1700", true);
+        this.setTest("1600", true);
+        this.setTest("(1995)", true);
+        this.setTest("[1995]", true);
+        this.setTest("year1995", true);
+        this.setTest(")1995(", true);
+
+        this.setTest("1599", false);
+        this.setTest(String.valueOf(year + 1), false);
+        this.setTest("3000", false);
+        this.setTest("01.2001", false);
+        this.setTest("1.1.2001", false);
+        this.setTest("1/1/2001", false);
+        this.setTest("2001/1/1", false);
+        this.setTest("11700", false);
+        this.setTest("17001", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
 }
