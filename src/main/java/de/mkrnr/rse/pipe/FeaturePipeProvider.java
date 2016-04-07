@@ -27,6 +27,14 @@ public class FeaturePipeProvider {
         this.createFeaturePipes();
     }
 
+    public Pipe getPipe(String featureName) {
+        return this.featurePipes.get(featureName);
+    }
+
+    public String[] getPipeLabels() {
+        return this.featurePipes.keySet().toArray(new String[0]);
+    }
+
     private void addRegexPipe(String featureName, String pattern) {
         this.featurePipes.put(featureName, new RegexPipe(featureName, Pattern.compile(pattern)));
     }
@@ -81,14 +89,6 @@ public class FeaturePipeProvider {
 
         // TODO add DATE
 
-    }
-
-    public Pipe getPipe(String featureName) {
-        return this.featurePipes.get(featureName);
-    }
-
-    public String[] getPipeLabels() {
-        return this.featurePipes.keySet().toArray(new String[0]);
     }
 
 }

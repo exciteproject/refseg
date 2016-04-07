@@ -45,60 +45,6 @@ public class XMLAuthorExtractor {
         this.setLastMark = setLastMark;
     }
 
-    private void extractAuthorContent(String authorContent, BufferedWriter bufferedWriter) {
-        CharSequenceLexer localLexer = new CharSequenceLexer(this.lexer.getPattern());
-        localLexer.setCharSequence(authorContent);
-
-        ArrayList<String> authorTokenStrings = new ArrayList<String>();
-        ArrayList<String> authorTags = new ArrayList<String>();
-        String currentTag = null;
-        while (localLexer.hasNext()) {
-            localLexer.next();
-
-            String tokenString = localLexer.getTokenString();
-            // match tags
-            if (tokenString.matches("<.*>")) {
-                // match end tag
-                if (tokenString.matches("</.*>")) {
-                    // check if closing tag matches the current tag
-                    try {
-                        if (currentTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
-                            currentTag = null;
-                        } else {
-                            throw new IllegalStateException("XML is not well formatted: " + authorContent);
-                        }
-                    } catch (NullPointerException e) {
-                        throw new NullPointerException("empty element in author content: " + authorContent);
-                    }
-                } else {
-                    currentTag = tokenString.substring(1, tokenString.length() - 1);
-                }
-            } else {
-                authorTokenStrings.add(tokenString);
-                if ((currentTag == null)) {
-                    authorTags.add(this.untaggedLabel);
-                } else {
-                    authorTags.add(currentTag);
-                }
-            }
-        }
-
-        for (int i = 0; i < authorTokenStrings.size(); i++) {
-            String prefix = "";
-            if (i == 0) {
-                prefix = "b-";
-            } else {
-                if ((i == (authorTokenStrings.size() - 1)) && this.setLastMark) {
-                    prefix = "e-";
-                } else {
-                    prefix = "i-";
-                }
-            }
-            this.writeTokenAndLabel(authorTokenStrings.get(i), prefix + authorTags.get(i), bufferedWriter);
-
-        }
-    }
-
     public void extractAuthors(File inputFile, File outputFile) {
         System.out.println(inputFile.getAbsolutePath());
         try {
@@ -175,7 +121,61 @@ public class XMLAuthorExtractor {
         }
     }
 
-    public String preprocessLine(String line) {
+    private void extractAuthorContent(String authorContent, BufferedWriter bufferedWriter) {
+        CharSequenceLexer localLexer = new CharSequenceLexer(this.lexer.getPattern());
+        localLexer.setCharSequence(authorContent);
+
+        ArrayList<String> authorTokenStrings = new ArrayList<String>();
+        ArrayList<String> authorTags = new ArrayList<String>();
+        String currentTag = null;
+        while (localLexer.hasNext()) {
+            localLexer.next();
+
+            String tokenString = localLexer.getTokenString();
+            // match tags
+            if (tokenString.matches("<.*>")) {
+                // match end tag
+                if (tokenString.matches("</.*>")) {
+                    // check if closing tag matches the current tag
+                    try {
+                        if (currentTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
+                            currentTag = null;
+                        } else {
+                            throw new IllegalStateException("XML is not well formatted: " + authorContent);
+                        }
+                    } catch (NullPointerException e) {
+                        throw new NullPointerException("empty element in author content: " + authorContent);
+                    }
+                } else {
+                    currentTag = tokenString.substring(1, tokenString.length() - 1);
+                }
+            } else {
+                authorTokenStrings.add(tokenString);
+                if ((currentTag == null)) {
+                    authorTags.add(this.untaggedLabel);
+                } else {
+                    authorTags.add(currentTag);
+                }
+            }
+        }
+
+        for (int i = 0; i < authorTokenStrings.size(); i++) {
+            String prefix = "";
+            if (i == 0) {
+                prefix = "b-";
+            } else {
+                if ((i == (authorTokenStrings.size() - 1)) && this.setLastMark) {
+                    prefix = "e-";
+                } else {
+                    prefix = "i-";
+                }
+            }
+            this.writeTokenAndLabel(authorTokenStrings.get(i), prefix + authorTags.get(i), bufferedWriter);
+
+        }
+    }
+
+    private String preprocessLine(String line) {
         line = line.replaceAll("<", " <");
         line = line.replaceAll(">", "> ");
         return line;

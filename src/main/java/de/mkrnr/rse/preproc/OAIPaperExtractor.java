@@ -74,20 +74,6 @@ public class OAIPaperExtractor {
         }
     }
 
-    private JSONObject readFile(File jsonFile) {
-        JSONObject jsonObject = null;
-        try {
-            InputStream inputStream = new FileInputStream(jsonFile);
-            String jsonString = IOUtils.toString(inputStream);
-            jsonObject = new JSONObject(jsonString);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return jsonObject;
-    }
-
     /**
      * Writes the read article list in a random order.
      *
@@ -130,5 +116,19 @@ public class OAIPaperExtractor {
             e.printStackTrace();
         }
 
+    }
+
+    private JSONObject readFile(File jsonFile) {
+        JSONObject jsonObject = null;
+        try {
+            InputStream inputStream = new FileInputStream(jsonFile);
+            String jsonString = IOUtils.toString(inputStream);
+            jsonObject = new JSONObject(jsonString);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return jsonObject;
     }
 }

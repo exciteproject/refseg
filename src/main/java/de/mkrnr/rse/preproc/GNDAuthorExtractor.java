@@ -51,18 +51,6 @@ public class GNDAuthorExtractor {
         this.model = this.dataset.getDefaultModel();
     }
 
-    private void addNamesToMap(String names, HashMap<String, Integer> map) {
-        String[] namesSplit = names.split(" ");
-        for (String name : namesSplit) {
-            if (map.containsKey(name)) {
-                map.put(name, map.get(name) + 1);
-            } else {
-                map.put(name, 1);
-            }
-        }
-
-    }
-
     public void close() {
         this.model.close();
         this.dataset.close();
@@ -97,6 +85,18 @@ public class GNDAuthorExtractor {
 
         this.writeMapToFile(forenameMap, forenameOutputFile);
         this.writeMapToFile(surnameMap, surnameOutputFile);
+
+    }
+
+    private void addNamesToMap(String names, HashMap<String, Integer> map) {
+        String[] namesSplit = names.split(" ");
+        for (String name : namesSplit) {
+            if (map.containsKey(name)) {
+                map.put(name, map.get(name) + 1);
+            } else {
+                map.put(name, 1);
+            }
+        }
 
     }
 
