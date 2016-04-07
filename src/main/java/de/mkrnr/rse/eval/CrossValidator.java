@@ -1,23 +1,18 @@
 package de.mkrnr.rse.eval;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
 import cc.mallet.pipe.SerialPipes;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.train.CRFTrainer;
-import de.mkrnr.rse.util.ToFileStreamer;
+import de.mkrnr.rse.util.FileMerger;
 
 public class CrossValidator {
 
@@ -90,8 +85,8 @@ public class CrossValidator {
 
     public void validate(Fold fold) {
 
-        File testingFile = this.mergeFiles(fold.getTrainingFiles());
-        File trainingFile = this.mergeFiles(fold.getTrainingFiles());
+        File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(), this.getTempFile("testing"));
+        File trainingFile = FileMerger.mergeFiles(fold.getTrainingFiles(), this.getTempFile("training"));
 
         FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
 
@@ -115,31 +110,16 @@ public class CrossValidator {
         crfEvaluator.evaluate(trainingFile, testingFile);
     }
 
-    private File mergeFiles(ArrayList<File> files) {
-        // InputStream stream = new B;
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        for (File file : files) {
-            InputStream inputStream;
-            try {
-                inputStream = new FileInputStream(file);
-                byteArrayOutputStream.write(inputStream);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-
-        File outputFile = null;
-
+    private File getTempFile(String filePrefix) {
+        String tempFileName = filePrefix + "-" + (int) (Math.random() * 10000000);
+        File tempFile = null;
         try {
-            byteArrayOutputStream.close();
-            outputFile = ToFileStreamer.streamToFile(byteArrayInputStream, outputFile);
+            tempFile = File.createTempFile(tempFileName, ".txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return outputFile;
+        tempFile.deleteOnExit();
+        return tempFile;
     }
 
     // TODO aggregate results

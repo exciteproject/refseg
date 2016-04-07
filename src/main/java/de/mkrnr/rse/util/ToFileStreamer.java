@@ -11,21 +11,17 @@ import org.apache.commons.io.IOUtils;
  * Class based on: http://stackoverflow.com/a/16028522/2174538
  */
 public class ToFileStreamer {
-    public static final String PREFIX = "stream2file";
 
-    public static final String SUFFIX = ".tmp";
-
-    public static void main(String[] args) {
-
-    }
-
-    public static File streamToFile(InputStream inputStream, File outputFile) throws IOException {
-        outputFile = File.createTempFile(PREFIX, SUFFIX);
-        outputFile.deleteOnExit();
+    /**
+     * Streams the content of inputStream to the file outputStream
+     * 
+     * @param inputStream
+     * @param outputFile
+     * @throws IOException
+     */
+    public static void streamToFile(InputStream inputStream, File outputFile) throws IOException {
         try (FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
             IOUtils.copy(inputStream, fileOutputStream);
         }
-        return outputFile;
     }
-
 }
