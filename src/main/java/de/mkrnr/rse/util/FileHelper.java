@@ -5,6 +5,9 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class FileHelper {
 
     public static void resetDirectory(File directory) {
@@ -20,6 +23,17 @@ public class FileHelper {
             }
         }
         directory.mkdirs();
+
+    }
+
+    public static void writeAsJson(Object object, File file) {
+
+        try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            FileUtils.writeStringToFile(file, gson.toJson(object));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }

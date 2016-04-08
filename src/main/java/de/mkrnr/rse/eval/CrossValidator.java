@@ -11,7 +11,8 @@ import java.util.List;
 import cc.mallet.pipe.SerialPipes;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
-import de.mkrnr.rse.train.CRFTrainer;
+import de.mkrnr.rse.train.CRFByLabelLikelihoodTrainer;
+import de.mkrnr.rse.train.Trainer;
 import de.mkrnr.rse.util.Deserializer;
 import de.mkrnr.rse.util.FileHelper;
 import de.mkrnr.rse.util.FileMerger;
@@ -20,19 +21,34 @@ import de.mkrnr.rse.util.Serializer;
 public class CrossValidator {
 
     public static void main(String[] args) {
-        File inputDirectory = new File("/home/martin/tmp/papers/2-test-extr");
-        File crossValidationDirectory = new File("/home/martin/tmp/eval/2-test-extr/");
+        File inputDirectory = new File("/home/martin/tmp/papers/20-test-extr");
+        // File inputDirectory = new
+        // File("/home/martin/tmp/papers/2-test-extr");
+        File crossValidationParentDirectory = new File("/home/martin/tmp/eval/");
+        int numberOfFolds = 12;
+
         List<String> featuresNames = new ArrayList<String>();
         featuresNames.add("CAPITALIZED");
         featuresNames.add("ONELETTER");
         featuresNames.add("ENDSWITHPERIOD");
         featuresNames.add("ENDSWITHCOMMA");
 
+        FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
+
+        SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
+
+        SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(featuresNames);
         // FileHelper.resetDirectory(evalDictionary);
 
         // create/load folds
-        CrossValidator crossValidator = new CrossValidator();
-        int numberOfFolds = 2;
+        CRFByLabelLikelihoodTrainer crfTrainer = new CRFByLabelLikelihoodTrainer(serialPipes);
+
+        Evaluator crfEvaluator = new Evaluator(serialPipes);
+
+        CrossValidator crossValidator = new CrossValidator(crfTrainer, crfEvaluator);
+
+        File crossValidationDirectory = new File(crossValidationParentDirectory + File.separator
+                + inputDirectory.getName() + "-" + numberOfFolds + "-fold");
         File foldsDirectory = new File(crossValidationDirectory + File.separator + "folds");
 
         List<Fold> folds = crossValidator.splitIntoFolds(inputDirectory, numberOfFolds);
@@ -41,34 +57,18 @@ public class CrossValidator {
 
         // evaluate folds
 
-        Evaluations evaluations = new Evaluations();
-        for (Fold fold : folds) {
-            System.out.println("Run evaluation on:");
-            fold.printFoldInformation();
-            FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
+        Evaluations evaluations = crossValidator.validate(folds);
 
-            SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
+        evaluations.writeEvaluations(new File(crossValidationDirectory + File.separator + "evaluations.json"));
+        evaluations.writeAggregatedResults(new File(crossValidationDirectory + File.separator + "aggregated.json"));
+    }
 
-            SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(featuresNames);
+    private Trainer trainer;
+    private Evaluator evaluator;
 
-            CRFTrainer crfTrainer = new CRFTrainer(serialPipes);
-
-            File trainingFile = FileMerger.mergeFiles(fold.getTrainingFiles(),
-                    crossValidator.getTempFile(fold.getName() + "-train"));
-            File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(),
-                    crossValidator.getTempFile(fold.getName() + "-test"));
-            crfTrainer.trainByLabelLikelihood(trainingFile, testingFile, true);
-
-            System.out.println("Evaluation:");
-            TransducerTrainerEvaluator crfEvaluator = new TransducerTrainerEvaluator(serialPipes,
-                    crfTrainer.getTrainer());
-
-            Evaluation evaluation = crfEvaluator.evaluate(trainingFile, testingFile);
-            evaluation.setFold(fold);
-            evaluations.addEvaluation(evaluation);
-
-        }
-        evaluations.aggregate();
+    public CrossValidator(Trainer trainer, Evaluator evaluator) {
+        this.trainer = trainer;
+        this.evaluator = evaluator;
 
     }
 
@@ -146,34 +146,9 @@ public class CrossValidator {
         }
 
         return folds;
-
     }
 
     public void validate(Fold fold) {
-
-        File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(), this.getTempFile("testing"));
-        File trainingFile = FileMerger.mergeFiles(fold.getTrainingFiles(), this.getTempFile("training"));
-
-        FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
-
-        SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
-
-        // TODO handle CRF configuration in additional class
-        List<String> featuresNames = new ArrayList<String>();
-        featuresNames.add("CAPITALIZED");
-        featuresNames.add("ONELETTER");
-        featuresNames.add("ENDSWITHPERIOD");
-        featuresNames.add("ENDSWITHCOMMA");
-
-        SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(featuresNames);
-
-        CRFTrainer crfTrainer = new CRFTrainer(serialPipes);
-
-        crfTrainer.trainByLabelLikelihood(trainingFile, testingFile, true);
-
-        System.out.println("Evaluation:");
-        TransducerTrainerEvaluator crfEvaluator = new TransducerTrainerEvaluator(serialPipes, crfTrainer.getTrainer());
-        crfEvaluator.evaluate(trainingFile, testingFile);
     }
 
     private File getTempFile(String filePrefix) {
@@ -186,6 +161,28 @@ public class CrossValidator {
         }
         tempFile.deleteOnExit();
         return tempFile;
+    }
+
+    private Evaluations validate(List<Fold> folds) {
+        Evaluations evaluations = new Evaluations();
+        for (Fold fold : folds) {
+            System.out.println("Run evaluation on:");
+            fold.printFoldInformation();
+
+            File trainingFile = FileMerger.mergeFiles(fold.getTrainingFiles(),
+                    this.getTempFile(fold.getName() + "-train"));
+            File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(),
+                    this.getTempFile(fold.getName() + "-test"));
+
+            this.trainer.train(trainingFile, testingFile, true);
+
+            Evaluation evaluation = this.evaluator.evaluate(this.trainer.getTransducerTrainer(), testingFile);
+            evaluation.setName(fold.getName());
+
+            evaluations.addEvaluation(evaluation);
+
+        }
+        return evaluations;
     }
 
     // TODO aggregate results

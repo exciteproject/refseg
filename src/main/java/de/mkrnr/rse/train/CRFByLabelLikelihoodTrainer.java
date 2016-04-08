@@ -10,12 +10,12 @@ import cc.mallet.fst.PerClassAccuracyEvaluator;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.InstanceList;
-import de.mkrnr.rse.eval.TransducerTrainerEvaluator;
+import de.mkrnr.rse.eval.Evaluator;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.util.InstanceListBuilder;
 
-public class CRFTrainer {
+public class CRFByLabelLikelihoodTrainer implements Trainer {
 
     public static void main(String[] args) {
 
@@ -34,29 +34,31 @@ public class CRFTrainer {
 
         SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(featuresNames);
 
-        CRFTrainer crfTrainer = new CRFTrainer(serialPipes);
+        CRFByLabelLikelihoodTrainer crfTrainer = new CRFByLabelLikelihoodTrainer(serialPipes);
 
-        crfTrainer.trainByLabelLikelihood(trainingFile, testingFile, true);
+        crfTrainer.train(trainingFile, testingFile, true);
 
         System.out.println("Evaluation:");
-        TransducerTrainerEvaluator crfEvaluator = new TransducerTrainerEvaluator(serialPipes, crfTrainer.getTrainer());
-        crfEvaluator.evaluate(trainingFile, testingFile);
+        Evaluator crfEvaluator = new Evaluator(serialPipes);
+        crfEvaluator.evaluate(crfTrainer.getTransducerTrainer(), testingFile);
 
     }
 
-    private TransducerTrainer trainer;
+    private TransducerTrainer transducerTrainer;
 
     private SerialPipes serialPipes;
 
-    public CRFTrainer(SerialPipes serialPipes) {
+    public CRFByLabelLikelihoodTrainer(SerialPipes serialPipes) {
         this.serialPipes = serialPipes;
     }
 
-    public TransducerTrainer getTrainer() {
-        return this.trainer;
+    @Override
+    public TransducerTrainer getTransducerTrainer() {
+        return this.transducerTrainer;
     }
 
-    public void trainByLabelLikelihood(File trainingFile, File testingFile, boolean evaluationDuringTraining) {
+    @Override
+    public void train(File trainingFile, File testingFile, boolean evaluateDuringTraining) {
         CRF crf = new CRF(this.serialPipes, null);
 
         InstanceList trainingInstances = InstanceListBuilder.build(trainingFile, this.serialPipes);
@@ -67,8 +69,8 @@ public class CRFTrainer {
         crf.addStatesForThreeQuarterLabelsConnectedAsIn(trainingInstances);
         crf.addStartState();
 
-        this.trainer = new CRFTrainerByLabelLikelihood(crf);
-        ((CRFTrainerByLabelLikelihood) this.trainer).setGaussianPriorVariance(10.0);
+        this.transducerTrainer = new CRFTrainerByLabelLikelihood(crf);
+        ((CRFTrainerByLabelLikelihood) this.transducerTrainer).setGaussianPriorVariance(10.0);
 
         // TODO create methods for other CRF trainers
 
@@ -78,12 +80,12 @@ public class CRFTrainer {
         // CRFTrainerByL1LabelLikelihood trainer = new
         // CRFTrainerByL1LabelLikelihood(crf, 0.75);
 
-        if (evaluationDuringTraining) {
-            this.trainer.addEvaluator(new PerClassAccuracyEvaluator(trainingInstances, "training"));
-            this.trainer.addEvaluator(new PerClassAccuracyEvaluator(testingInstances, "testing"));
+        if (evaluateDuringTraining) {
+            this.transducerTrainer.addEvaluator(new PerClassAccuracyEvaluator(trainingInstances, "training"));
+            this.transducerTrainer.addEvaluator(new PerClassAccuracyEvaluator(testingInstances, "testing"));
         }
 
-        this.trainer.train(trainingInstances);
+        this.transducerTrainer.train(trainingInstances);
     }
 
 }

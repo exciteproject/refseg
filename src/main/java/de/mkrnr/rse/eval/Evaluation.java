@@ -15,29 +15,51 @@ public class Evaluation implements Serializable {
         System.out.println(System.nanoTime());
     }
 
-    private Fold fold;
     private TreeMap<String, Double> evaluationResults;
+    private String name;
 
     public Evaluation() {
+        this("");
     }
 
-    public Evaluation(Fold fold) {
-        this.fold = fold;
+    public Evaluation(String name) {
+        this.name = name;
+        this.evaluationResults = new TreeMap<String, Double>();
     }
 
     public void addEvaluationResult(String resultName, double result) {
         this.evaluationResults.put(resultName, result);
     }
 
+    public TreeMap<String, Double> getEvaluationResults() {
+        return this.evaluationResults;
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
     public void printEvaluationResults() {
-        System.out.println("Fold name: " + this.fold.getName());
+        System.out.println("Evaluation: " + this.name);
         for (Entry<String, Double> resultEntry : this.evaluationResults.entrySet()) {
             System.out.println(resultEntry.getKey() + " " + resultEntry.getValue());
         }
     }
 
-    public void setFold(Fold fold) {
-        this.fold = fold;
+    public void setName(String name) {
+        this.name = name;
     }
+
+    // @Override
+    // public String toString() {
+    // String evaluationString = "Evaluation: " + this.name + "\n";
+    // for (Entry<String, Double> evaluationResult :
+    // this.evaluationResults.entrySet()) {
+    // evaluationString += "\t" + evaluationResult.getKey() + ": " +
+    // evaluationResult.getValue() + "\n";
+    // }
+
+    // return evaluationString;
+    // }
 
 }

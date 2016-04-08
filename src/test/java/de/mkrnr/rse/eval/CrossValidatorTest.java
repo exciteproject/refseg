@@ -36,7 +36,7 @@ public class CrossValidatorTest {
 
         this.testInputDirectory.mkdir();
 
-        this.crossValidator = new CrossValidator();
+        this.crossValidator = new CrossValidator(null, null);
         // crossValidator.validate(fileDirectory, folds);
     }
 

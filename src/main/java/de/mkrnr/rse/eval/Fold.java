@@ -1,8 +1,14 @@
 package de.mkrnr.rse.eval;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class Fold implements Serializable {
 
@@ -57,5 +63,24 @@ public class Fold implements Serializable {
         System.out.println();
     }
 
-    // TODO add JSON serialization and deserialization
+    private void readObject(ObjectInputStream objectInputStream) throws ClassNotFoundException, IOException {
+        // default deserialization
+        objectInputStream.defaultReadObject();
+
+        String foldAsString = (String) objectInputStream.readObject();
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Fold fold = gson.fromJson(foldAsString, Fold.class);
+        this.testingFiles = fold.getTestingFiles();
+        this.trainingFiles = fold.getTrainingFiles();
+
+    }
+
+    private void writeObject(ObjectOutputStream objectOutputStream) throws IOException {
+        // default serialization
+        objectOutputStream.defaultWriteObject();
+
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        objectOutputStream.writeObject(gson.toJson(this));
+    }
 }
