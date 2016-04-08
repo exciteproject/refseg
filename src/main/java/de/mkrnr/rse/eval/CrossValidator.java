@@ -12,21 +12,83 @@ import cc.mallet.pipe.SerialPipes;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.train.CRFTrainer;
+import de.mkrnr.rse.util.Deserializer;
+import de.mkrnr.rse.util.FileHelper;
 import de.mkrnr.rse.util.FileMerger;
+import de.mkrnr.rse.util.Serializer;
 
 public class CrossValidator {
 
     public static void main(String[] args) {
+        File inputDirectory = new File("/home/martin/tmp/papers/2-test-extr");
+        File crossValidationDirectory = new File("/home/martin/tmp/eval/2-test-extr/");
+        List<String> featuresNames = new ArrayList<String>();
+        featuresNames.add("CAPITALIZED");
+        featuresNames.add("ONELETTER");
+        featuresNames.add("ENDSWITHPERIOD");
+        featuresNames.add("ENDSWITHCOMMA");
+
+        // FileHelper.resetDirectory(evalDictionary);
+
+        // create/load folds
         CrossValidator crossValidator = new CrossValidator();
-        File inputDirectory = new File("/home/martin/tmp/papers/80-test-extr");
-        int numberOfFolds = 10;
+        int numberOfFolds = 2;
+        File foldsDirectory = new File(crossValidationDirectory + File.separator + "folds");
+
         List<Fold> folds = crossValidator.splitIntoFolds(inputDirectory, numberOfFolds);
-        // crossValidator.generateFoldFiles(folds, inputDirectory,
-        // foldsDirectory);
+        crossValidator.saveFolds(folds, foldsDirectory);
+        // List<Fold> folds = crossValidator.loadFolds(foldsDirectory);
+
+        // evaluate folds
+
         for (Fold fold : folds) {
-            crossValidator.validate(fold);
+            System.out.println("Run evaluation on:");
+            fold.printFoldInformation();
+            FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
+
+            SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
+
+            SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(featuresNames);
+
+            CRFTrainer crfTrainer = new CRFTrainer(serialPipes);
+
+            File trainingFile = FileMerger.mergeFiles(fold.getTrainingFiles(),
+                    crossValidator.getTempFile(fold.getName()));
+            File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(),
+                    crossValidator.getTempFile(fold.getName()));
+            crfTrainer.trainByLabelLikelihood(trainingFile, testingFile, true);
+
+            System.out.println("Evaluation:");
+            TransducerTrainerEvaluator crfEvaluator = new TransducerTrainerEvaluator(serialPipes,
+                    crfTrainer.getTrainer());
+            crfEvaluator.evaluate(trainingFile, testingFile);
+
+            // TODO load serialPipes and trainer
+            // crossValidator.validate(fold);
         }
 
+    }
+
+    public List<Fold> loadFolds(File foldsDirectory) {
+        List<Fold> folds = new ArrayList<Fold>();
+
+        File[] seralizedFoldFiles = foldsDirectory.listFiles();
+        Arrays.sort(seralizedFoldFiles);
+
+        for (File serializedFoldFile : seralizedFoldFiles) {
+            folds.add((Fold) Deserializer.deserialize(serializedFoldFile));
+        }
+        return folds;
+    }
+
+    public void saveFolds(List<Fold> folds, File outputDirectory) {
+        // delete existing directory and create new one
+        FileHelper.resetDirectory(outputDirectory);
+
+        for (Fold fold : folds) {
+            Serializer.serialize(fold,
+                    new File(outputDirectory.getAbsolutePath() + File.separator + fold.getName() + ".ser"));
+        }
     }
 
     /**
@@ -54,7 +116,8 @@ public class CrossValidator {
 
         for (int foldIndex = 0; foldIndex < numberOfFolds; foldIndex++) {
 
-            Fold fold = new Fold();
+            // TODO add fold information in result printout
+            Fold fold = new Fold(inputDirectory.getName() + "-" + numberOfFolds + "-fold-" + foldIndex);
 
             int remainingFolds = numberOfFolds - foldIndex;
 
