@@ -57,4 +57,5 @@ public class Fold implements Serializable {
         System.out.println();
     }
 
+    // TODO add JSON serialization and deserialization
 }

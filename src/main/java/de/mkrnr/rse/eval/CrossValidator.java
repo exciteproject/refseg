@@ -41,6 +41,7 @@ public class CrossValidator {
 
         // evaluate folds
 
+        Evaluations evaluations = new Evaluations();
         for (Fold fold : folds) {
             System.out.println("Run evaluation on:");
             fold.printFoldInformation();
@@ -53,19 +54,21 @@ public class CrossValidator {
             CRFTrainer crfTrainer = new CRFTrainer(serialPipes);
 
             File trainingFile = FileMerger.mergeFiles(fold.getTrainingFiles(),
-                    crossValidator.getTempFile(fold.getName()));
+                    crossValidator.getTempFile(fold.getName() + "-train"));
             File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(),
-                    crossValidator.getTempFile(fold.getName()));
+                    crossValidator.getTempFile(fold.getName() + "-test"));
             crfTrainer.trainByLabelLikelihood(trainingFile, testingFile, true);
 
             System.out.println("Evaluation:");
             TransducerTrainerEvaluator crfEvaluator = new TransducerTrainerEvaluator(serialPipes,
                     crfTrainer.getTrainer());
-            crfEvaluator.evaluate(trainingFile, testingFile);
 
-            // TODO load serialPipes and trainer
-            // crossValidator.validate(fold);
+            Evaluation evaluation = crfEvaluator.evaluate(trainingFile, testingFile);
+            evaluation.setFold(fold);
+            evaluations.addEvaluation(evaluation);
+
         }
+        evaluations.aggregate();
 
     }
 
@@ -174,7 +177,7 @@ public class CrossValidator {
     }
 
     private File getTempFile(String filePrefix) {
-        String tempFileName = filePrefix + "-" + (int) (Math.random() * 10000000);
+        String tempFileName = filePrefix + "-" + System.nanoTime();
         File tempFile = null;
         try {
             tempFile = File.createTempFile(tempFileName, ".txt");

@@ -20,10 +20,13 @@ public class TransducerTrainerEvaluator {
         this.trainer = trainer;
     }
 
-    public void evaluate(File trainingFile, File testingFile) {
+    public Evaluation evaluate(File trainingFile, File testingFile) {
+        Evaluation evaluation = new Evaluation();
+        // TODO store results in evaluation
         InstanceList trainingInstances = InstanceListBuilder.build(trainingFile, this.serialPipes);
         InstanceList testingInstances = InstanceListBuilder.build(testingFile, this.serialPipes);
 
+        // TODO Write new evaluators that return their results
         PerClassAccuracyEvaluator trainingPerClassAccuracyEvaluator = new PerClassAccuracyEvaluator(trainingInstances,
                 "training");
         trainingPerClassAccuracyEvaluator.evaluate(this.trainer);
@@ -40,6 +43,7 @@ public class TransducerTrainerEvaluator {
         ViterbiWriter viterbiWriter = new ViterbiWriter("output/ner_crf",
                 new InstanceList[] { trainingInstances, testingInstances }, new String[] { "train", "test" });
         viterbiWriter.evaluate(this.trainer);
+        return evaluation;
     }
 
 }
