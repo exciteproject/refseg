@@ -18,11 +18,11 @@ import org.apache.pdfbox.text.PDFTextStripper;
 public class PDFTextExtractor {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        String filePath = args[0];
 
         String inputDirectory = args[1];
         String outputDirectory = args[2];
         PDFTextExtractor pdfTextExtractor = new PDFTextExtractor();
+        // String filePath = args[0];
         // String text = pdfTextExtractor.extractText(new File(filePath));
         // System.out.println(text);
         pdfTextExtractor.extractTextFromDirectory(new File(inputDirectory), new File(outputDirectory));

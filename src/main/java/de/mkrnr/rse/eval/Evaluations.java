@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import de.mkrnr.rse.util.FileHelper;
+import de.mkrnr.rse.util.JsonHelper;
 
 public class Evaluations {
 
@@ -46,7 +46,7 @@ public class Evaluations {
 
         }
 
-        FileHelper.writeAsJson(aggregatedResults, outputFile);
+        JsonHelper.writeToFile(aggregatedResults, outputFile);
     }
 
     public void writeEvaluations(File outputFile) {
@@ -55,6 +55,6 @@ public class Evaluations {
         for (Evaluation evaluation : this.evaluations) {
             aggregatedEvaluations.put(evaluation.getName(), evaluation.getEvaluationResults());
         }
-        FileHelper.writeAsJson(aggregatedEvaluations, outputFile);
+        JsonHelper.writeToFile(aggregatedEvaluations, outputFile);
     }
 }

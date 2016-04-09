@@ -8,37 +8,84 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
 import cc.mallet.pipe.SerialPipes;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.train.CRFByLabelLikelihoodTrainer;
 import de.mkrnr.rse.train.Trainer;
-import de.mkrnr.rse.util.Deserializer;
 import de.mkrnr.rse.util.FileHelper;
 import de.mkrnr.rse.util.FileMerger;
-import de.mkrnr.rse.util.Serializer;
+import de.mkrnr.rse.util.JsonHelper;
 
 public class CrossValidator {
 
     public static void main(String[] args) {
-        File inputDirectory = new File("/home/martin/tmp/papers/20-test-extr");
-        // File inputDirectory = new
-        // File("/home/martin/tmp/papers/2-test-extr");
-        File crossValidationParentDirectory = new File("/home/martin/tmp/eval/");
-        int numberOfFolds = 12;
+        Options options = new Options();
+
+        Option featuresOption = new Option("feat", true, "comma separated list of features");
+        featuresOption.setLongOpt("features");
+        featuresOption.setArgs(Option.UNLIMITED_VALUES);
+        featuresOption.setRequired(true);
+        options.addOption(featuresOption);
+
+        Option inputOption = new Option("input", true,
+                "input directory containing preprocessed text files for MALLET evaluation");
+        inputOption.setLongOpt("input-dir");
+        inputOption.setRequired(true);
+        options.addOption(inputOption);
+
+        Option evalOption = new Option("eval", true,
+                "directory in which the validation results are stored and which contains the folds directory");
+        evalOption.setLongOpt("evaluation-dir");
+        evalOption.setRequired(true);
+        options.addOption(evalOption);
+
+        Option numberOfFoldsOption = new Option("folds", true, "number of folds for cross validation");
+        numberOfFoldsOption.setLongOpt("number-of-folds");
+        numberOfFoldsOption.setType(Number.class);
+        numberOfFoldsOption.setRequired(true);
+        options.addOption(numberOfFoldsOption);
+
+        Option createFoldsOption = new Option("create", false,
+                "new folds are created if set, otherwise existing folds are loaded");
+        createFoldsOption.setLongOpt("create-folds");
+        options.addOption(createFoldsOption);
+
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd = null;
+        try {
+            cmd = parser.parse(options, args);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        File inputDirectory = new File(cmd.getOptionValue(inputOption.getOpt()));
+        File crossValidationDirectory = new File(cmd.getOptionValue(evalOption.getOpt()));
+
+        Integer numberOfFolds = null;
+        try {
+            numberOfFolds = ((Number) cmd.getParsedOptionValue(numberOfFoldsOption.getOpt())).intValue();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
         List<String> featuresNames = new ArrayList<String>();
-        featuresNames.add("CAPITALIZED");
-        featuresNames.add("ONELETTER");
-        featuresNames.add("ENDSWITHPERIOD");
-        featuresNames.add("ENDSWITHCOMMA");
+        for (String featureName : cmd.getOptionValues(featuresOption.getOpt())) {
+            featuresNames.add(featureName);
+        }
 
         FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
 
         SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
 
         SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(featuresNames);
-        // FileHelper.resetDirectory(evalDictionary);
 
         // create/load folds
         CRFByLabelLikelihoodTrainer crfTrainer = new CRFByLabelLikelihoodTrainer(serialPipes);
@@ -47,13 +94,18 @@ public class CrossValidator {
 
         CrossValidator crossValidator = new CrossValidator(crfTrainer, crfEvaluator);
 
-        File crossValidationDirectory = new File(crossValidationParentDirectory + File.separator
-                + inputDirectory.getName() + "-" + numberOfFolds + "-fold");
         File foldsDirectory = new File(crossValidationDirectory + File.separator + "folds");
 
-        List<Fold> folds = crossValidator.splitIntoFolds(inputDirectory, numberOfFolds);
-        crossValidator.saveFolds(folds, foldsDirectory);
-        // List<Fold> folds = crossValidator.loadFolds(foldsDirectory);
+        List<Fold> folds = null;
+        if (cmd.hasOption(createFoldsOption.getOpt())) {
+
+            // TODO reset dir?
+            // FileHelper.resetDirectory(evalDictionary);
+            folds = crossValidator.splitIntoFolds(inputDirectory, numberOfFolds);
+            crossValidator.saveFolds(folds, foldsDirectory);
+        } else {
+            folds = crossValidator.loadFolds(foldsDirectory);
+        }
 
         // evaluate folds
 
@@ -79,7 +131,7 @@ public class CrossValidator {
         Arrays.sort(seralizedFoldFiles);
 
         for (File serializedFoldFile : seralizedFoldFiles) {
-            folds.add((Fold) Deserializer.deserialize(serializedFoldFile));
+            folds.add((Fold) JsonHelper.readFromFile(Fold.class, serializedFoldFile));
         }
         return folds;
     }
@@ -89,8 +141,8 @@ public class CrossValidator {
         FileHelper.resetDirectory(outputDirectory);
 
         for (Fold fold : folds) {
-            Serializer.serialize(fold,
-                    new File(outputDirectory.getAbsolutePath() + File.separator + fold.getName() + ".ser"));
+            JsonHelper.writeToFile(fold,
+                    new File(outputDirectory.getAbsolutePath() + File.separator + fold.getName() + ".json"));
         }
     }
 
