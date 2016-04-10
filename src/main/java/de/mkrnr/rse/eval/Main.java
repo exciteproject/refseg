@@ -11,8 +11,11 @@ import com.beust.jcommander.converters.FileConverter;
 import cc.mallet.pipe.SerialPipes;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
-import de.mkrnr.rse.train.CRFByLabelLikelihoodTrainer;
-import de.mkrnr.rse.train.Trainer;
+import de.mkrnr.rse.train.CRFBuilder;
+import de.mkrnr.rse.train.CRFTrainerByLabelLikelihoodBuilder;
+import de.mkrnr.rse.train.CRFTrainerFactory;
+import de.mkrnr.rse.train.TransducerTrainerBuilder;
+import de.mkrnr.rse.train.TransducerTrainerFactory;
 
 public class Main {
 
@@ -65,24 +68,27 @@ public class Main {
 
         SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(this.features);
 
-        Trainer trainer = null;
+        CRFBuilder crfBuilder = new CRFBuilder(serialPipes, null);
+        // TODO add other states
+        crfBuilder.setAddStatesForThreeQuarterLabelsConnected();
 
+        TransducerTrainerBuilder transducerTrainerBuilder = null;
         // TODO add option for choosing the trainer
         if (true) {
-            CRFByLabelLikelihoodTrainer crfByLabelLikelihoodTrainer = new CRFByLabelLikelihoodTrainer(serialPipes);
-
-            // TODO set options for stats
-            crfByLabelLikelihoodTrainer.setAddStatesForThreeQuarterLabelsConnected();
+            CRFTrainerByLabelLikelihoodBuilder crfTrainerByLabelLikelihoodBuilder = new CRFTrainerByLabelLikelihoodBuilder();
 
             // TODO add specific crf trainer options
-            crfByLabelLikelihoodTrainer.setGaussianPriorVariance(10);
+            crfTrainerByLabelLikelihoodBuilder.setGaussianPriorVariance(10);
 
-            trainer = crfByLabelLikelihoodTrainer;
+            transducerTrainerBuilder = crfTrainerByLabelLikelihoodBuilder;
         }
 
-        Evaluator evaluator = new Evaluator(serialPipes);
+        TransducerTrainerFactory transducerTrainerFactory = new CRFTrainerFactory(crfBuilder, transducerTrainerBuilder);
 
-        CrossValidator crossValidator = new CrossValidator(trainer, evaluator);
+        StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory = new StructuredPerClassAccuracyEvaluatorFactory();
+
+        TransducerCrossValidator crossValidator = new TransducerCrossValidator(transducerTrainerFactory,
+                structuredTransducerEvaluatorFactory);
 
         File foldsDirectory = new File(this.evaluationDirectory + File.separator + "folds");
 
@@ -96,7 +102,7 @@ public class Main {
         }
 
         // evaluate folds
-        Evaluations evaluations = crossValidator.validate(folds);
+        Evaluations evaluations = crossValidator.validate(folds, serialPipes);
 
         evaluations.writeEvaluations(new File(this.evaluationDirectory + File.separator + "evaluations.json"));
         evaluations.writeAggregatedResults(new File(this.evaluationDirectory + File.separator + "aggregated.json"));

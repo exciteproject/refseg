@@ -11,8 +11,6 @@ public class Evaluation implements Serializable {
     public static void main(String[] args) {
         // TODO Auto-generated method stub
 
-        System.out.println(System.currentTimeMillis());
-        System.out.println(System.nanoTime());
     }
 
     private TreeMap<String, Double> evaluationResults;

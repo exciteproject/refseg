@@ -26,27 +26,35 @@ public class Evaluations {
     }
 
     public void writeAggregatedResults(File outputFile) {
-        TreeMap<String, Double> aggregatedResults = new TreeMap<String, Double>();
+        TreeMap<String, List<Double>> aggregatedResults = new TreeMap<String, List<Double>>();
 
         for (Evaluation evaluation : this.evaluations) {
             for (Entry<String, Double> result : evaluation.getEvaluationResults().entrySet()) {
                 if (aggregatedResults.containsKey(result.getKey())) {
-                    aggregatedResults.put(result.getKey(), aggregatedResults.get(result.getKey()) + result.getValue());
+                    aggregatedResults.get(result.getKey()).add(result.getValue());
                 } else {
-                    aggregatedResults.put(result.getKey(), result.getValue());
+                    List<Double> resultList = new ArrayList<Double>();
+                    resultList.add(result.getValue());
+                    aggregatedResults.put(result.getKey(), resultList);
                 }
             }
         }
 
-        // String aggregatedString = "";
-        for (Entry<String, Double> aggregatedResult : aggregatedResults.entrySet()) {
-            // aggregatedString += aggregatedResult.getKey() + ": "
-            // + (aggregatedResult.getValue() / this.evaluations.size());
-            aggregatedResult.setValue(aggregatedResult.getValue() / this.evaluations.size());
+        TreeMap<String, Double> resultMeans = new TreeMap<String, Double>();
 
+        for (Entry<String, List<Double>> aggregatedResult : aggregatedResults.entrySet()) {
+            Double resultSum = 0.0;
+            for (Double result : aggregatedResult.getValue()) {
+                resultSum += result;
+            }
+            Double mean = resultSum / aggregatedResult.getValue().size();
+
+            if (!mean.isNaN()) {
+                resultMeans.put(aggregatedResult.getKey(), mean);
+            }
         }
 
-        JsonHelper.writeToFile(aggregatedResults, outputFile);
+        JsonHelper.writeToFile(resultMeans, outputFile);
     }
 
     public void writeEvaluations(File outputFile) {

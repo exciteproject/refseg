@@ -2,19 +2,14 @@ package de.mkrnr.rse.train;
 
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.CRFTrainerByLabelLikelihood;
-import cc.mallet.pipe.SerialPipes;
 
-public class CRFByLabelLikelihoodTrainer extends CRFTrainer {
+public class CRFTrainerByLabelLikelihoodBuilder extends TransducerTrainerBuilder {
 
-    private Boolean usingHyperbolicPrior;
-    private Double hyperbolicPriorSlope;
-    private Double hyperbolicPriorSharpness;
     private Double gaussianPriorVariance;
+    private Double hyperbolicPriorSharpness;
+    private Double hyperbolicPriorSlope;
     private Boolean useSparseWeights;
-
-    public CRFByLabelLikelihoodTrainer(SerialPipes serialPipes) {
-        super(serialPipes);
-    }
+    private Boolean useHyperbolicPrior;
 
     public double getGaussianPriorVariance() {
         return this.gaussianPriorVariance;
@@ -33,28 +28,27 @@ public class CRFByLabelLikelihoodTrainer extends CRFTrainer {
         return this.useSparseWeights;
     }
 
-    public void setGaussianPriorVariance(double p) {
-        this.gaussianPriorVariance = p;
+    public void setGaussianPriorVariance(double gaussianPriorVariance) {
+        this.gaussianPriorVariance = gaussianPriorVariance;
     }
 
-    public void setHyperbolicPriorSharpness(double p) {
-        this.hyperbolicPriorSharpness = p;
+    public void setHyperbolicPriorSharpness(double hyperbolicPriorSharpness) {
+        this.hyperbolicPriorSharpness = hyperbolicPriorSharpness;
     }
 
-    public void setHyperbolicPriorSlope(double p) {
-        this.hyperbolicPriorSlope = p;
+    public void setHyperbolicPriorSlope(double hyperbolicPriorSlope) {
+        this.hyperbolicPriorSlope = hyperbolicPriorSlope;
     }
 
-    public void setUseHyperbolicPrior(boolean f) {
-        this.usingHyperbolicPrior = f;
+    public void setUseHyperbolicPrior(boolean useHyperbolicPrior) {
+        this.useHyperbolicPrior = useHyperbolicPrior;
     }
 
-    public void setUseSparseWeights(boolean b) {
-        this.useSparseWeights = b;
+    public void setUseSparseWeights(boolean useSparseWeights) {
+        this.useSparseWeights = useSparseWeights;
     }
 
-    @Override
-    protected void setTransducerTrainer(CRF crf) {
+    protected CRFTrainerByLabelLikelihood build(CRF crf) {
         CRFTrainerByLabelLikelihood crfTrainerByLabelLikelihood = new CRFTrainerByLabelLikelihood(crf);
 
         if (this.gaussianPriorVariance != null) {
@@ -69,11 +63,11 @@ public class CRFByLabelLikelihoodTrainer extends CRFTrainer {
         if (this.useSparseWeights != null) {
             crfTrainerByLabelLikelihood.setUseSparseWeights(this.useSparseWeights);
         }
-        if (this.usingHyperbolicPrior != null) {
-            crfTrainerByLabelLikelihood.setUseHyperbolicPrior(this.usingHyperbolicPrior);
+        if (this.useHyperbolicPrior != null) {
+            crfTrainerByLabelLikelihood.setUseHyperbolicPrior(this.useHyperbolicPrior);
         }
 
-        this.transducerTrainer = crfTrainerByLabelLikelihood;
+        return crfTrainerByLabelLikelihood;
     }
 
 }

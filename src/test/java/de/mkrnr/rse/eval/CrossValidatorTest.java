@@ -26,7 +26,7 @@ public class CrossValidatorTest {
 
     private File testInputDirectory;
     private File testFoldsDirectory;
-    private CrossValidator crossValidator;
+    private TransducerCrossValidator crossValidator;
 
     @Before
     public void setUp() throws Exception {
@@ -36,7 +36,7 @@ public class CrossValidatorTest {
 
         this.testInputDirectory.mkdir();
 
-        this.crossValidator = new CrossValidator(null, null);
+        this.crossValidator = new TransducerCrossValidator(null, null);
         // crossValidator.validate(fileDirectory, folds);
     }
 

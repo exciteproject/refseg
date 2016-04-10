@@ -8,19 +8,24 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import de.mkrnr.rse.train.Trainer;
+import cc.mallet.fst.TransducerTrainer;
+import cc.mallet.pipe.Pipe;
+import cc.mallet.types.InstanceList;
+import de.mkrnr.rse.train.TransducerTrainerFactory;
 import de.mkrnr.rse.util.FileHelper;
 import de.mkrnr.rse.util.FileMerger;
+import de.mkrnr.rse.util.InstanceListBuilder;
 import de.mkrnr.rse.util.JsonHelper;
 
-public class CrossValidator {
+public class TransducerCrossValidator {
 
-    private Trainer trainer;
-    private Evaluator evaluator;
+    private TransducerTrainerFactory transducerTrainerFactory;
+    private StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory;
 
-    public CrossValidator(Trainer trainer, Evaluator evaluator) {
-        this.trainer = trainer;
-        this.evaluator = evaluator;
+    public TransducerCrossValidator(TransducerTrainerFactory transducerTrainerFactory,
+            StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory) {
+        this.transducerTrainerFactory = transducerTrainerFactory;
+        this.structuredTransducerEvaluatorFactory = structuredTransducerEvaluatorFactory;
 
     }
 
@@ -100,10 +105,7 @@ public class CrossValidator {
         return folds;
     }
 
-    public void validate(Fold fold) {
-    }
-
-    public Evaluations validate(List<Fold> folds) {
+    public Evaluations validate(List<Fold> folds, Pipe inputPipe) {
         Evaluations evaluations = new Evaluations();
         for (Fold fold : folds) {
             System.out.println("Run evaluation on:");
@@ -113,10 +115,17 @@ public class CrossValidator {
                     this.getTempFile(fold.getName() + "-train"));
             File testingFile = FileMerger.mergeFiles(fold.getTestingFiles(),
                     this.getTempFile(fold.getName() + "-test"));
+            InstanceList trainingInstances = InstanceListBuilder.build(trainingFile, inputPipe);
+            InstanceList testingInstances = InstanceListBuilder.build(testingFile, inputPipe);
 
-            this.trainer.train(trainingFile, testingFile, true);
+            TransducerTrainer transducerTrainer = this.transducerTrainerFactory.getTransducerTrainer(trainingInstances,
+                    testingInstances, true);
+            transducerTrainer.train(trainingInstances);
 
-            Evaluation evaluation = this.evaluator.evaluate(this.trainer.getTransducerTrainer(), testingFile);
+            StructuredTransducerEvaluator structuredTransducerEvaluator = this.structuredTransducerEvaluatorFactory
+                    .getStructuredTransducerEvaluator(testingInstances, "testing");
+            structuredTransducerEvaluator.evaluate(transducerTrainer);
+            Evaluation evaluation = structuredTransducerEvaluator.getEvaluation();
             evaluation.setName(fold.getName());
 
             evaluations.addEvaluation(evaluation);
