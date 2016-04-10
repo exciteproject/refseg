@@ -12,6 +12,7 @@ import cc.mallet.pipe.SerialPipes;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.train.CRFByLabelLikelihoodTrainer;
+import de.mkrnr.rse.train.Trainer;
 
 public class Main {
 
@@ -64,22 +65,24 @@ public class Main {
 
         SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(this.features);
 
-        // TODO specify kind of CRF states, e.g.
-        // crf.addStatesForThreeQuarterLabelsConnectedAsIn();
-        // problem: needs instance already
-        // solution: pass as string
+        Trainer trainer = null;
 
-        // TODO specify kind of CRFTrainer, e.g. CRFTrainerByLabelLikelihood
-        // TODO for this CRFTrainer, set parameters
+        // TODO add option for choosing the trainer
+        if (true) {
+            CRFByLabelLikelihoodTrainer crfByLabelLikelihoodTrainer = new CRFByLabelLikelihoodTrainer(serialPipes);
 
-        CRFByLabelLikelihoodTrainer crfTrainer = new CRFByLabelLikelihoodTrainer(serialPipes);
+            // TODO set options for stats
+            crfByLabelLikelihoodTrainer.setAddStatesForThreeQuarterLabelsConnected();
 
-        // CRFByLabelLikelihoodTrainer crfTrainer = new
-        // CRFByLabelLikelihoodTrainer(serialPipes);
+            // TODO add specific crf trainer options
+            crfByLabelLikelihoodTrainer.setGaussianPriorVariance(10);
 
-        Evaluator crfEvaluator = new Evaluator(serialPipes);
+            trainer = crfByLabelLikelihoodTrainer;
+        }
 
-        CrossValidator crossValidator = new CrossValidator(crfTrainer, crfEvaluator);
+        Evaluator evaluator = new Evaluator(serialPipes);
+
+        CrossValidator crossValidator = new CrossValidator(trainer, evaluator);
 
         File foldsDirectory = new File(this.evaluationDirectory + File.separator + "folds");
 
