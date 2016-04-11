@@ -104,8 +104,6 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
                 this.evaluation.addEvaluationResult(label + " f1", f1);
             }
 
-            this.evaluation.addEvaluationResult(label + " f1", f1);
-
             if (!this.otherLabel.equals(label.toString())) {
                 totalNumCorrectTokens += numCorrectTokens[i];
                 totalNumPredTokens += numPredTokens[i];
