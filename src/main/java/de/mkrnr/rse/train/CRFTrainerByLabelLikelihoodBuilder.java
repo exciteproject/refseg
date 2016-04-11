@@ -4,30 +4,25 @@ import java.util.List;
 
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.CRFTrainerByLabelLikelihood;
+import de.mkrnr.rse.util.Configuration;
 
 public class CRFTrainerByLabelLikelihoodBuilder extends TransducerTrainerBuilder {
 
-    static final String GAUSSIAN_PRIOR_VARIANCE = "gaussianPriorVariance";
-    static final String HYPERBOLIC_PRIOR_SHARPNESS = "hyperbolicPriorSharpness";
-    static final String HYPERBOLIC_PRIOR_SLOPE = "hyperbolicPriorSlope";
-    static final String USE_SPARSE_WEIGHTS = "useSparseWeights";
-    static final String USE_HYPERBOLIC_PRIOR = "useHyperbolicPrior";
+    protected static final String GAUSSIAN_PRIOR_VARIANCE = "gaussianPriorVariance";
+    protected static final String HYPERBOLIC_PRIOR_SHARPNESS = "hyperbolicPriorSharpness";
+    protected static final String HYPERBOLIC_PRIOR_SLOPE = "hyperbolicPriorSlope";
+    protected static final String USE_SPARSE_WEIGHTS = "useSparseWeights";
+    protected static final String USE_HYPERBOLIC_PRIOR = "useHyperbolicPrior";
 
-    public static void main(String[] args) {
-        CRFTrainerByLabelLikelihoodBuilder crfTrainerByLabelLikelihoodBuilder = new CRFTrainerByLabelLikelihoodBuilder();
-        List<String> possibleConfiguration = crfTrainerByLabelLikelihoodBuilder.getPossibleConfigurations();
-        System.out.println(possibleConfiguration.get(0));
-    }
-
-    public CRFTrainerByLabelLikelihoodBuilder() {
-        super();
+    public CRFTrainerByLabelLikelihoodBuilder(List<Configuration> configurations) {
+        super(configurations);
     }
 
     @Override
     protected CRFTrainerByLabelLikelihood build(CRF crf) {
         CRFTrainerByLabelLikelihood crfTrainerByLabelLikelihood = new CRFTrainerByLabelLikelihood(crf);
 
-        for (Configuration configuration : this.configurations.getConfigurations()) {
+        for (Configuration configuration : this.configurations) {
             switch (configuration.getName()) {
 
             case GAUSSIAN_PRIOR_VARIANCE:

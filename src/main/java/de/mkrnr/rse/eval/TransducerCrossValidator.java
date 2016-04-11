@@ -21,11 +21,13 @@ public class TransducerCrossValidator {
 
     private TransducerTrainerFactory transducerTrainerFactory;
     private StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory;
+    private String otherLabel;
 
     public TransducerCrossValidator(TransducerTrainerFactory transducerTrainerFactory,
-            StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory) {
+            StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory, String otherLabel) {
         this.transducerTrainerFactory = transducerTrainerFactory;
         this.structuredTransducerEvaluatorFactory = structuredTransducerEvaluatorFactory;
+        this.otherLabel = otherLabel;
 
     }
 
@@ -123,7 +125,7 @@ public class TransducerCrossValidator {
             transducerTrainer.train(trainingInstances);
 
             StructuredTransducerEvaluator structuredTransducerEvaluator = this.structuredTransducerEvaluatorFactory
-                    .getStructuredTransducerEvaluator(testingInstances, "testing");
+                    .getStructuredTransducerEvaluator(testingInstances, "testing", this.otherLabel);
             structuredTransducerEvaluator.evaluate(transducerTrainer);
             Evaluation evaluation = structuredTransducerEvaluator.getEvaluation();
             evaluation.setName(fold.getName());

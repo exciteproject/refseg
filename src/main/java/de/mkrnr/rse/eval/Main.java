@@ -16,6 +16,8 @@ import de.mkrnr.rse.train.CRFTrainerByLabelLikelihoodBuilder;
 import de.mkrnr.rse.train.CRFTrainerFactory;
 import de.mkrnr.rse.train.TransducerTrainerBuilder;
 import de.mkrnr.rse.train.TransducerTrainerFactory;
+import de.mkrnr.rse.util.Configuration;
+import de.mkrnr.rse.util.ConfigurationConverter;
 
 public class Main {
 
@@ -27,6 +29,7 @@ public class Main {
             jCommander = new JCommander(main, args);
         } catch (ParameterException e) {
             System.err.println(e.getMessage());
+            e.printStackTrace();
             return;
         }
 
@@ -60,6 +63,18 @@ public class Main {
             "--number-of-folds" }, description = "number of folds for cross validation", required = true)
     private Integer numberOfFolds;
 
+    @Parameter(names = { "-crf",
+            "--crf-configurations" }, description = "list of key=value for configuring the CRF building", variableArity = true, required = true, converter = ConfigurationConverter.class)
+    private List<Configuration> crfConfigurations;
+
+    @Parameter(names = { "-trainer",
+            "--trainer-configurations" }, description = "list of key=value for configuring the trainer building", variableArity = true, required = true, converter = ConfigurationConverter.class)
+    private List<Configuration> transducerTrainerConfigurations;
+
+    @Parameter(names = { "-other",
+            "--other-label" }, description = "label that is used to specitfy other instances in the training set")
+    private String otherLabel = "other";
+
     private void run() {
 
         FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
@@ -68,17 +83,14 @@ public class Main {
 
         SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(this.features);
 
-        CRFBuilder crfBuilder = new CRFBuilder(serialPipes, null);
-        // TODO add other states
-        crfBuilder.setAddStatesForThreeQuarterLabelsConnected();
+        CRFBuilder crfBuilder = new CRFBuilder(this.crfConfigurations, serialPipes, null);
 
         TransducerTrainerBuilder transducerTrainerBuilder = null;
+
         // TODO add option for choosing the trainer
         if (true) {
-            CRFTrainerByLabelLikelihoodBuilder crfTrainerByLabelLikelihoodBuilder = new CRFTrainerByLabelLikelihoodBuilder();
-
-            // TODO add specific crf trainer options
-            crfTrainerByLabelLikelihoodBuilder.setGaussianPriorVariance(10);
+            CRFTrainerByLabelLikelihoodBuilder crfTrainerByLabelLikelihoodBuilder = new CRFTrainerByLabelLikelihoodBuilder(
+                    this.transducerTrainerConfigurations);
 
             transducerTrainerBuilder = crfTrainerByLabelLikelihoodBuilder;
         }
@@ -88,7 +100,7 @@ public class Main {
         StructuredTransducerEvaluatorFactory structuredTransducerEvaluatorFactory = new StructuredPerClassAccuracyEvaluatorFactory();
 
         TransducerCrossValidator crossValidator = new TransducerCrossValidator(transducerTrainerFactory,
-                structuredTransducerEvaluatorFactory);
+                structuredTransducerEvaluatorFactory, this.otherLabel);
 
         File foldsDirectory = new File(this.evaluationDirectory + File.separator + "folds");
 

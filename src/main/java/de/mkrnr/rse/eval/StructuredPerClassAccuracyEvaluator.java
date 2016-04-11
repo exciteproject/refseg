@@ -15,12 +15,13 @@ import cc.mallet.types.Sequence;
  */
 public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEvaluator {
 
-    public StructuredPerClassAccuracyEvaluator(InstanceList i1, String d1) {
-        this(new InstanceList[] { i1 }, new String[] { d1 });
+    public StructuredPerClassAccuracyEvaluator(InstanceList i1, String d1, String otherLabel) {
+        this(new InstanceList[] { i1 }, new String[] { d1 }, otherLabel);
     }
 
-    private StructuredPerClassAccuracyEvaluator(InstanceList[] instanceLists, String[] descriptions) {
-        super(instanceLists, descriptions);
+    private StructuredPerClassAccuracyEvaluator(InstanceList[] instanceLists, String[] descriptions,
+            String otherLabel) {
+        super(instanceLists, descriptions, otherLabel);
     }
 
     @Override
@@ -51,6 +52,10 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
         }
 
         ArrayList<Double> allF1 = new ArrayList<Double>();
+
+        int totalNumCorrectTokens = 0;
+        int totalNumPredTokens = 0;
+        int totalNumTrueTokens = 0;
 
         for (int i = 0; i < numLabels; i++) {
             Object label = dict.lookupObject(i);
@@ -98,6 +103,14 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
             if (!f1.isNaN()) {
                 this.evaluation.addEvaluationResult(label + " f1", f1);
             }
+
+            this.evaluation.addEvaluationResult(label + " f1", f1);
+
+            if (!this.otherLabel.equals(label.toString())) {
+                totalNumCorrectTokens += numCorrectTokens[i];
+                totalNumPredTokens += numPredTokens[i];
+                totalNumTrueTokens += numTrueTokens[i];
+            }
         }
 
         Double aggregatedF1 = 0.0;
@@ -109,6 +122,14 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
         if (!f1Mean.isNaN()) {
             this.evaluation.addEvaluationResult("mean f1 ", f1Mean);
         }
+
+        double totalPrecision = ((double) totalNumCorrectTokens) / totalNumPredTokens;
+        double totalRecall = ((double) totalNumCorrectTokens) / totalNumTrueTokens;
+
+        double totalF1 = (2 * totalPrecision * totalRecall) / (totalPrecision + totalRecall);
+        this.evaluation.addEvaluationResult("total precision ", totalPrecision);
+        this.evaluation.addEvaluationResult("total recall ", totalRecall);
+        this.evaluation.addEvaluationResult("total f1 ", totalF1);
 
     }
 }

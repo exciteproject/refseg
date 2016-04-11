@@ -5,6 +5,6 @@ import cc.mallet.types.InstanceList;
 public abstract class StructuredTransducerEvaluatorFactory {
 
     public abstract StructuredTransducerEvaluator getStructuredTransducerEvaluator(InstanceList testingInstances,
-            String label);
+            String label, String otherLabel);
 
 }

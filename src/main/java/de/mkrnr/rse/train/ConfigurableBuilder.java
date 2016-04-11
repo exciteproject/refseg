@@ -5,14 +5,16 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ConfigurableBuilder {
-    protected Configurations configurations;
+import de.mkrnr.rse.util.Configuration;
 
-    public ConfigurableBuilder() {
-        this.configurations = new Configurations();
+public abstract class ConfigurableBuilder {
+    protected List<Configuration> configurations;
+
+    public ConfigurableBuilder(List<Configuration> configurations) {
+        this.configurations = configurations;
     }
 
-    public Configurations getConfigurations() {
+    public List<Configuration> getConfigurations() {
         return this.configurations;
     }
 
@@ -20,8 +22,8 @@ public abstract class ConfigurableBuilder {
         List<String> possibleConfigurations = new ArrayList<String>();
         Field[] fields = CRFTrainerByLabelLikelihoodBuilder.class.getDeclaredFields();
         for (Field field : fields) {
-            if (Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers())
-                    && field.getType().equals(String.class)) {
+            if (Modifier.isProtected(field.getModifiers()) && Modifier.isStatic(field.getModifiers())
+                    && Modifier.isFinal(field.getModifiers()) && field.getType().equals(String.class)) {
                 try {
                     possibleConfigurations.add((String) field.get(""));
                 } catch (IllegalArgumentException e) {
