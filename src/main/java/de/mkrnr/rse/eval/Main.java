@@ -104,7 +104,8 @@ public class Main {
         // evaluate folds
         Evaluations evaluations = crossValidator.validate(folds, serialPipes);
 
-        evaluations.writeEvaluations(new File(this.evaluationDirectory + File.separator + "evaluations.json"));
-        evaluations.writeAggregatedResults(new File(this.evaluationDirectory + File.separator + "aggregated.json"));
+        evaluations.writeEvaluations(new File(this.evaluationDirectory + File.separator + "evaluations" + ".json"));
+        evaluations
+                .writeAggregatedResults(new File(this.evaluationDirectory + File.separator + "aggregated" + ".json"));
     }
 }

@@ -1,72 +1,56 @@
 package de.mkrnr.rse.train;
 
+import java.util.List;
+
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.CRFTrainerByLabelLikelihood;
 
 public class CRFTrainerByLabelLikelihoodBuilder extends TransducerTrainerBuilder {
 
-    private Double gaussianPriorVariance;
-    private Double hyperbolicPriorSharpness;
-    private Double hyperbolicPriorSlope;
-    private Boolean useSparseWeights;
-    private Boolean useHyperbolicPrior;
+    static final String GAUSSIAN_PRIOR_VARIANCE = "gaussianPriorVariance";
+    static final String HYPERBOLIC_PRIOR_SHARPNESS = "hyperbolicPriorSharpness";
+    static final String HYPERBOLIC_PRIOR_SLOPE = "hyperbolicPriorSlope";
+    static final String USE_SPARSE_WEIGHTS = "useSparseWeights";
+    static final String USE_HYPERBOLIC_PRIOR = "useHyperbolicPrior";
 
-    public double getGaussianPriorVariance() {
-        return this.gaussianPriorVariance;
+    public static void main(String[] args) {
+        CRFTrainerByLabelLikelihoodBuilder crfTrainerByLabelLikelihoodBuilder = new CRFTrainerByLabelLikelihoodBuilder();
+        List<String> possibleConfiguration = crfTrainerByLabelLikelihoodBuilder.getPossibleConfigurations();
+        System.out.println(possibleConfiguration.get(0));
     }
 
-    // public int getDefaultFeatureIndex () { return defaultFeatureIndex;}
-    public double getUseHyperbolicPriorSharpness() {
-        return this.hyperbolicPriorSharpness;
+    public CRFTrainerByLabelLikelihoodBuilder() {
+        super();
     }
 
-    public double getUseHyperbolicPriorSlope() {
-        return this.hyperbolicPriorSlope;
-    }
-
-    public boolean getUseSparseWeights() {
-        return this.useSparseWeights;
-    }
-
-    public void setGaussianPriorVariance(double gaussianPriorVariance) {
-        this.gaussianPriorVariance = gaussianPriorVariance;
-    }
-
-    public void setHyperbolicPriorSharpness(double hyperbolicPriorSharpness) {
-        this.hyperbolicPriorSharpness = hyperbolicPriorSharpness;
-    }
-
-    public void setHyperbolicPriorSlope(double hyperbolicPriorSlope) {
-        this.hyperbolicPriorSlope = hyperbolicPriorSlope;
-    }
-
-    public void setUseHyperbolicPrior(boolean useHyperbolicPrior) {
-        this.useHyperbolicPrior = useHyperbolicPrior;
-    }
-
-    public void setUseSparseWeights(boolean useSparseWeights) {
-        this.useSparseWeights = useSparseWeights;
-    }
-
+    @Override
     protected CRFTrainerByLabelLikelihood build(CRF crf) {
         CRFTrainerByLabelLikelihood crfTrainerByLabelLikelihood = new CRFTrainerByLabelLikelihood(crf);
 
-        if (this.gaussianPriorVariance != null) {
-            crfTrainerByLabelLikelihood.setGaussianPriorVariance(this.gaussianPriorVariance);
-        }
-        if (this.hyperbolicPriorSharpness != null) {
-            crfTrainerByLabelLikelihood.setHyperbolicPriorSharpness(this.hyperbolicPriorSharpness);
-        }
-        if (this.hyperbolicPriorSlope != null) {
-            crfTrainerByLabelLikelihood.setHyperbolicPriorSlope(this.hyperbolicPriorSlope);
-        }
-        if (this.useSparseWeights != null) {
-            crfTrainerByLabelLikelihood.setUseSparseWeights(this.useSparseWeights);
-        }
-        if (this.useHyperbolicPrior != null) {
-            crfTrainerByLabelLikelihood.setUseHyperbolicPrior(this.useHyperbolicPrior);
-        }
+        for (Configuration configuration : this.configurations.getConfigurations()) {
+            switch (configuration.getName()) {
 
+            case GAUSSIAN_PRIOR_VARIANCE:
+                crfTrainerByLabelLikelihood.setGaussianPriorVariance(configuration.getDoubleValue());
+                break;
+            case HYPERBOLIC_PRIOR_SHARPNESS:
+                crfTrainerByLabelLikelihood.setHyperbolicPriorSharpness(configuration.getDoubleValue());
+                break;
+            case HYPERBOLIC_PRIOR_SLOPE:
+                crfTrainerByLabelLikelihood.setHyperbolicPriorSlope(configuration.getDoubleValue());
+                break;
+            case USE_SPARSE_WEIGHTS:
+                crfTrainerByLabelLikelihood.setUseSparseWeights(configuration.getBooleanValue());
+                break;
+            case USE_HYPERBOLIC_PRIOR:
+                crfTrainerByLabelLikelihood.setUseHyperbolicPrior(configuration.getBooleanValue());
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "configuration not valid for CRFTrainerByLabelLikelihood: " + configuration.getName());
+
+            }
+        }
         return crfTrainerByLabelLikelihood;
     }
 

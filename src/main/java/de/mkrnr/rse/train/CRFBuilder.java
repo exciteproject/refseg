@@ -4,7 +4,7 @@ import cc.mallet.fst.CRF;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.types.InstanceList;
 
-public class CRFBuilder {
+public class CRFBuilder extends ConfigurableBuilder {
     private boolean addStatesForThreeQuarterLabelsConnected;
     private Pipe inputPipe;
     private Pipe outputPipe;
