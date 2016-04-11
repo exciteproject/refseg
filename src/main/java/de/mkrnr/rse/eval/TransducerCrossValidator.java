@@ -107,7 +107,7 @@ public class TransducerCrossValidator {
         return folds;
     }
 
-    public TransducerEvaluations validate(List<Fold> folds, Pipe inputPipe) {
+    public TransducerEvaluations validate(List<Fold> folds, Pipe inputPipe, boolean evaluateDuringTraining) {
         TransducerEvaluations transducerEvaluations = new TransducerEvaluations();
         for (Fold fold : folds) {
             System.out.println("Run evaluation on:");
@@ -121,7 +121,7 @@ public class TransducerCrossValidator {
             InstanceList testingInstances = InstanceListBuilder.build(testingFile, inputPipe);
 
             TransducerTrainer transducerTrainer = this.transducerTrainerFactory.getTransducerTrainer(trainingInstances,
-                    testingInstances, true);
+                    testingInstances, evaluateDuringTraining);
             transducerTrainer.train(trainingInstances);
 
             StructuredTransducerEvaluator structuredTransducerEvaluator = this.structuredTransducerEvaluatorFactory

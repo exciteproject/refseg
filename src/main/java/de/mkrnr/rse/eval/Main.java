@@ -47,6 +47,10 @@ public class Main {
             "--create-folds" }, description = "New folds are created if set, otherwise existing folds are loaded")
     private boolean create = false;
 
+    @Parameter(names = { "-log-eval",
+            "--log-eval-during-training" }, description = "logs information about precision, recall, and f1 scores during training")
+    private boolean evaluateDuringTraining = false;
+
     @Parameter(names = { "-eval",
             "--evaluation-dir" }, description = "directory in which the evaluation results are stored and which contains the folds directory", required = true, converter = FileConverter.class)
     private File evaluationDirectory;
@@ -117,7 +121,8 @@ public class Main {
         }
 
         // evaluate folds
-        TransducerEvaluations transducerEvaluations = crossValidator.validate(folds, serialPipes);
+        TransducerEvaluations transducerEvaluations = crossValidator.validate(folds, serialPipes,
+                this.evaluateDuringTraining);
 
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
