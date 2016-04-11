@@ -1,19 +1,11 @@
 package de.mkrnr.rse.eval;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import de.mkrnr.rse.util.JsonHelper;
-
-public class Evaluations {
-
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-
-    }
+public abstract class Evaluations {
 
     private List<Evaluation> evaluations;
 
@@ -25,7 +17,7 @@ public class Evaluations {
         this.evaluations.add(evaluation);
     }
 
-    public void writeAggregatedResults(File outputFile) {
+    protected TreeMap<String, Double> getAggregatedResults() {
         TreeMap<String, List<Double>> aggregatedResults = new TreeMap<String, List<Double>>();
 
         for (Evaluation evaluation : this.evaluations) {
@@ -54,15 +46,15 @@ public class Evaluations {
             }
         }
 
-        JsonHelper.writeToFile(resultMeans, outputFile);
+        return resultMeans;
     }
 
-    public void writeEvaluations(File outputFile) {
+    protected TreeMap<String, TreeMap<String, Double>> getEvaluationsMap() {
 
         TreeMap<String, TreeMap<String, Double>> aggregatedEvaluations = new TreeMap<String, TreeMap<String, Double>>();
         for (Evaluation evaluation : this.evaluations) {
             aggregatedEvaluations.put(evaluation.getName(), evaluation.getEvaluationResults());
         }
-        JsonHelper.writeToFile(aggregatedEvaluations, outputFile);
+        return aggregatedEvaluations;
     }
 }

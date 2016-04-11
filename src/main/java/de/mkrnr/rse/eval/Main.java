@@ -1,6 +1,9 @@
 package de.mkrnr.rse.eval;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import com.beust.jcommander.JCommander;
@@ -114,10 +117,13 @@ public class Main {
         }
 
         // evaluate folds
-        Evaluations evaluations = crossValidator.validate(folds, serialPipes);
+        TransducerEvaluations transducerEvaluations = crossValidator.validate(folds, serialPipes);
 
-        evaluations.writeEvaluations(new File(this.evaluationDirectory + File.separator + "evaluations" + ".json"));
-        evaluations
-                .writeAggregatedResults(new File(this.evaluationDirectory + File.separator + "aggregated" + ".json"));
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+
+        String dateAndTime = df.format(new Date());
+        transducerEvaluations.writeStatistics(
+                new File(this.evaluationDirectory + File.separator + "results-" + dateAndTime + ".json"),
+                this.crfConfigurations, this.transducerTrainerConfigurations);
     }
 }

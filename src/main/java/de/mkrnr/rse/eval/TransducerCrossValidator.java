@@ -107,8 +107,8 @@ public class TransducerCrossValidator {
         return folds;
     }
 
-    public Evaluations validate(List<Fold> folds, Pipe inputPipe) {
-        Evaluations evaluations = new Evaluations();
+    public TransducerEvaluations validate(List<Fold> folds, Pipe inputPipe) {
+        TransducerEvaluations transducerEvaluations = new TransducerEvaluations();
         for (Fold fold : folds) {
             System.out.println("Run evaluation on:");
             fold.printFoldInformation();
@@ -130,10 +130,10 @@ public class TransducerCrossValidator {
             Evaluation evaluation = structuredTransducerEvaluator.getEvaluation();
             evaluation.setName(fold.getName());
 
-            evaluations.addEvaluation(evaluation);
+            transducerEvaluations.addEvaluation(evaluation);
 
         }
-        return evaluations;
+        return transducerEvaluations;
     }
 
     private File getTempFile(String filePrefix) {
