@@ -57,32 +57,37 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
             Double precision = ((double) numCorrectTokens[i]) / numPredTokens[i];
             Double recall = ((double) numCorrectTokens[i]) / numTrueTokens[i];
 
-            if (Double.isNaN(precision)) {
-                // cases: numTrueTokens>0: precision = 0 since no token was
+            if (precision.isNaN()) {
+                // case 1: numTrueTokens>0: precision = 0 since no token was
                 // found
-                // numTrueTokens=0: ignore
-                // the result
                 if (numTrueTokens[i] > 0) {
                     precision = 0.0;
                 }
+                // case 2: numTrueTokens=0: ignore
+                // the result (leave it NaN)
+            }
+
+            if (recall.isNaN()) {
+                // case 1: numPredTokens>0: recall = 0 since the recall is zero
+                // for the found tokens
+                if (numPredTokens[i] > 0) {
+                    recall = 0.0;
+                }
+                // case 2: numPredTokens=0: ignore
+                // the result (leave it NaN)
             }
 
             Double f1 = (2 * precision * recall) / (precision + recall);
 
             if (f1.isNaN()) {
-                if (!precision.isNaN() && !recall.isNaN()) {
+                if ((precision == 0.0) && (recall == 0.0)) {
                     f1 = 0.0;
                 }
             }
             if (!f1.isNaN()) {
-                // only happens when recall=NaN and precision = NaN
+                // only happens when recall>=0 and precision>=0
                 allF1.add(f1);
             }
-
-            // if (recall.isNaN()) {
-            // //either recall recall = 1 (kind grader) or ignore result
-            // //recall = 0.0;
-            // }
 
             if (!precision.isNaN()) {
                 this.evaluation.addEvaluationResult(label + " precision", precision);
