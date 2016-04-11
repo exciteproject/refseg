@@ -128,7 +128,7 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
         if (!totalPrecision.isNaN()) {
             this.evaluation.addEvaluationResult("total precision ", totalPrecision);
         }
-        if (!totalPrecision.isNaN()) {
+        if (!totalRecall.isNaN()) {
             this.evaluation.addEvaluationResult("total recall ", totalRecall);
         }
         if (!totalF1.isNaN()) {
