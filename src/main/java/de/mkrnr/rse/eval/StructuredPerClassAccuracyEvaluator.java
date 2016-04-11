@@ -123,13 +123,19 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
             this.evaluation.addEvaluationResult("mean f1 ", f1Mean);
         }
 
-        double totalPrecision = ((double) totalNumCorrectTokens) / totalNumPredTokens;
-        double totalRecall = ((double) totalNumCorrectTokens) / totalNumTrueTokens;
+        Double totalPrecision = ((double) totalNumCorrectTokens) / totalNumPredTokens;
+        Double totalRecall = ((double) totalNumCorrectTokens) / totalNumTrueTokens;
+        Double totalF1 = (2 * totalPrecision * totalRecall) / (totalPrecision + totalRecall);
 
-        double totalF1 = (2 * totalPrecision * totalRecall) / (totalPrecision + totalRecall);
-        this.evaluation.addEvaluationResult("total precision ", totalPrecision);
-        this.evaluation.addEvaluationResult("total recall ", totalRecall);
-        this.evaluation.addEvaluationResult("total f1 ", totalF1);
+        if (!totalPrecision.isNaN()) {
+            this.evaluation.addEvaluationResult("total precision ", totalPrecision);
+        }
+        if (!totalPrecision.isNaN()) {
+            this.evaluation.addEvaluationResult("total recall ", totalRecall);
+        }
+        if (!totalF1.isNaN()) {
+            this.evaluation.addEvaluationResult("total f1 ", totalF1);
+        }
 
     }
 }
