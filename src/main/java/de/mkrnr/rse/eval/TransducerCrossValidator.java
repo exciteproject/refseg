@@ -32,21 +32,12 @@ public class TransducerCrossValidator {
     public Folds loadFolds(File foldsFile) {
         Folds folds = new Folds();
 
-        // File[] seralizedFoldFiles = foldsDirectory.listFiles();
-        // Arrays.sort(seralizedFoldFiles);
-        //
-        // for (File serializedFoldFile : seralizedFoldFiles) {
-        // folds.add((Fold) JsonHelper.readFromFile(Fold.class,
-        // serializedFoldFile));
-        // }
-
         folds = (Folds) JsonHelper.readFromFile(Folds.class, foldsFile);
+
         return folds;
     }
 
     public void saveFolds(Folds folds, File outputFile) {
-        // delete existing directory and create new one
-
         JsonHelper.writeToFile(folds, outputFile);
     }
 
@@ -144,7 +135,4 @@ public class TransducerCrossValidator {
         tempFile.deleteOnExit();
         return tempFile;
     }
-
-    // TODO aggregate results
-
 }
