@@ -33,6 +33,7 @@ public class FeaturePipeProviderTest {
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         featurePipeProvider = new FeaturePipeProvider(null, null);
+        featurePipeProvider = new FeaturePipeProvider();
     }
 
     @AfterClass
@@ -42,62 +43,6 @@ public class FeaturePipeProviderTest {
     private ArrayList<String> testStrings;
 
     private ArrayList<Boolean> expectedResults;
-
-    private void checkResults(String result, String featureName) {
-        String[] resultSplit = result.split("\\n");
-
-        for (int i = 0; i < resultSplit.length; i++) {
-            Assert.assertEquals(this.expectedResults.get(i).booleanValue(), resultSplit[i].contains(featureName));
-        }
-    }
-
-    private String createTestString() {
-        String inputString = "";
-        for (String testString : this.testStrings) {
-            inputString += testString + "\n";
-        }
-        inputString = inputString.replaceFirst("\n$", "");
-        return inputString;
-    }
-
-    private String runPipe(String featureName) {
-        // create testString
-        String testString = this.createTestString();
-
-        // set pipes
-        Pipe featurePipe = featurePipeProvider.getPipe(featureName);
-
-        ArrayList<Pipe> pipes = new ArrayList<Pipe>();
-
-        pipes.add(new Input2CharSequence("UTF-8"));
-        pipes.add(new SimpleTaggerSentence2TokenSequence());
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        PrintStream printStream = new PrintStream(byteArrayOutputStream);
-        pipes.add(featurePipe);
-        pipes.add(new TokenSequence2FeatureVectorSequence());
-        pipes.add(new PrintInput(printStream));
-
-        InstanceList instanceList = new InstanceList(new SerialPipes(pipes));
-        instanceList.addThruPipe(
-                new LineGroupIterator(new BufferedReader(new InputStreamReader(IOUtils.toInputStream(testString))),
-                        Pattern.compile("^\\s*$"), true));
-        String output = "";
-        try {
-            output = byteArrayOutputStream.toString("UTF8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        // remove line with class name
-        output = output.replaceFirst(".*\\n", "");
-        return output;
-
-    }
-
-    private void setTest(String testString, boolean expectedResult) {
-        this.testStrings.add(testString);
-        this.expectedResults.add(expectedResult);
-    }
 
     @Before
     public void setUp() throws Exception {
@@ -438,5 +383,61 @@ public class FeaturePipeProviderTest {
         String results = this.runPipe(featureName);
 
         this.checkResults(results, featureName);
+    }
+
+    private void checkResults(String result, String featureName) {
+        String[] resultSplit = result.split("\\n");
+
+        for (int i = 0; i < resultSplit.length; i++) {
+            Assert.assertEquals(this.expectedResults.get(i).booleanValue(), resultSplit[i].contains(featureName));
+        }
+    }
+
+    private String createTestString() {
+        String inputString = "";
+        for (String testString : this.testStrings) {
+            inputString += testString + "\n";
+        }
+        inputString = inputString.replaceFirst("\n$", "");
+        return inputString;
+    }
+
+    private String runPipe(String featureName) {
+        // create testString
+        String testString = this.createTestString();
+
+        // set pipes
+        Pipe featurePipe = featurePipeProvider.getPipe(featureName);
+
+        ArrayList<Pipe> pipes = new ArrayList<Pipe>();
+
+        pipes.add(new Input2CharSequence("UTF-8"));
+        pipes.add(new SimpleTaggerSentence2TokenSequence());
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        PrintStream printStream = new PrintStream(byteArrayOutputStream);
+        pipes.add(featurePipe);
+        pipes.add(new TokenSequence2FeatureVectorSequence());
+        pipes.add(new PrintInput(printStream));
+
+        InstanceList instanceList = new InstanceList(new SerialPipes(pipes));
+        instanceList.addThruPipe(
+                new LineGroupIterator(new BufferedReader(new InputStreamReader(IOUtils.toInputStream(testString))),
+                        Pattern.compile("^\\s*$"), true));
+        String output = "";
+        try {
+            output = byteArrayOutputStream.toString("UTF8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        // remove line with class name
+        output = output.replaceFirst(".*\\n", "");
+        return output;
+
+    }
+
+    private void setTest(String testString, boolean expectedResult) {
+        this.testStrings.add(testString);
+        this.expectedResults.add(expectedResult);
     }
 }

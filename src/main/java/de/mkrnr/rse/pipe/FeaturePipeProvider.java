@@ -17,6 +17,10 @@ public class FeaturePipeProvider {
     private File firstNameFile;
     private File lastNameFile;
 
+    public FeaturePipeProvider() {
+        this.createFeaturePipes();
+    }
+
     public FeaturePipeProvider(File firstNameFile, File lastNameFile) {
         this.firstNameFile = firstNameFile;
         this.lastNameFile = lastNameFile;
@@ -87,11 +91,15 @@ public class FeaturePipeProvider {
         // TODO add DATE
 
         // add firstname and lastname pipes
-        String firstNamePipeLabel = "FIRSTNAME";
-        this.featurePipes.put(firstNamePipeLabel, new NamePipe(firstNamePipeLabel, this.firstNameFile));
+        if (this.firstNameFile != null) {
+            String firstNamePipeLabel = "FIRSTNAME";
+            this.featurePipes.put(firstNamePipeLabel, new NamePipe(firstNamePipeLabel, this.firstNameFile));
+        }
 
-        String lastNamePipeLabel = "LASTNAME";
-        this.featurePipes.put(lastNamePipeLabel, new NamePipe(lastNamePipeLabel, this.lastNameFile));
+        if (this.lastNameFile != null) {
+            String lastNamePipeLabel = "LASTNAME";
+            this.featurePipes.put(lastNamePipeLabel, new NamePipe(lastNamePipeLabel, this.lastNameFile));
+        }
 
     }
 
