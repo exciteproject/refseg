@@ -91,6 +91,9 @@ public class GNDAuthorExtractor {
     private void addNamesToMap(String names, HashMap<String, Integer> map) {
         String[] namesSplit = names.split(" ");
         for (String name : namesSplit) {
+            if (name.length() < 2) {
+                continue;
+            }
             if (map.containsKey(name)) {
                 map.put(name, map.get(name) + 1);
             } else {

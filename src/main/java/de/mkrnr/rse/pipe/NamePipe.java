@@ -44,7 +44,9 @@ public class NamePipe extends Pipe implements Serializable {
             BufferedReader lastNameFileReader = new BufferedReader(new FileReader(lastNameFile));
             String line;
             while ((line = lastNameFileReader.readLine()) != null) {
-                this.lastNames.add(line.trim());
+                // removes the name counts
+                String[] lineSplit = line.split("\t");
+                this.lastNames.add(lineSplit[0].trim());
             }
             lastNameFileReader.close();
 
@@ -66,6 +68,7 @@ public class NamePipe extends Pipe implements Serializable {
             for (String tokenPart : tokenSplit) {
                 String normalizedTokenPart = tokenPart.replaceAll("[^\\p{L}]", "");
                 if ((normalizedTokenPart.length() > 0) && this.lastNames.contains(normalizedTokenPart)) {
+                    // TODO add name counts as featureValue
                     token.setFeatureValue(this.featureName, 1.0);
                 }
             }

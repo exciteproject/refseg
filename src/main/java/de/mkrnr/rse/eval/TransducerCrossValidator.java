@@ -6,14 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 
-import cc.mallet.fst.CRFTrainerByLabelLikelihood;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.types.InstanceList;
 import de.mkrnr.rse.train.TransducerTrainerFactory;
-import de.mkrnr.rse.util.FileHelper;
 import de.mkrnr.rse.util.FileMerger;
 import de.mkrnr.rse.util.InstanceListBuilder;
 import de.mkrnr.rse.util.JsonHelper;
@@ -32,26 +29,25 @@ public class TransducerCrossValidator {
 
     }
 
-    public List<Fold> loadFolds(File foldsDirectory) {
-        List<Fold> folds = new ArrayList<Fold>();
+    public Folds loadFolds(File foldsFile) {
+        Folds folds = new Folds();
 
-        File[] seralizedFoldFiles = foldsDirectory.listFiles();
-        Arrays.sort(seralizedFoldFiles);
+        // File[] seralizedFoldFiles = foldsDirectory.listFiles();
+        // Arrays.sort(seralizedFoldFiles);
+        //
+        // for (File serializedFoldFile : seralizedFoldFiles) {
+        // folds.add((Fold) JsonHelper.readFromFile(Fold.class,
+        // serializedFoldFile));
+        // }
 
-        for (File serializedFoldFile : seralizedFoldFiles) {
-            folds.add((Fold) JsonHelper.readFromFile(Fold.class, serializedFoldFile));
-        }
+        folds = (Folds) JsonHelper.readFromFile(Folds.class, foldsFile);
         return folds;
     }
 
-    public void saveFolds(List<Fold> folds, File outputDirectory) {
+    public void saveFolds(Folds folds, File outputFile) {
         // delete existing directory and create new one
-        FileHelper.resetDirectory(outputDirectory);
 
-        for (Fold fold : folds) {
-            JsonHelper.writeToFile(fold,
-                    new File(outputDirectory.getAbsolutePath() + File.separator + fold.getName() + ".json"));
-        }
+        JsonHelper.writeToFile(folds, outputFile);
     }
 
     /**
@@ -63,7 +59,7 @@ public class TransducerCrossValidator {
      * @param numberOfFolds
      *            Number of folds
      */
-    public List<Fold> splitIntoFolds(File inputDirectory, int numberOfFolds) {
+    public Folds splitIntoFolds(File inputDirectory, int numberOfFolds) {
 
         File[] allFiles = inputDirectory.listFiles();
         ArrayList<File> remainingFiles = new ArrayList<File>(Arrays.asList(inputDirectory.listFiles()));
@@ -75,7 +71,7 @@ public class TransducerCrossValidator {
         // shuffle files
         Collections.shuffle(remainingFiles);
 
-        ArrayList<Fold> folds = new ArrayList<Fold>();
+        Folds folds = new Folds();
 
         for (int foldIndex = 0; foldIndex < numberOfFolds; foldIndex++) {
 
@@ -108,9 +104,9 @@ public class TransducerCrossValidator {
         return folds;
     }
 
-    public TransducerEvaluations validate(List<Fold> folds, Pipe inputPipe, boolean evaluateDuringTraining) {
+    public TransducerEvaluations validate(Folds folds, Pipe inputPipe, boolean evaluateDuringTraining) {
         TransducerEvaluations transducerEvaluations = new TransducerEvaluations();
-        for (Fold fold : folds) {
+        for (Fold fold : folds.asList()) {
             System.out.println("Run evaluation on:");
             fold.printFoldInformation();
 
@@ -123,15 +119,7 @@ public class TransducerCrossValidator {
 
             TransducerTrainer transducerTrainer = this.transducerTrainerFactory.getTransducerTrainer(trainingInstances,
                     testingInstances, evaluateDuringTraining);
-
-            // relatively dirty fix to increase training speed for
-            // crfTrainerByLabelLikelihood
-            if (transducerTrainer.getClass().equals(CRFTrainerByLabelLikelihood.class)) {
-                CRFTrainerByLabelLikelihood crfTrainerByLabelLikelihood = (CRFTrainerByLabelLikelihood) transducerTrainer;
-                crfTrainerByLabelLikelihood.train(trainingInstances, Integer.MAX_VALUE, new double[] { 0.2, 0.5, 1.0 });
-            } else {
-                transducerTrainer.train(trainingInstances);
-            }
+            transducerTrainer.train(trainingInstances);
 
             StructuredTransducerEvaluator structuredTransducerEvaluator = this.structuredTransducerEvaluatorFactory
                     .getStructuredTransducerEvaluator(testingInstances, "testing", this.otherLabel);

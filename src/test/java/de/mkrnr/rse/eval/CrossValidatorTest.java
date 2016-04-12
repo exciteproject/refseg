@@ -2,7 +2,6 @@ package de.mkrnr.rse.eval;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -54,8 +53,7 @@ public class CrossValidatorTest {
 
         this.generateFiles(numberOfFiles);
 
-        ArrayList<Fold> folds = new ArrayList<Fold>(
-                this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds));
+        Folds folds = this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds);
 
         this.evaluateFolds(folds, numberOfFolds, numberOfFiles);
     }
@@ -67,8 +65,7 @@ public class CrossValidatorTest {
 
         this.generateFiles(numberOfFiles);
 
-        ArrayList<Fold> folds = new ArrayList<Fold>(
-                this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds));
+        Folds folds = this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds);
 
         this.evaluateFolds(folds, numberOfFolds, numberOfFiles);
     }
@@ -80,8 +77,7 @@ public class CrossValidatorTest {
 
         this.generateFiles(numberOfFiles);
 
-        ArrayList<Fold> folds = new ArrayList<Fold>(
-                this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds));
+        Folds folds = this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds);
 
         this.evaluateFolds(folds, numberOfFolds, numberOfFiles);
     }
@@ -93,17 +89,17 @@ public class CrossValidatorTest {
 
         this.generateFiles(numberOfFiles);
 
-        new ArrayList<Fold>(this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds));
+        this.crossValidator.splitIntoFolds(this.testInputDirectory, numberOfFolds);
     }
 
-    private void evaluateFolds(ArrayList<Fold> folds, int numberOfFolds, int numberOfFiles) {
-        Assert.assertEquals(numberOfFolds, folds.size());
+    private void evaluateFolds(Folds folds, int numberOfFolds, int numberOfFiles) {
+        Assert.assertEquals(numberOfFolds, folds.asList().size());
 
         int minTestingFilesInFold = numberOfFiles / numberOfFolds;
         int maxTestingFilesInFold = (int) Math.ceil(((double) numberOfFiles) / numberOfFolds);
 
         int numberOfTotalTestingFiles = 0;
-        for (Fold fold : folds) {
+        for (Fold fold : folds.asList()) {
             int testingFilesInFold = fold.getTestingFiles().size();
             int trainingFilesInFold = fold.getTrainingFiles().size();
 

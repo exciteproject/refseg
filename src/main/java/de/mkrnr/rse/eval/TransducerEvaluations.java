@@ -9,12 +9,13 @@ import de.mkrnr.rse.util.JsonHelper;
 
 public class TransducerEvaluations extends Evaluations {
     public void writeStatistics(File outputFile, List<Configuration> crfConfigurations,
-            List<Configuration> transducerTrainerConfigurations) {
+            List<Configuration> transducerTrainerConfigurations, Folds folds) {
         LinkedHashMap<String, Object> statisticsMap = new LinkedHashMap<String, Object>();
         statisticsMap.put("aggregated", this.getAggregatedResults());
         statisticsMap.put("crfConfiguration", crfConfigurations);
         statisticsMap.put("transducerTrainerConfiguration", transducerTrainerConfigurations);
         statisticsMap.put("evaluations", this.getEvaluationsMap());
+        statisticsMap.put("folds", folds.asList());
 
         JsonHelper.writeToFile(statisticsMap, outputFile);
     }

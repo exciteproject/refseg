@@ -14,15 +14,12 @@ public class FeaturePipeProvider {
     }
 
     private HashMap<String, Pipe> featurePipes;
+    private File firstNameFile;
+    private File lastNameFile;
 
     public FeaturePipeProvider(File firstNameFile, File lastNameFile) {
-        // String firstNamePipeLabel = "FIRSTNAME";
-        // this.featurePipes.put(firstNamePipeLabel, new
-        // NamePipe(firstNamePipeLabel, firstNameFile));
-
-        // String lastNamePipeLabel = "LASTNAME";
-        // this.featurePipes.put(lastNamePipeLabel, new
-        // NamePipe(lastNamePipeLabel, lastNameFile));
+        this.firstNameFile = firstNameFile;
+        this.lastNameFile = lastNameFile;
 
         this.createFeaturePipes();
     }
@@ -88,6 +85,13 @@ public class FeaturePipeProvider {
         this.addRegexPipe("YEAR", "\\D*(1[6-9][0-9][0-9]|20[0-" + decadeNumber + "][0-" + yearNumber + "])\\D*");
 
         // TODO add DATE
+
+        // add firstname and lastname pipes
+        String firstNamePipeLabel = "FIRSTNAME";
+        this.featurePipes.put(firstNamePipeLabel, new NamePipe(firstNamePipeLabel, this.firstNameFile));
+
+        String lastNamePipeLabel = "LASTNAME";
+        this.featurePipes.put(lastNamePipeLabel, new NamePipe(lastNamePipeLabel, this.lastNameFile));
 
     }
 

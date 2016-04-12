@@ -67,6 +67,14 @@ public class Main {
             "--input-dir" }, description = "input directory containing preprocessed text files for MALLET evaluation", required = true, converter = FileConverter.class)
     private File inputDirectory;
 
+    @Parameter(names = { "-first-names",
+            "--first-names-file" }, description = "file containing first names and counts, separated by tab", required = true, converter = FileConverter.class)
+    private File firstNameFile;
+
+    @Parameter(names = { "-last-names",
+            "--last-names-file" }, description = "file containing last names and counts, separated by tab", required = true, converter = FileConverter.class)
+    private File lastNameFile;
+
     @Parameter(names = { "-folds",
             "--number-of-folds" }, description = "number of folds for cross validation", required = true)
     private Integer numberOfFolds;
@@ -85,7 +93,7 @@ public class Main {
 
     private void run() {
 
-        FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
+        FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(this.firstNameFile, this.lastNameFile);
 
         SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
 
@@ -110,15 +118,15 @@ public class Main {
         TransducerCrossValidator crossValidator = new TransducerCrossValidator(transducerTrainerFactory,
                 structuredTransducerEvaluatorFactory, this.otherLabel);
 
-        File foldsDirectory = new File(this.evaluationDirectory + File.separator + "folds");
+        File foldsFile = new File(this.evaluationDirectory + File.separator + "folds.json");
 
         // create/load folds
-        List<Fold> folds = null;
+        Folds folds = null;
         if (this.create) {
             folds = crossValidator.splitIntoFolds(this.inputDirectory, this.numberOfFolds);
-            crossValidator.saveFolds(folds, foldsDirectory);
+            crossValidator.saveFolds(folds, foldsFile);
         } else {
-            folds = crossValidator.loadFolds(foldsDirectory);
+            folds = crossValidator.loadFolds(foldsFile);
         }
 
         // evaluate folds
@@ -130,6 +138,6 @@ public class Main {
         String dateAndTime = df.format(new Date());
         transducerEvaluations.writeStatistics(
                 new File(this.evaluationDirectory + File.separator + "results-" + dateAndTime + ".json"),
-                this.crfConfigurations, this.transducerTrainerConfigurations);
+                this.crfConfigurations, this.transducerTrainerConfigurations, folds);
     }
 }
