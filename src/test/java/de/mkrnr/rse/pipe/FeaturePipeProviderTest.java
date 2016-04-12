@@ -55,6 +55,35 @@ public class FeaturePipeProviderTest {
     }
 
     @Test
+    public void testAllCaps() {
+        String featureName = "ALLCAPS";
+
+        this.setTest("TEST", true);
+        this.setTest("T", true);
+        this.setTest("ÖSTLICH", true);
+        this.setTest("Ö", true);
+        this.setTest("T!ST", true);
+        this.setTest("T.S.", true);
+        this.setTest("T.S", true);
+
+        this.setTest("test", false);
+        this.setTest("Test", false);
+        this.setTest("t", false);
+        this.setTest("Östlich", false);
+        this.setTest("ö", false);
+        this.setTest("1eST", false);
+        this.setTest(".tEST", false);
+        this.setTest(".", false);
+        this.setTest("!.", false);
+        this.setTest("1234", false);
+        this.setTest("_", false);
+
+        String results = this.runPipe(featureName);
+
+        this.checkResults(results, featureName);
+    }
+
+    @Test
     public void testBraces() {
         String featureName = "BRACES";
 
