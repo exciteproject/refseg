@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import cc.mallet.fst.CRFTrainerByLabelLikelihood;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.types.InstanceList;
@@ -122,7 +123,15 @@ public class TransducerCrossValidator {
 
             TransducerTrainer transducerTrainer = this.transducerTrainerFactory.getTransducerTrainer(trainingInstances,
                     testingInstances, evaluateDuringTraining);
-            transducerTrainer.train(trainingInstances);
+
+            // relatively dirty fix to increase training speed for
+            // crfTrainerByLabelLikelihood
+            if (transducerTrainer.getClass().equals(CRFTrainerByLabelLikelihood.class)) {
+                CRFTrainerByLabelLikelihood crfTrainerByLabelLikelihood = (CRFTrainerByLabelLikelihood) transducerTrainer;
+                crfTrainerByLabelLikelihood.train(trainingInstances, Integer.MAX_VALUE, new double[] { 0.2, 0.5, 1.0 });
+            } else {
+                transducerTrainer.train(trainingInstances);
+            }
 
             StructuredTransducerEvaluator structuredTransducerEvaluator = this.structuredTransducerEvaluatorFactory
                     .getStructuredTransducerEvaluator(testingInstances, "testing", this.otherLabel);
