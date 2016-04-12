@@ -3,6 +3,7 @@ package de.mkrnr.rse.eval;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -75,8 +76,8 @@ public class Main {
     private List<Configuration> crfConfigurations;
 
     @Parameter(names = { "-trainer",
-            "--trainer-configurations" }, description = "list of key=value for configuring the trainer building", variableArity = true, required = true, converter = ConfigurationConverter.class)
-    private List<Configuration> transducerTrainerConfigurations;
+            "--trainer-configurations" }, description = "list of key=value for configuring the trainer building", variableArity = true, converter = ConfigurationConverter.class)
+    private List<Configuration> transducerTrainerConfigurations = new ArrayList<Configuration>();
 
     @Parameter(names = { "-other",
             "--other-label" }, description = "label that is used to specitfy other instances in the training set")
