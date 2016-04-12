@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.HashMap;
 
 import cc.mallet.pipe.Pipe;
 import cc.mallet.types.Instance;
@@ -27,26 +27,37 @@ public class NamePipe extends Pipe implements Serializable {
 
     private String featureName;
 
-    private HashSet<String> lastNames;
+    private HashMap<String, Integer> nameCountMap;
+
+    private Integer maxCount;
 
     /**
      *
      * @param featureName
      *            the label that is used when a last name was detected
-     * @param lastNameFile
-     *            a file containing one last name per line
+     * @param nameFile
+     *            a file containing per line: name tab count
      */
-    public NamePipe(String featureName, File lastNameFile) {
+    public NamePipe(String featureName, File nameFile) {
         this.featureName = featureName;
 
-        this.lastNames = new HashSet<String>();
+        this.nameCountMap = new HashMap<String, Integer>();
         try {
-            BufferedReader lastNameFileReader = new BufferedReader(new FileReader(lastNameFile));
+            BufferedReader lastNameFileReader = new BufferedReader(new FileReader(nameFile));
             String line;
+            this.maxCount = 0;
             while ((line = lastNameFileReader.readLine()) != null) {
                 // removes the name counts
                 String[] lineSplit = line.split("\t");
-                this.lastNames.add(lineSplit[0].trim());
+                if (lineSplit.length != 2) {
+                    lastNameFileReader.close();
+                    throw new IllegalStateException("line is in wrong format: " + line);
+                }
+                Integer currentCount = Integer.valueOf(lineSplit[1]);
+                if (currentCount > this.maxCount) {
+                    this.maxCount = currentCount;
+                }
+                this.nameCountMap.put(lineSplit[0].trim(), currentCount);
             }
             lastNameFileReader.close();
 
@@ -67,9 +78,8 @@ public class NamePipe extends Pipe implements Serializable {
             String[] tokenSplit = token.getText().trim().split("\\s");
             for (String tokenPart : tokenSplit) {
                 String normalizedTokenPart = tokenPart.replaceAll("[^\\p{L}]", "");
-                if ((normalizedTokenPart.length() > 0) && this.lastNames.contains(normalizedTokenPart)) {
-                    // TODO add name counts as featureValue
-                    token.setFeatureValue(this.featureName, 1.0);
+                if ((normalizedTokenPart.length() > 0) && this.nameCountMap.containsKey((normalizedTokenPart))) {
+                    token.setFeatureValue(this.featureName, Math.log1p(this.nameCountMap.get(normalizedTokenPart)));
                 }
             }
         }
