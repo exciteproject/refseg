@@ -27,9 +27,7 @@ public class NamePipe extends Pipe implements Serializable {
 
     private String featureName;
 
-    private HashMap<String, Integer> nameCountMap;
-
-    private Integer maxCount;
+    private HashMap<String, Double> nameCountMap;
 
     /**
      *
@@ -41,11 +39,10 @@ public class NamePipe extends Pipe implements Serializable {
     public NamePipe(String featureName, File nameFile) {
         this.featureName = featureName;
 
-        this.nameCountMap = new HashMap<String, Integer>();
+        this.nameCountMap = new HashMap<String, Double>();
         try {
             BufferedReader lastNameFileReader = new BufferedReader(new FileReader(nameFile));
             String line;
-            this.maxCount = 0;
             while ((line = lastNameFileReader.readLine()) != null) {
                 // removes the name counts
                 String[] lineSplit = line.split("\t");
@@ -54,10 +51,8 @@ public class NamePipe extends Pipe implements Serializable {
                     throw new IllegalStateException("line is in wrong format: " + line);
                 }
                 Integer currentCount = Integer.valueOf(lineSplit[1]);
-                if (currentCount > this.maxCount) {
-                    this.maxCount = currentCount;
-                }
-                this.nameCountMap.put(lineSplit[0].trim(), currentCount);
+                double featureValue = Math.log1p(currentCount);
+                this.nameCountMap.put(lineSplit[0].trim(), featureValue);
             }
             lastNameFileReader.close();
 
@@ -79,7 +74,7 @@ public class NamePipe extends Pipe implements Serializable {
             for (String tokenPart : tokenSplit) {
                 String normalizedTokenPart = tokenPart.replaceAll("[^\\p{L}]", "");
                 if ((normalizedTokenPart.length() > 0) && this.nameCountMap.containsKey((normalizedTokenPart))) {
-                    token.setFeatureValue(this.featureName, Math.log1p(this.nameCountMap.get(normalizedTokenPart)));
+                    token.setFeatureValue(this.featureName, this.nameCountMap.get(normalizedTokenPart));
                 }
             }
         }
