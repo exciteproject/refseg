@@ -30,11 +30,7 @@ public class TransducerCrossValidator {
     }
 
     public Folds loadFolds(File foldsFile) {
-        Folds folds = new Folds();
-
-        folds = (Folds) JsonHelper.readFromFile(Folds.class, foldsFile);
-
-        return folds;
+        return (Folds) JsonHelper.readFromFile(Folds.class, foldsFile);
     }
 
     public void saveFolds(Folds folds, File outputFile) {
