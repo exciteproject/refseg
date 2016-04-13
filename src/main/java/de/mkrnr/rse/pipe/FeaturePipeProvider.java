@@ -45,8 +45,11 @@ public class FeaturePipeProvider {
 
         // add featurePipes that use a RegexPipe
 
-        // matches tokens where the first letter is capitalized
-        this.addRegexPipe("ALLCAPS", "([^\\p{L}]*\\p{Lu}+[^\\p{L}]*)+");
+        // matches tokens where all letters are lower cased
+        this.addRegexPipe("ALLLOWERCASE", "([^\\p{L}]*\\p{javaLowerCase}+[^\\p{L}]*)+");
+
+        // matches tokens where all letters are capitalized
+        this.addRegexPipe("ALLCAPS", "([^\\p{L}]*\\p{javaUpperCase}+[^\\p{L}]*)+");
 
         // matches tokens where the first letter is capitalized
         this.addRegexPipe("CAPITALIZED", "[^\\p{L}]*\\p{Lu}.*");
