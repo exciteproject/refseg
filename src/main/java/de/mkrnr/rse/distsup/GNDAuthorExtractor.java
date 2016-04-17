@@ -1,4 +1,4 @@
-package de.mkrnr.rse.preproc;
+package de.mkrnr.rse.distsup;
 
 import java.io.BufferedWriter;
 import java.io.File;

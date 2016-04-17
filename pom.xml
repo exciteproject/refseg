@@ -93,5 +93,10 @@
       <artifactId>jcommander</artifactId>
       <version>1.48</version>
     </dependency>
+    <dependency>
+      <groupId>org.ahocorasick</groupId>
+      <artifactId>ahocorasick</artifactId>
+      <version>0.3.0</version>
+    </dependency>
   </dependencies>
 </project>
