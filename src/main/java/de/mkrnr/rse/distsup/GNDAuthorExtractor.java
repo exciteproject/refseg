@@ -30,11 +30,11 @@ public class GNDAuthorExtractor {
      *            output file for surnames
      */
     public static void main(String[] args) {
-        File tdbDirectory = new File(args[0]);
-        GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor(tdbDirectory);
+	File tdbDirectory = new File(args[0]);
+	GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor(tdbDirectory);
 
-        gndAuthorExtractor.extractAuthorNames(new File(args[1]), new File(args[2]));
-        gndAuthorExtractor.close();
+	gndAuthorExtractor.extractAuthorNames(new File(args[1]), new File(args[2]), new File(args[3]));
+	gndAuthorExtractor.close();
     }
 
     private Dataset dataset;
@@ -47,74 +47,83 @@ public class GNDAuthorExtractor {
      *
      */
     public GNDAuthorExtractor(File tdbDirectory) {
-        this.dataset = TDBFactory.createDataset(tdbDirectory.getAbsolutePath());
-        this.model = this.dataset.getDefaultModel();
+	this.dataset = TDBFactory.createDataset(tdbDirectory.getAbsolutePath());
+	this.model = this.dataset.getDefaultModel();
     }
 
     public void close() {
-        this.model.close();
-        this.dataset.close();
+	this.model.close();
+	this.dataset.close();
     }
 
-    public void extractAuthorNames(File forenameOutputFile, File surnameOutputFile) {
-        String prefixes = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n";
-        prefixes += "PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#> \n";
-        String queryString = prefixes + "SELECT ?forename ?surname WHERE " + "{ " + "{"
-                + "?person rdf:type gndo:UndifferentiatedPerson . \n" + "} UNION {"
-                + "?person rdf:type gndo:DifferentiatedPerson . \n" + "}"
-                + "?person gndo:preferredNameEntityForThePerson ?nameEntity ."
-                + "?nameEntity gndo:forename ?forename . " + "?nameEntity gndo:surname ?surname . " + "}";
+    public void extractAuthorNames(File forenameOutputFile, File surnameOutputFile, File nameOutputFile) {
+	String prefixes = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n";
+	prefixes += "PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#> \n";
+	String queryString = prefixes + "SELECT ?forename ?surname WHERE " + "{ "
+		+ "?person rdf:type gndo:DifferentiatedPerson . \n"
+		+ "?person gndo:preferredNameEntityForThePerson ?nameEntity . \n"
+		+ "?nameEntity gndo:forename ?forename . " + "?nameEntity gndo:surname ?surname . " + "}";
+	// String queryString = prefixes + "SELECT ?forename ?surname WHERE " +
+	// "{ " + "{"
+	// + "?person rdf:type gndo:UndifferentiatedPerson . \n" + "} UNION {"
+	// + "?person rdf:type gndo:DifferentiatedPerson . \n" + "}"
+	// + "?person gndo:preferredNameEntityForThePerson ?nameEntity ."
+	// + "?nameEntity gndo:forename ?forename . " + "?nameEntity
+	// gndo:surname ?surname . " + "}";
 
-        Query query = QueryFactory.create(queryString);
-        QueryExecution qexec = QueryExecutionFactory.create(query, this.model);
-        ResultSet results = qexec.execSelect();
+	Query query = QueryFactory.create(queryString);
+	QueryExecution qexec = QueryExecutionFactory.create(query, this.model);
+	ResultSet results = qexec.execSelect();
 
-        HashMap<String, Integer> forenameMap = new HashMap<String, Integer>();
-        HashMap<String, Integer> surnameMap = new HashMap<String, Integer>();
+	HashMap<String, Integer> forenameMap = new HashMap<String, Integer>();
+	HashMap<String, Integer> surnameMap = new HashMap<String, Integer>();
+	HashMap<String, Integer> nameMap = new HashMap<String, Integer>();
 
-        while (results.hasNext()) {
-            QuerySolution binding = results.nextSolution();
+	while (results.hasNext()) {
+	    QuerySolution binding = results.nextSolution();
 
-            LiteralImpl forename = (LiteralImpl) binding.get("forename");
-            LiteralImpl surname = (LiteralImpl) binding.get("surname");
+	    LiteralImpl forename = (LiteralImpl) binding.get("forename");
+	    LiteralImpl surname = (LiteralImpl) binding.get("surname");
 
-            this.addNamesToMap(forename.toString(), forenameMap);
-            this.addNamesToMap(surname.getString(), surnameMap);
+	    this.addNamesToMap(forename.toString(), forenameMap);
+	    this.addNamesToMap(surname.toString(), surnameMap);
+	    this.addNamesToMap(forename.toString() + "\t" + surname.toString(), nameMap);
 
-        }
+	}
 
-        this.writeMapToFile(forenameMap, forenameOutputFile);
-        this.writeMapToFile(surnameMap, surnameOutputFile);
+	this.writeMapToFile(forenameMap, forenameOutputFile);
+	this.writeMapToFile(surnameMap, surnameOutputFile);
+	this.writeMapToFile(nameMap, nameOutputFile);
 
     }
 
     private void addNamesToMap(String names, HashMap<String, Integer> map) {
-        String[] namesSplit = names.split(" ");
-        for (String name : namesSplit) {
-            if (name.length() < 2) {
-                continue;
-            }
-            if (map.containsKey(name)) {
-                map.put(name, map.get(name) + 1);
-            } else {
-                map.put(name, 1);
-            }
-        }
+	String[] namesSplit = names.split(" ");
+	for (String name : namesSplit) {
+	    if (name.length() < 2) {
+		continue;
+	    }
+	    if (map.containsKey(name)) {
+		map.put(name, map.get(name) + 1);
+	    } else {
+		map.put(name, 1);
+	    }
+	}
 
     }
 
     private void writeMapToFile(HashMap<String, Integer> map, File outputFile) {
-        try {
-            BufferedWriter forenameWriter = new BufferedWriter(new FileWriter(outputFile));
+	try {
+	    BufferedWriter nameWriter = new BufferedWriter(new FileWriter(outputFile));
 
-            for (Entry<String, Integer> entry : map.entrySet()) {
-                forenameWriter.write(entry.getKey() + "\t" + entry.getValue() + System.lineSeparator());
-            }
+	    for (Entry<String, Integer> entry : map.entrySet()) {
+		nameWriter.write(entry.getKey() + "\t" + entry.getValue() + System.lineSeparator());
+	    }
 
-            forenameWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+	    nameWriter.close();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
 
     }
 }
