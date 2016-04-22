@@ -17,91 +17,107 @@ public class CoraReferenceExtractor {
 
     public static void main(String[] args) {
 
-        CoraReferenceExtractor coraReferenceExtractor = new CoraReferenceExtractor();
+	CoraReferenceExtractor coraReferenceExtractor = new CoraReferenceExtractor();
 
-        // coraReferenceExtractor.extractReferencesInDir(new
-        // File("/home/martin/downloads/cora-classify/cora/extractions"),
-        // //
-        // "/home/martin/downloads/cora-classify/cora/extractions/file:##cse.ogi.edu#pub#ogipvm#papers#CLO.ps.gz"),
-        // new File("/home/martin/tmp/cora/annotated-references"));
-        coraReferenceExtractor.removeXMLTagsInDir(new File("/home/martin/tmp/cora/annotated-references"),
-                new File("/home/martin/tmp/cora/references"));
-        // coraReferenceExtractor.extractReferences(new File(
-        // "/home/martin/downloads/cora-classify/cora/extractions/file:##cdr.stanford.edu#pub#CDR#Publications#Reports#design-nav.ps"),
-        // //
-        // "/home/martin/downloads/cora-classify/cora/extractions/file:##cse.ogi.edu#pub#ogipvm#papers#CLO.ps.gz"),
-        // new File("/home/martin/tmp/cora-test-refs.txt"));
-        // coraReferenceExtractor.removeXMLTags(new
-        // File("/home/martin/tmp/cora-test-refs.txt"),
-        // new File("/home/martin/tmp/cora-test-refs-clean.txt"));
+	// coraReferenceExtractor.extractReferencesInDir(new
+	// File("/home/martin/downloads/cora-classify/cora/extractions"),
+	// //
+	// "/home/martin/downloads/cora-classify/cora/extractions/file:##cse.ogi.edu#pub#ogipvm#papers#CLO.ps.gz"),
+	// new File("/home/martin/tmp/cora/annotated-references"));
+	try {
+	    coraReferenceExtractor.removeXMLTagsInDir(new File(args[0]), new File(args[1]));
+	} catch (FileNotFoundException e) {
+	    // TODO Auto-generated catch block
+	    e.printStackTrace();
+	}
+	// coraReferenceExtractor.extractReferences(new File(
+	// "/home/martin/downloads/cora-classify/cora/extractions/file:##cdr.stanford.edu#pub#CDR#Publications#Reports#design-nav.ps"),
+	// //
+	// "/home/martin/downloads/cora-classify/cora/extractions/file:##cse.ogi.edu#pub#ogipvm#papers#CLO.ps.gz"),
+	// new File("/home/martin/tmp/cora-test-refs.txt"));
+	// coraReferenceExtractor.removeXMLTags(new
+	// File("/home/martin/tmp/cora-test-refs.txt"),
+	// new File("/home/martin/tmp/cora-test-refs-clean.txt"));
     }
 
     public void extractReferences(File inputFile, File outputFile) {
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                if (line.startsWith("Reference: ")) {
-                    line = line.replace("Reference: ", "");
-                    bufferedWriter.write(line + System.lineSeparator());
-                }
-            }
-            bufferedWriter.close();
-            bufferedReader.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("inputFile was not found: " + inputFile.getAbsolutePath());
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+	try {
+	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
+	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+	    String line;
+	    while ((line = bufferedReader.readLine()) != null) {
+		if (line.startsWith("Reference: ")) {
+		    line = line.replace("Reference: ", "");
+		    bufferedWriter.write(line + System.lineSeparator());
+		}
+	    }
+	    bufferedWriter.close();
+	    bufferedReader.close();
+	} catch (FileNotFoundException e) {
+	    System.err.println("inputFile was not found: " + inputFile.getAbsolutePath());
+	    e.printStackTrace();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
 
     }
 
-    public void extractReferencesInDir(File inputDir, File outputDir) {
-        outputDir.mkdirs();
-        for (File inputFile : inputDir.listFiles()) {
-            this.extractReferences(inputFile,
-                    new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
-        }
+    public void extractReferencesInDir(File inputDir, File outputDir) throws FileNotFoundException {
+	outputDir.mkdirs();
+
+	try {
+
+	    for (File inputFile : inputDir.listFiles()) {
+		this.extractReferences(inputFile,
+			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+	    }
+	} catch (NullPointerException e) {
+	    throw new FileNotFoundException();
+	}
+
     }
 
     public void removeXMLTags(File inputFile, File outputFile) {
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
+	try {
+	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
+	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+	    String line;
+	    while ((line = bufferedReader.readLine()) != null) {
 
-                // System.out.println("before:\t|" + line + "|");
+		// System.out.println("before:\t|" + line + "|");
 
-                // remove first XML tag
-                line = line.replaceAll("^<[^>]+>\\s", "");
+		// remove first XML tag
+		line = line.replaceAll("^<[^>]+>\\s", "");
 
-                // remove XML tags, possible multiple in a row
-                line = line.replaceAll("\\s(<[^>]+>\\s)+", " ");
+		// remove XML tags, possible multiple in a row
+		line = line.replaceAll("\\s(<[^>]+>\\s)+", " ");
 
-                // remove last XML tag
-                line = line.replaceAll("\\s<[^>]+>", "");
+		// remove last XML tag
+		line = line.replaceAll("\\s<[^>]+>", "");
 
-                // System.out.println("after:\t|" + line + "|");
-                bufferedWriter.write(line + System.lineSeparator());
-            }
-            bufferedWriter.close();
-            bufferedReader.close();
-        } catch (FileNotFoundException e) {
-            System.err.println("inputFile was not found: " + inputFile.getAbsolutePath());
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		// System.out.println("after:\t|" + line + "|");
+		bufferedWriter.write(line + System.lineSeparator());
+	    }
+	    bufferedWriter.close();
+	    bufferedReader.close();
+	} catch (FileNotFoundException e) {
+	    System.err.println("inputFile was not found: " + inputFile.getAbsolutePath());
+	    e.printStackTrace();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
     }
 
-    public void removeXMLTagsInDir(File inputDir, File outputDir) {
-        outputDir.mkdirs();
-        for (File inputFile : inputDir.listFiles()) {
-            this.removeXMLTags(inputFile, new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
-        }
+    public void removeXMLTagsInDir(File inputDir, File outputDir) throws FileNotFoundException {
+	outputDir.mkdirs();
+	try {
+	    for (File inputFile : inputDir.listFiles()) {
+		this.removeXMLTags(inputFile,
+			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+	    }
+	} catch (NullPointerException e) {
+	    throw new FileNotFoundException();
+	}
     }
 
 }
