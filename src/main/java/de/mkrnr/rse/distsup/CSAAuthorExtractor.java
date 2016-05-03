@@ -1,16 +1,13 @@
 package de.mkrnr.rse.distsup;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map.Entry;
 
-public class CSAAuthorExtractor {
+public class CSAAuthorExtractor extends AuthorExtractor {
 
     public static void main(String[] args) throws FileNotFoundException {
 
@@ -64,36 +61,6 @@ public class CSAAuthorExtractor {
 	this.writeMapToFile(forenameMap, forenameOutputFile);
 	this.writeMapToFile(surnameMap, surnameOutputFile);
 	this.writeMapToFile(nameMap, nameOutputFile);
-
-    }
-
-    private void addNamesToMap(String names, HashMap<String, Integer> map) {
-	String[] namesSplit = names.split(" ");
-	for (String name : namesSplit) {
-	    if (name.length() < 2) {
-		continue;
-	    }
-	    if (map.containsKey(name)) {
-		map.put(name, map.get(name) + 1);
-	    } else {
-		map.put(name, 1);
-	    }
-	}
-
-    }
-
-    private void writeMapToFile(HashMap<String, Integer> map, File outputFile) {
-	try {
-	    BufferedWriter nameWriter = new BufferedWriter(new FileWriter(outputFile));
-
-	    for (Entry<String, Integer> entry : map.entrySet()) {
-		nameWriter.write(entry.getKey() + "\t" + entry.getValue() + System.lineSeparator());
-	    }
-
-	    nameWriter.close();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
 
     }
 

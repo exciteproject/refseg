@@ -79,6 +79,7 @@ public class GNDAuthorExtractor {
 	HashMap<String, Integer> surnameMap = new HashMap<String, Integer>();
 	HashMap<String, Integer> nameMap = new HashMap<String, Integer>();
 
+	int count = 0;
 	while (results.hasNext()) {
 	    QuerySolution binding = results.nextSolution();
 
@@ -89,7 +90,9 @@ public class GNDAuthorExtractor {
 	    this.addNamesToMap(surname.toString(), surnameMap);
 	    this.addNamesToMap(forename.toString() + "\t" + surname.toString(), nameMap);
 
+	    count++;
 	}
+	System.out.println(count);
 
 	this.writeMapToFile(forenameMap, forenameOutputFile);
 	this.writeMapToFile(surnameMap, surnameOutputFile);
@@ -98,16 +101,10 @@ public class GNDAuthorExtractor {
     }
 
     private void addNamesToMap(String names, HashMap<String, Integer> map) {
-	String[] namesSplit = names.split(" ");
-	for (String name : namesSplit) {
-	    if (name.length() < 2) {
-		continue;
-	    }
-	    if (map.containsKey(name)) {
-		map.put(name, map.get(name) + 1);
-	    } else {
-		map.put(name, 1);
-	    }
+	if (map.containsKey(names)) {
+	    map.put(names, map.get(names) + 1);
+	} else {
+	    map.put(names, 1);
 	}
 
     }
