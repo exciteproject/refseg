@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import de.mkrnr.rse.util.FileHelper;
 
@@ -20,7 +18,6 @@ public class NameContextExtractor {
 	File taggedFile = new File(args[1]);
 	NameContextExtractor nameContextExtractor = new NameContextExtractor(nameFile);
 	nameContextExtractor.extractContexts(taggedFile, 2);
-
     }
 
     // generate name lookup
@@ -33,11 +30,8 @@ public class NameContextExtractor {
 
     private Map<String, boolean[]> nameTypeMap;
 
-    private final Pattern nameTagPattern = Pattern.compile("<name>(.+?)</name>");
-    // matches names in xml tags including characters before and after until
-    // the first space (if existing)
-    private final Pattern xmlTagPatternWithContext = Pattern
-	    .compile("\\s?([^\\s]*)<([^<>]+)>([^<>]+)</([^<>]+)>([^\\s]*)\\s?");
+    private final String firstNameTagLabel = "firstName";
+    private final String lastNameTagLabel = "lastName";
 
     /**
      * Constructor that generates a lookup for the names in nameFile TODO:
@@ -57,46 +51,51 @@ public class NameContextExtractor {
 	// TODO change replacement
 	taggedText = taggedText.replaceAll(System.getProperty("line.separator"), " <lineSeparator/> ");
 
-	List<String> contexts = new ArrayList<String>();
-
 	// TODO remove
-	String test = "Test von <name>Dietze</name>. <name>C. A.</name>; <name>Rolfes</name>, <name>M.</name> täst";
+	String test = "<name>Test</name> test Test von <name>Michael</name>. <name>Friedrich</name>; <name>Michael</name>, <name>Friedrich</name> täst";
 
-	Matcher matcher = this.xmlTagPatternWithContext.matcher(test);
-	int endOfLastMatchIndex = 0;
+	NameSplit nameSplit = new NameSplit(test);
 
-	List<String> nameSplits = new ArrayList<String>();
-	List<Boolean> ifNameSplits = new ArrayList<Boolean>();
-
-	while (matcher.find()) {
-	    // get string before the match
-	    if (endOfLastMatchIndex < matcher.start()) {
-		nameSplits.add(test.substring(endOfLastMatchIndex, matcher.start()));
-		ifNameSplits.add(false);
-	    }
-	    nameSplits.add(test.substring(matcher.start(), matcher.end()));
-	    ifNameSplits.add(true);
-
-	    endOfLastMatchIndex = matcher.end();
-	}
-	// add substring after last match
-	if (endOfLastMatchIndex < test.length()) {
-	    nameSplits.add(test.substring(endOfLastMatchIndex, test.length()));
-	    ifNameSplits.add(false);
-	}
+	// for (int i = 0; i < nameSplits.size(); i++) {
+	// System.out.println(nameSplits.get(i));
+	// }
 
 	// nameSplits.size()-1 because of name check at position i + 1
-	for (int i = 0; i < (nameSplits.size() - 1); i++) {
-	    if (ifNameSplits.get(i) && ifNameSplits.get(i + 1)) {
-		String iName = this.getName(nameSplits.get(i));
-		String iPlusOneName = this.getName(nameSplits.get(i + 1));
+	List<NameSplit> contexts = this.extractContexts(nameSplit, contextSize);
 
-		// TODO write out all pairs of possible names (first+last or
-		// last+first)
+	return contexts.toArray(new String[0]);
+    }
 
+    private List<NameSplit> extractContexts(NameSplit nameSplit, int contextSize) {
+	List<NameSplit> contexts = new ArrayList<NameSplit>();
+	for (int i = 0; i < (nameSplit.size() - 1); i++) {
+	    if (nameSplit.isName(i) && nameSplit.isName(i + 1)) {
+		String iName = nameSplit.getName(i);
+		String iPlusOneName = nameSplit.getName(i + 1);
+
+		boolean[] iNameTypes = this.nameTypeMap.get(iName);
+		boolean[] iPlusOneNameTypes = this.nameTypeMap.get(iPlusOneName);
+
+		// iName or IPlusOneName not found
+		if ((iNameTypes == null) || (iPlusOneNameTypes == null)) {
+		    continue;
+		}
+
+		// iName = first name && iPlusOneName = last name
+		if (iNameTypes[0] && iPlusOneNameTypes[1]) {
+		    // TODO add recursion
+		    contexts.addAll(this.getTaggedContext(nameSplit, i, this.firstNameTagLabel, this.lastNameTagLabel,
+			    contextSize));
+		}
+		if (iNameTypes[1] && iPlusOneNameTypes[0]) {
+		    // TODO add recursion
+		    contexts.addAll(this.getTaggedContext(nameSplit, i, this.lastNameTagLabel, this.firstNameTagLabel,
+			    contextSize));
+		}
 	    }
 	}
-	return contexts.toArray(new String[0]);
+
+	return contexts;
     }
 
     private Map<String, boolean[]> generateNameMap(File nameFile) throws IOException {
@@ -131,9 +130,36 @@ public class NameContextExtractor {
 	return nameTypeMap;
     }
 
-    private String getName(String taggedName) {
-	final Matcher nametagPatternMatcher = this.nameTagPattern.matcher(taggedName);
-	nametagPatternMatcher.find();
-	return nametagPatternMatcher.group(1);
+    private List<NameSplit> getTaggedContext(NameSplit nameSplit, int indexInNameSplits, String iNameTagLabel,
+	    String iPlusOneNameTagLabel, int contextSize) {
+	List<NameSplit> contexts = new ArrayList<NameSplit>();
+
+	int contextStart = indexInNameSplits - contextSize;
+	if (contextStart < 0) {
+	    contextStart = 0;
+	}
+
+	int contextEnd = indexInNameSplits + 1 + contextSize;
+	if (contextEnd > (nameSplit.size() - 1)) {
+	    contextEnd = nameSplit.size() - 1;
+	}
+
+	NameSplit context = nameSplit.getSubSplit(contextStart, contextEnd);
+
+	int iNameIndex = contextSize;
+	int iPlusOneNameIndex = contextSize + 1;
+	context.set(iNameIndex, this.setTags(context.get(iNameIndex), iNameTagLabel));
+	context.set(iPlusOneNameIndex, this.setTags(context.get(iPlusOneNameIndex), iPlusOneNameTagLabel));
+
+	System.out.println(context.toString());
+
+	return contexts;
+    }
+
+    private String setTags(String nameWithTags, String tagLabel) {
+	String nameWithChangedTags = nameWithTags;
+	nameWithChangedTags = nameWithChangedTags.replaceFirst("<([^<>/]+)>", "<" + tagLabel + ">");
+	nameWithChangedTags = nameWithChangedTags.replaceFirst("</([^<>]+)>", "</" + tagLabel + ">");
+	return nameWithChangedTags;
     }
 }
