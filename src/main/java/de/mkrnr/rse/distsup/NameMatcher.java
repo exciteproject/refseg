@@ -73,16 +73,12 @@ public class NameMatcher {
     }
 
     public void matchFile(File inputFile, File outputFile) {
-	System.out.println("match authors in file");
 	String inputString = null;
 	try {
 	    inputString = FileHelper.readFile(inputFile);
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
-
-	// inputString = "test .<lastName>Morison</lastName>,
-	// <firstName>Tracy</firstName>. test";
 
 	NameSplit nameSplit = new NameSplit(inputString);
 
@@ -115,9 +111,7 @@ public class NameMatcher {
 	    // no author name starts with name at position i
 	    nameSplit.removeNameTag(i);
 	}
-	try
-
-	{
+	try {
 	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	    bufferedWriter.write(nameSplit.toString());
 	    bufferedWriter.close();

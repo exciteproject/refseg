@@ -3,7 +3,8 @@ package de.mkrnr.rse.distsup;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import de.mkrnr.rse.util.XMLHelper;
 
 public class NameSplit {
 
@@ -19,21 +20,13 @@ public class NameSplit {
     List<String> nameSplit;
     List<String> nameSplitTag;
 
-    private final String xmlTagRegEx = "<([^<>]+)>([^<>]+)</([^<>]+)>";
-    private final Pattern xmlTagPattern = Pattern.compile(this.xmlTagRegEx);
-
-    // matches names in xml tags including characters before and after until
-    // the first space (if existing)
-    private final String xmlTagWithContextRegEx = "\\s?([^\\s]*)" + this.xmlTagRegEx + "([^\\s]*)\\s?";
-    private final Pattern xmlTagPatternWithContext = Pattern.compile(this.xmlTagWithContextRegEx);
-
     public NameSplit() {
 	this.nameSplit = new ArrayList<String>();
 	this.nameSplitTag = new ArrayList<String>();
     }
 
     public NameSplit(String inputString) {
-	Matcher matcher = this.xmlTagPatternWithContext.matcher(inputString);
+	final Matcher matcher = XMLHelper.getXMLTagWithContextMatcher(inputString);
 	int endOfLastMatchIndex = 0;
 
 	this.nameSplit = new ArrayList<String>();
@@ -88,7 +81,7 @@ public class NameSplit {
     }
 
     public String getName(int index) {
-	final Matcher nametagPatternMatcher = this.xmlTagPattern.matcher(this.nameSplit.get(index));
+	final Matcher nametagPatternMatcher = XMLHelper.getXMLTagMatcher(this.nameSplit.get(index));
 	nametagPatternMatcher.find();
 	return nametagPatternMatcher.group(2);
     }
@@ -103,18 +96,7 @@ public class NameSplit {
     }
 
     public void removeNameTag(int index) {
-	String name = this.getName(index);
-	String nameWithRemovedTag = this.get(index);
-	try {
-
-	    nameWithRemovedTag = nameWithRemovedTag.replaceFirst("<([^<>]+)>" + Pattern.quote(name),
-		    Pattern.quote(name));
-	    nameWithRemovedTag = nameWithRemovedTag.replaceFirst(Pattern.quote(name) + "</([^<>]+)>",
-		    Pattern.quote(name));
-	} catch (Exception e) {
-	    System.out.println(name);
-	    System.out.println(nameWithRemovedTag);
-	}
+	String nameWithRemovedTag = XMLHelper.removeTags(this.get(index));
 
 	this.set(index, nameWithRemovedTag, null);
     }
@@ -133,11 +115,7 @@ public class NameSplit {
 
     @Override
     public String toString() {
-	String result = "";
-	for (String nameSplitPart : this.nameSplit) {
-	    result += nameSplitPart;
-	}
-	return result;
+	return String.join("", this.nameSplit);
     }
 
     private void add(int startNameIndex, String string, String tag) {
