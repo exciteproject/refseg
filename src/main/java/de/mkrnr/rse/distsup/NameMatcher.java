@@ -6,10 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,23 +56,6 @@ public class NameMatcher {
 	this.firstNameTag = firstNameTag;
 	this.lastNameTag = lastNameTag;
 	this.authorTag = authorTag;
-    }
-
-    public String[] extractContexts(File taggedFile, int contextSize) throws IOException {
-	String taggedText = FileHelper.readFile(taggedFile);
-	// replace linebreaks
-	// TODO change replacement
-	taggedText = taggedText.replaceAll(System.getProperty("line.separator"), " <lineSeparator/> ");
-
-	List<String> contexts = new ArrayList<String>();
-
-	// for (int i = 0 + contextSize; i < (taggedText.length - 3); i++) {
-	// for (int j = i - contextSize; j < (i + 2 + contextSize); j++) {
-	// System.out.println(i + " " + words[j]);
-	// }
-	// System.out.println("---");
-	// }
-	return contexts.toArray(new String[0]);
     }
 
     public void matchDirectory(File inputDirectory, File outputDirectory) {
