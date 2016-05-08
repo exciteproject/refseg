@@ -15,7 +15,7 @@ import cc.mallet.util.CharSequenceLexer;
 /**
  * A class for labeling tokens based on the XML tags that they appear in.
  */
-public class CoraTargetExtractor {
+public class CoraTargetExtractor extends Extractor {
 
     public static void main(String[] args) {
 	Pattern tokenPattern = Pattern.compile("\\S+");
@@ -23,7 +23,7 @@ public class CoraTargetExtractor {
 	String[] relevantTags = new String[1];
 	relevantTags[0] = "author";
 	CoraTargetExtractor xmlTargetExtractor = new CoraTargetExtractor(tokenPattern, relevantTags, "other");
-	xmlTargetExtractor.extractTargets(new File(args[0]), new File(args[1]));
+	xmlTargetExtractor.extract(new File(args[0]), new File(args[1]));
 	// xmlTargetExtractor.extractTargetsInDir(new File(args[0]), new
 	// File(args[1]));
     }
@@ -49,7 +49,8 @@ public class CoraTargetExtractor {
 	this.filterTags = true;
     }
 
-    public void extractTargets(File inputFile, File outputFile) {
+    @Override
+    public void extract(File inputFile, File outputFile) {
 	System.out.println(inputFile.getAbsolutePath());
 	try {
 	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
@@ -97,16 +98,4 @@ public class CoraTargetExtractor {
 	}
     }
 
-    public void extractTargetsInDir(File inputDir, File outputDir) throws FileNotFoundException {
-	outputDir.mkdirs();
-
-	try {
-	    for (File inputFile : inputDir.listFiles()) {
-		this.extractTargets(inputFile,
-			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
-	    }
-	} catch (NullPointerException e) {
-	    throw new FileNotFoundException();
-	}
-    }
 }

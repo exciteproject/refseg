@@ -4,21 +4,30 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.commons.io.IOUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
-public class ReferenceSectionExtractor {
+import de.mkrnr.rse.util.FileHelper;
+import de.mkrnr.rse.util.XMLHelper;
 
-    public static void main(String[] args) {
+public class ParsCitReferenceSectionExtractor {
+
+    public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
 
 	long startTime = System.currentTimeMillis();
-	ReferenceSectionExtractor referenceSectionExtractor = new ReferenceSectionExtractor();
-	referenceSectionExtractor.extract(new File(args[0]));
+	ParsCitReferenceSectionExtractor referenceSectionExtractor = new ParsCitReferenceSectionExtractor();
+	// referenceSectionExtractor.extract(new File(args[0]));
+	referenceSectionExtractor.extractReferenceSection(null);
 	long endTime = System.currentTimeMillis();
 	System.out.println();
 	System.out.println("This took " + (endTime - startTime) + " milliseconds");
     }
 
-    public String extract(File inputFile) {
+    public String extract(File inputFile) throws ParserConfigurationException, SAXException, IOException {
 	String labeledSections;
 	try {
 	    labeledSections = this.labelSections(inputFile);
@@ -32,8 +41,21 @@ public class ReferenceSectionExtractor {
 	}
 
 	System.out.println(labeledSections);
-	String referenceSection = null;
+	String referenceSection = this.extractReferenceSection(labeledSections);
 	return referenceSection;
+    }
+
+    public String extractReferenceSection(String labeledSections)
+	    throws ParserConfigurationException, SAXException, IOException {
+
+	labeledSections = FileHelper.readFile(new File("/media/data/masters-thesis/papers/test.xml"));
+	Document document = XMLHelper.loadXMLFromString(labeledSections);
+	NodeList referencesParts = document.getElementsByTagName("reference");
+	for (int i = 0, len = referencesParts.getLength(); i < len; i++) {
+	    System.out.println(referencesParts.item(i).getFirstChild().getNodeValue());
+	}
+
+	return null;
     }
 
     /**

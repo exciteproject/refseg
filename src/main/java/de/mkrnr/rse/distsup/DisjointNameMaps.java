@@ -12,12 +12,20 @@ public class DisjointNameMaps {
     private Map<String, Integer> firstNameMap;
     private Map<String, Integer> lastNameMap;
 
+    private int sameNames = 0;
+    private int sameNameCount = 0;
+    private int totalCount = 0;
+
     public DisjointNameMaps(File firstNameFile, File lastNameFile) {
 	this.firstNameMap = new HashMap<String, Integer>();
 	this.lastNameMap = new HashMap<String, Integer>();
 
 	this.addFirstNames(firstNameFile);
 	this.addLastNames(lastNameFile);
+	System.out.println("sameNames*2: " + (this.sameNames * 2));
+	System.out.println("sameNameCount*2: " + (this.sameNameCount * 2));
+	System.out.println("totalCount: " + this.totalCount);
+
     }
 
     public Map<String, Integer> getFirstNameMap() {
@@ -85,7 +93,15 @@ public class DisjointNameMaps {
     }
 
     private void addName(String name, int nameCount, Map<String, Integer> mapToAdd, Map<String, Integer> otherMap) {
+	this.totalCount += nameCount;
 	if (otherMap.containsKey(name)) {
+
+	    // TODO remove
+	    if (otherMap.get(name) == nameCount) {
+		this.sameNames++;
+		this.sameNameCount += nameCount;
+	    }
+
 	    if (otherMap.get(name) < nameCount) {
 		otherMap.remove(name);
 	    } else {

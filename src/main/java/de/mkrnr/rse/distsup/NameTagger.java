@@ -118,7 +118,6 @@ public class NameTagger {
     }
 
     private String tagString(String inputString, Trie trie, String tagName) {
-
 	Collection<Token> tokens = trie.tokenize(inputString);
 	StringBuffer taggedSequence = new StringBuffer();
 	Iterator<Token> tokenIterator = tokens.iterator();
@@ -129,7 +128,6 @@ public class NameTagger {
 	    } else {
 		taggedSequence.append(token.getFragment());
 	    }
-
 	}
 	return taggedSequence.toString();
 

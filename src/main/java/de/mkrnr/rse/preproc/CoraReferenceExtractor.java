@@ -13,7 +13,7 @@ import java.io.IOException;
  * Research Paper Classification data available at
  * https://people.cs.umass.edu/~mccallum/data.html
  */
-public class CoraReferenceExtractor {
+public class CoraReferenceExtractor extends Extractor {
 
     public static void main(String[] args) {
 
@@ -40,7 +40,8 @@ public class CoraReferenceExtractor {
 	// new File("/home/martin/tmp/cora-test-refs-clean.txt"));
     }
 
-    public void extractReferences(File inputFile, File outputFile) {
+    @Override
+    public void extract(File inputFile, File outputFile) {
 	try {
 	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
 	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
@@ -58,21 +59,6 @@ public class CoraReferenceExtractor {
 	    e.printStackTrace();
 	} catch (IOException e) {
 	    e.printStackTrace();
-	}
-
-    }
-
-    public void extractReferencesInDir(File inputDir, File outputDir) throws FileNotFoundException {
-	outputDir.mkdirs();
-
-	try {
-
-	    for (File inputFile : inputDir.listFiles()) {
-		this.extractReferences(inputFile,
-			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
-	    }
-	} catch (NullPointerException e) {
-	    throw new FileNotFoundException();
 	}
 
     }

@@ -1,7 +1,17 @@
 package de.mkrnr.rse.util;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class XMLHelper {
 
@@ -18,6 +28,14 @@ public class XMLHelper {
 
     public static Matcher getXMLTagWithContextMatcher(String inputString) {
 	return XMLHelper.XML_TAGS_WITH_CONTEXT_PATTERN.matcher(inputString);
+    }
+
+    public static Document loadXMLFromString(String xml)
+	    throws ParserConfigurationException, SAXException, IOException {
+	DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	DocumentBuilder builder = factory.newDocumentBuilder();
+	InputSource is = new InputSource(new StringReader(xml));
+	return builder.parse(is);
     }
 
     public static String removeTags(String input) {

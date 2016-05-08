@@ -15,41 +15,38 @@ import org.apache.pdfbox.text.PDFTextStripper;
 /**
  * A class for extracting text from PDF files using Apache PDFBox.
  */
-public class PDFTextExtractor {
+public class PDFTextExtractor extends Extractor {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
 
 	String inputDirectory = args[1];
 	String outputDirectory = args[2];
-	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor();
+	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(2);
 	// String filePath = args[0];
 	// String text = pdfTextExtractor.extractText(new File(filePath));
 	// System.out.println(text);
-	pdfTextExtractor.extractTextFromDirectory(new File(inputDirectory), new File(outputDirectory));
+	pdfTextExtractor.extractInDir(new File(inputDirectory), new File(outputDirectory));
     }
 
     private Boolean sortByPosition;
-
-    public PDFTextExtractor() {
-	this.sortByPosition = null;
-    }
+    private int startPage;
+    private int endPage;
 
     public PDFTextExtractor(boolean sortByPosition) {
 	this.sortByPosition = sortByPosition;
     }
 
-    public String extractText(File pdfFile) {
-	return this.extractText(pdfFile, 0, 0);
+    public PDFTextExtractor(int startPage) {
+	this.startPage = startPage;
+	this.endPage = -1;
+	this.sortByPosition = null;
     }
 
-    public String extractText(File pdfFile, int startPage) {
-	return this.extractText(pdfFile, startPage, 0);
-    }
-
-    public String extractText(File pdfFile, int startPage, int endPage) {
+    @Override
+    public void extract(File inputFile, File outputFile) {
 	PDDocument pdDocument = null;
 	try {
-	    PDFParser pdfParser = new PDFParser(new RandomAccessFile(pdfFile, "r"));
+	    PDFParser pdfParser = new PDFParser(new RandomAccessFile(inputFile, "r"));
 	    pdfParser.parse();
 
 	    COSDocument cosDocument = pdfParser.getDocument();
@@ -60,12 +57,12 @@ public class PDFTextExtractor {
 
 	    pdfTextStripper.setAddMoreFormatting(true);
 
-	    if (startPage > 0) {
-		pdfTextStripper.setStartPage(startPage);
+	    if (this.startPage > 0) {
+		pdfTextStripper.setStartPage(this.startPage);
 	    }
 
-	    if (endPage > 0) {
-		pdfTextStripper.setEndPage(endPage);
+	    if (this.endPage > 0) {
+		pdfTextStripper.setEndPage(this.endPage);
 	    } else {
 		pdfTextStripper.setEndPage(pdDocument.getNumberOfPages());
 	    }
@@ -76,54 +73,31 @@ public class PDFTextExtractor {
 
 	    String text = pdfTextStripper.getText(pdDocument);
 
-	    return text;
+	    String outputFileName = outputFile.getName().replaceAll("\\.pdf", ".txt");
+	    outputFile = new File(outputFile.getParentFile().getAbsolutePath() + File.separator + outputFileName);
+
+	    if (text.length() > 0) {
+		try {
+		    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+		    bufferedWriter.write(text);
+		    bufferedWriter.close();
+		} catch (IOException e) {
+		    e.printStackTrace();
+		}
+	    }
 
 	} catch (FileNotFoundException e) {
-	    return null;
+	    e.printStackTrace();
 	} catch (IOException e) {
-	    return null;
+	    e.printStackTrace();
 	} finally {
 	    if (pdDocument != null) {
 		try {
-
 		    pdDocument.close();
 		} catch (IOException e) {
 		    e.printStackTrace();
-		    return null;
 		}
 	    }
-	}
-    }
-
-    public void extractTextFromDirectory(File inputDirectory, File outputDirectory) throws FileNotFoundException {
-	if (!inputDirectory.isDirectory()) {
-	    throw new IllegalArgumentException("inputDirectory is not a directory");
-	}
-
-	if (!outputDirectory.exists()) {
-	    outputDirectory.mkdirs();
-	}
-
-	try {
-	    for (File inputFile : inputDirectory.listFiles()) {
-		// TODO: set 1 with parameters
-		String currentPDF = this.extractText(inputFile, 2);
-		String outputFileName = inputFile.getName().replaceAll("\\.pdf", ".txt");
-		File outputFile = new File(outputDirectory.getAbsolutePath() + File.separator + outputFileName);
-
-		if (currentPDF != null) {
-		    try {
-			BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-			bufferedWriter.write(currentPDF);
-			bufferedWriter.close();
-		    } catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		    }
-		}
-	    }
-	} catch (NullPointerException e) {
-	    throw new FileNotFoundException();
 	}
     }
 

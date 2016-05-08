@@ -20,12 +20,29 @@ public class NameMatcher {
 	File taggedDir = new File(args[1]);
 	File outputDir = new File(args[2]);
 
+	long startTime = System.currentTimeMillis();
 	NameMatcher nameContextExtractor = new NameMatcher(nameFile, "firstName", "lastName", "author");
 
-	long startTime = System.currentTimeMillis();
-	nameContextExtractor.matchDirectory(taggedDir, outputDir);
 	long endTime = System.currentTimeMillis();
+	nameContextExtractor.matchDirectory(taggedDir, outputDir);
 	System.out.println("This took " + (endTime - startTime) + " milliseconds");
+	// Getting the runtime reference from system
+	Runtime runtime = Runtime.getRuntime();
+
+	int mb = 1024 * 1024;
+	System.out.println("##### Heap utilization statistics [MB] #####");
+
+	// Print used memory
+	System.out.println("Used Memory:" + ((runtime.totalMemory() - runtime.freeMemory()) / mb));
+
+	// Print free memory
+	System.out.println("Free Memory:" + (runtime.freeMemory() / mb));
+
+	// Print total available memory
+	System.out.println("Total Memory:" + (runtime.totalMemory() / mb));
+
+	// Print Maximum available memory
+	System.out.println("Max Memory:" + (runtime.maxMemory() / mb));
     }
 
     // generate name lookup
