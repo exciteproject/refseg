@@ -81,7 +81,7 @@ public class PDFTextExtractor extends Extractor {
 
 	} finally {
 	    if (randomAccessFile != null) {
-		bufferedWriter.close();
+		randomAccessFile.close();
 	    }
 	    if (pdDocument != null) {
 		pdDocument.close();
