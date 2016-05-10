@@ -2,12 +2,13 @@ package de.mkrnr.rse.preproc;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public abstract class Extractor {
 
-    public abstract void extract(File inputFile, File outputFile) throws FileNotFoundException;
+    public abstract void extract(File inputFile, File outputFile) throws IOException;
 
-    public void extractInDir(File inputDir, File outputDir) throws FileNotFoundException {
+    public void extractInDir(File inputDir, File outputDir) throws IOException {
 	outputDir.mkdirs();
 
 	try {

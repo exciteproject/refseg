@@ -2,7 +2,6 @@ package de.mkrnr.rse.preproc;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -17,11 +16,11 @@ import org.apache.pdfbox.text.PDFTextStripper;
  */
 public class PDFTextExtractor extends Extractor {
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws IOException {
 
 	String inputDirectory = args[1];
 	String outputDirectory = args[2];
-	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(2);
+	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(2, null, null);
 	// String filePath = args[0];
 	// String text = pdfTextExtractor.extractText(new File(filePath));
 	// System.out.println(text);
@@ -31,19 +30,20 @@ public class PDFTextExtractor extends Extractor {
     private Boolean sortByPosition;
     private int startPage;
     private int endPage;
+    private Boolean addMoreFormatting;
 
-    public PDFTextExtractor(boolean sortByPosition) {
-	this.sortByPosition = sortByPosition;
+    public PDFTextExtractor(boolean sortByPosition, boolean addMoreFormatting) {
     }
 
-    public PDFTextExtractor(int startPage) {
+    public PDFTextExtractor(int startPage, Boolean sortByPosition, Boolean addMoreFormatting) {
 	this.startPage = startPage;
 	this.endPage = -1;
-	this.sortByPosition = null;
+	this.sortByPosition = sortByPosition;
+	this.addMoreFormatting = addMoreFormatting;
     }
 
     @Override
-    public void extract(File inputFile, File outputFile) {
+    public void extract(File inputFile, File outputFile) throws IOException {
 	PDDocument pdDocument = null;
 	try {
 	    PDFParser pdfParser = new PDFParser(new RandomAccessFile(inputFile, "r"));
@@ -54,8 +54,6 @@ public class PDFTextExtractor extends Extractor {
 	    pdDocument = new PDDocument(cosDocument);
 
 	    PDFTextStripper pdfTextStripper = new PDFTextStripper();
-
-	    pdfTextStripper.setAddMoreFormatting(true);
 
 	    if (this.startPage > 0) {
 		pdfTextStripper.setStartPage(this.startPage);
@@ -69,6 +67,9 @@ public class PDFTextExtractor extends Extractor {
 
 	    if (this.sortByPosition != null) {
 		pdfTextStripper.setSortByPosition(this.sortByPosition);
+	    }
+	    if (this.addMoreFormatting != null) {
+		pdfTextStripper.setAddMoreFormatting(true);
 	    }
 
 	    String text = pdfTextStripper.getText(pdDocument);
@@ -86,10 +87,6 @@ public class PDFTextExtractor extends Extractor {
 		}
 	    }
 
-	} catch (FileNotFoundException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
-	    e.printStackTrace();
 	} finally {
 	    if (pdDocument != null) {
 		try {
