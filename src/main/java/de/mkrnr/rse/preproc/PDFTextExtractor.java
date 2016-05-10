@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.apache.pdfbox.cos.COSDocument;
 import org.apache.pdfbox.io.RandomAccessFile;
 import org.apache.pdfbox.pdfparser.PDFParser;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -32,26 +31,24 @@ public class PDFTextExtractor extends Extractor {
     private int endPage;
     private Boolean addMoreFormatting;
 
-    public PDFTextExtractor(boolean sortByPosition, boolean addMoreFormatting) {
-    }
-
     public PDFTextExtractor(int startPage, Boolean sortByPosition, Boolean addMoreFormatting) {
 	this.startPage = startPage;
-	this.endPage = -1;
+	this.endPage = 0;
 	this.sortByPosition = sortByPosition;
 	this.addMoreFormatting = addMoreFormatting;
     }
 
     @Override
     public void extract(File inputFile, File outputFile) throws IOException {
+	RandomAccessFile randomAccessFile = null;
 	PDDocument pdDocument = null;
+	BufferedWriter bufferedWriter = null;
 	try {
-	    PDFParser pdfParser = new PDFParser(new RandomAccessFile(inputFile, "r"));
+	    randomAccessFile = new RandomAccessFile(inputFile, "r");
+	    PDFParser pdfParser = new PDFParser(randomAccessFile);
 	    pdfParser.parse();
 
-	    COSDocument cosDocument = pdfParser.getDocument();
-
-	    pdDocument = new PDDocument(cosDocument);
+	    pdDocument = pdfParser.getPDDocument();
 
 	    PDFTextStripper pdfTextStripper = new PDFTextStripper();
 
@@ -78,22 +75,19 @@ public class PDFTextExtractor extends Extractor {
 	    outputFile = new File(outputFile.getParentFile().getAbsolutePath() + File.separator + outputFileName);
 
 	    if (text.length() > 0) {
-		try {
-		    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-		    bufferedWriter.write(text);
-		    bufferedWriter.close();
-		} catch (IOException e) {
-		    e.printStackTrace();
-		}
+		bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+		bufferedWriter.write(text);
 	    }
 
 	} finally {
+	    if (randomAccessFile != null) {
+		bufferedWriter.close();
+	    }
 	    if (pdDocument != null) {
-		try {
-		    pdDocument.close();
-		} catch (IOException e) {
-		    e.printStackTrace();
-		}
+		pdDocument.close();
+	    }
+	    if (bufferedWriter != null) {
+		bufferedWriter.close();
 	    }
 	}
     }
