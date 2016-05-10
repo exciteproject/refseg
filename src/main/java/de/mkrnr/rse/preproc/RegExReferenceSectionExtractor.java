@@ -12,11 +12,11 @@ import de.mkrnr.rse.util.FileHelper;
 
 public class RegExReferenceSectionExtractor extends Extractor {
 
-    private static final String REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Referenzen|REFERENZEN|Bibliography|"
-	    + "BIBLIOGRAPHY|References|REFERENCES|Literatur|LITERATUR|Schrifttum).*";
+    private static final String REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Bibliography|"
+	    + "BIBLIOGRAPHY|Bibliographie|BIBLIOGRAPHIE|Referenzen|REFERENZEN|References|REFERENCES|Reference List|REFERENCE LIST|Literatur|LITERATUR|Sources|SOURCES|Schrifttum).*";
 
     private static final String AFTER_REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Anmerkungen|ANMERKUNGEN|Appendix|"
-	    + "APPENDIX|Author|AUTHOR|Autor|AUTOR|ANHANG|Anhang|Die Schriftenreihe|Eingereicht am|Bemerkungen|Zur Person).*";
+	    + "ANHANG|Anhang|APPENDIX|Author|AUTHOR|Autor|AUTOR|Bemerkungen|Die Schriftenreihe|Discussion|DISCUSSION|Eingereicht am|Forschungsschwerpunkt|Stiftungsmaterialien|Zur Person|Zusammenfassung).*";
 
     public static void main(String[] args) throws IOException {
 	RegExReferenceSectionExtractor regExReferenceSectionExtractor = new RegExReferenceSectionExtractor();
@@ -34,7 +34,6 @@ public class RegExReferenceSectionExtractor extends Extractor {
 	    boolean referenceSectionFound = false;
 	    boolean afterReferenceSectionFound = false;
 	    int lineCount = 0;
-	    int referenceSectionStartLine = 0;
 	    while ((line = bufferedReader.readLine()) != null) {
 		if (!afterReferenceSectionFound) {
 		    lineCount++;
@@ -45,6 +44,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
 			}
 
 			if (Pattern.matches(REFERENCE_HEADER_REGEX, line)) {
+			    afterReferenceSectionFound = true;
 			    referenceSectionFound = false;
 			    break;
 			}
@@ -54,7 +54,6 @@ public class RegExReferenceSectionExtractor extends Extractor {
 
 		    if (Pattern.matches(REFERENCE_HEADER_REGEX, line) && (lineCount > (0.7 * totalLines))) {
 			referenceSectionFound = true;
-			referenceSectionStartLine = lineCount;
 		    }
 		}
 	    }
