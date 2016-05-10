@@ -17,8 +17,8 @@ public class PDFTextExtractor extends Extractor {
 
     public static void main(String[] args) throws IOException {
 
-	String inputDirectory = args[1];
-	String outputDirectory = args[2];
+	String inputDirectory = args[0];
+	String outputDirectory = args[1];
 	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(2, null, null);
 	// String filePath = args[0];
 	// String text = pdfTextExtractor.extractText(new File(filePath));
@@ -40,6 +40,7 @@ public class PDFTextExtractor extends Extractor {
 
     @Override
     public void extract(File inputFile, File outputFile) throws IOException {
+	System.out.println(inputFile.getName());
 	RandomAccessFile randomAccessFile = null;
 	PDDocument pdDocument = null;
 	BufferedWriter bufferedWriter = null;

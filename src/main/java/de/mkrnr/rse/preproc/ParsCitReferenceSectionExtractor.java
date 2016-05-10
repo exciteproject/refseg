@@ -1,6 +1,8 @@
 package de.mkrnr.rse.preproc;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 
@@ -11,51 +13,65 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.mkrnr.rse.util.FileHelper;
 import de.mkrnr.rse.util.XMLHelper;
 
-public class ParsCitReferenceSectionExtractor {
+public class ParsCitReferenceSectionExtractor extends Extractor {
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {
 
 	long startTime = System.currentTimeMillis();
 	ParsCitReferenceSectionExtractor referenceSectionExtractor = new ParsCitReferenceSectionExtractor();
 	// referenceSectionExtractor.extract(new File(args[0]));
-	referenceSectionExtractor.extractReferenceSection(null);
+	referenceSectionExtractor.extractInDir(new File(args[0]), new File(args[1]));
+	// referenceSectionExtractor.extractReferenceSection(null);
 	long endTime = System.currentTimeMillis();
 	System.out.println();
 	System.out.println("This took " + (endTime - startTime) + " milliseconds");
     }
 
-    public String extract(File inputFile) throws ParserConfigurationException, SAXException, IOException {
-	String labeledSections;
+    @Override
+    public void extract(File inputFile, File outputFile) throws IOException {
+	String labeledSections = null;
 	try {
 	    labeledSections = this.labelSections(inputFile);
 	} catch (IOException e) {
 	    e.printStackTrace();
-	    return null;
 	} catch (InterruptedException e) {
 	    // TODO Auto-generated catch block
 	    e.printStackTrace();
-	    return null;
 	}
 
-	System.out.println(labeledSections);
-	String referenceSection = this.extractReferenceSection(labeledSections);
-	return referenceSection;
+	// System.out.println(labeledSections);
+	String referenceSection = null;
+	if (labeledSections != null) {
+	    try {
+		referenceSection = this.extractReferenceSection(labeledSections);
+	    } catch (ParserConfigurationException | SAXException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	    }
+	}
+
+	if (referenceSection != null) {
+	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+	    bufferedWriter.write(referenceSection);
+	    bufferedWriter.close();
+
+	}
+	System.out.println(inputFile.getAbsolutePath());
     }
 
     public String extractReferenceSection(String labeledSections)
 	    throws ParserConfigurationException, SAXException, IOException {
 
-	labeledSections = FileHelper.readFile(new File("/media/data/masters-thesis/papers/test.xml"));
 	Document document = XMLHelper.loadXMLFromString(labeledSections);
 	NodeList referencesParts = document.getElementsByTagName("reference");
+	String referenceString = "";
 	for (int i = 0, len = referencesParts.getLength(); i < len; i++) {
-	    System.out.println(referencesParts.item(i).getFirstChild().getNodeValue());
+	    referenceString += referencesParts.item(i).getFirstChild().getNodeValue();
 	}
 
-	return null;
+	return referenceString;
     }
 
     /**

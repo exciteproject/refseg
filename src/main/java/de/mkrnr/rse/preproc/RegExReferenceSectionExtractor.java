@@ -16,11 +16,17 @@ public class RegExReferenceSectionExtractor extends Extractor {
 	    + "BIBLIOGRAPHY|Bibliographie|BIBLIOGRAPHIE|Referenzen|REFERENZEN|References|REFERENCES|Reference List|REFERENCE LIST|Literatur|LITERATUR|Sources|SOURCES|Schrifttum).*";
 
     private static final String AFTER_REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Anmerkungen|ANMERKUNGEN|Appendix|"
-	    + "ANHANG|Anhang|APPENDIX|Author|AUTHOR|Autor|AUTOR|Bemerkungen|Die Schriftenreihe|Discussion|DISCUSSION|Eingereicht am|Forschungsschwerpunkt|Stiftungsmaterialien|Zur Person|Zusammenfassung).*";
+	    + "ANHANG|Anhang|APPENDIX|Author|AUTHOR|Autor|AUTOR|Bemerkungen|Die Schriftenreihe|Discussion|DISCUSSION|Eingereicht am|Forschungsschwerpunkt|Stiftungsmaterialien|Table|TABLE|Zur Person|Zusammenfassung).*";
 
     public static void main(String[] args) throws IOException {
+	long startTime = System.currentTimeMillis();
 	RegExReferenceSectionExtractor regExReferenceSectionExtractor = new RegExReferenceSectionExtractor();
+	// regExReferenceSectionExtractor.extract(new File(args[0] +
+	// "/10454.txt"), null);
 	regExReferenceSectionExtractor.extractInDir(new File(args[0]), new File(args[1]));
+	long endTime = System.currentTimeMillis();
+	System.out.println();
+	System.out.println("This took " + (endTime - startTime) + " milliseconds");
     }
 
     @Override
@@ -35,6 +41,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
 	    boolean afterReferenceSectionFound = false;
 	    int lineCount = 0;
 	    while ((line = bufferedReader.readLine()) != null) {
+		// System.out.println(line);
 		if (!afterReferenceSectionFound) {
 		    lineCount++;
 		    if (referenceSectionFound) {
