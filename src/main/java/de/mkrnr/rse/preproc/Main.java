@@ -47,13 +47,17 @@ public class Main {
 	    "--preprocessed-dir" }, description = "directory in which the preprocessed text files are stored", converter = FileConverter.class)
     private File preProcDirectory;
 
-    private void run() throws IOException {
+    private void run() {
 	if (this.pdfDirectory != null) {
 	    if (this.textDirectory != null) {
 		// TODO Add parameters for sortByPosition and addMoreFormatting
 		PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(this.pdfStartPage, null, null);
-		pdfTextExtractor.extractInDir(this.pdfDirectory, this.textDirectory);
-
+		try {
+		    pdfTextExtractor.extractInDir(this.pdfDirectory, this.textDirectory);
+		} catch (IOException e) {
+		    System.err.print("IOException in PDFTextExtractor: ");
+		    System.err.println(e.getMessage());
+		}
 	    } else {
 		throw new ParameterException("\"-text\" needs to be set as output when \"-pdf\" is set");
 	    }
@@ -61,13 +65,16 @@ public class Main {
 
 	if (this.textDirectory != null) {
 	    if (this.preProcDirectory != null) {
-		// TODO Add parameters for sortByPosition and addMoreFormatting
 		PDFTextPreprocessor pdfTextPreprocessor = new PDFTextPreprocessor();
-		pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
+		try {
+		    pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
+		} catch (IOException e) {
+		    System.err.print("IOException in PDFTextPreprocessor: ");
+		    System.err.println(e.getMessage());
+		}
 	    } else {
 		throw new ParameterException("\"-preproc\" needs to be set as output when \"-text\" is set");
 	    }
 	}
-
     }
 }
