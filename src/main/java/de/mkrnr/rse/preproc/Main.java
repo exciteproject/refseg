@@ -1,7 +1,6 @@
 package de.mkrnr.rse.preproc;
 
 import java.io.File;
-import java.io.IOException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -10,7 +9,7 @@ import com.beust.jcommander.converters.FileConverter;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 	Main main = new Main();
 
 	JCommander jCommander;
@@ -52,12 +51,7 @@ public class Main {
 	    if (this.textDirectory != null) {
 		// TODO Add parameters for sortByPosition and addMoreFormatting
 		PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(this.pdfStartPage, null, null);
-		try {
-		    pdfTextExtractor.extractInDir(this.pdfDirectory, this.textDirectory);
-		} catch (IOException e) {
-		    System.err.print("IOException in PDFTextExtractor: ");
-		    System.err.println(e.getMessage());
-		}
+		pdfTextExtractor.extractInDir(this.pdfDirectory, this.textDirectory);
 	    } else {
 		throw new ParameterException("\"-text\" needs to be set as output when \"-pdf\" is set");
 	    }
@@ -66,12 +60,7 @@ public class Main {
 	if (this.textDirectory != null) {
 	    if (this.preProcDirectory != null) {
 		PDFTextPreprocessor pdfTextPreprocessor = new PDFTextPreprocessor();
-		try {
-		    pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
-		} catch (IOException e) {
-		    System.err.print("IOException in PDFTextPreprocessor: ");
-		    System.err.println(e.getMessage());
-		}
+		pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
 	    } else {
 		throw new ParameterException("\"-preproc\" needs to be set as output when \"-text\" is set");
 	    }
