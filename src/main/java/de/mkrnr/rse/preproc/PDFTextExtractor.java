@@ -23,7 +23,11 @@ public class PDFTextExtractor extends Extractor {
 	// String filePath = args[0];
 	// String text = pdfTextExtractor.extractText(new File(filePath));
 	// System.out.println(text);
-	pdfTextExtractor.extractInDir(new File(inputDirectory), new File(outputDirectory));
+	// pdfTextExtractor.extract(new File(inputDirectory), new
+	// File(outputDirectory));
+	inputDirectory = "/media/data/masters-thesis/papers/40259.pdf";
+	outputDirectory = "/media/data/masters-thesis/papers/40259.pdf";
+	pdfTextExtractor.extract(new File(inputDirectory), new File(outputDirectory));
     }
 
     private Boolean sortByPosition;
@@ -80,6 +84,8 @@ public class PDFTextExtractor extends Extractor {
 		bufferedWriter.write(text);
 	    }
 
+	} catch (ClassCastException e) {
+	    e.printStackTrace();
 	} finally {
 	    if (randomAccessFile != null) {
 		randomAccessFile.close();
@@ -92,5 +98,4 @@ public class PDFTextExtractor extends Extractor {
 	    }
 	}
     }
-
 }

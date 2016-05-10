@@ -25,7 +25,7 @@ public class NameTagger {
 	NameTagger authorTagger = new NameTagger("firstName", "lastName");
 	authorTagger.createTries(firstNameFile, lastNameFile);
 	long startTime = System.currentTimeMillis();
-	authorTagger.tagDirectory(new File(args[2]), new File(args[3]));
+	// authorTagger.tagDirectory(new File(args[2]), new File(args[3]));
 	long endTime = System.currentTimeMillis();
 	System.out.println("This took " + (endTime - startTime) + " milliseconds");
 
