@@ -46,6 +46,10 @@ public class Main {
 	    "--preprocessed-dir" }, description = "directory in which the preprocessed text files are stored", converter = FileConverter.class)
     private File preProcDirectory;
 
+    @Parameter(names = { "-refextr",
+	    "--referenec-extraction-dir" }, description = "directory in which the preprocessed text files are stored", converter = FileConverter.class)
+    private File refExtrDirectory;
+
     private void run() {
 	if ((this.pdfDirectory != null) && (this.textDirectory != null)) {
 	    // TODO Add parameters for sortByPosition and addMoreFormatting
@@ -56,6 +60,10 @@ public class Main {
 	if ((this.textDirectory != null) && (this.preProcDirectory != null)) {
 	    PDFTextPreprocessor pdfTextPreprocessor = new PDFTextPreprocessor();
 	    pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
+	}
+	if ((this.preProcDirectory != null) && (this.refExtrDirectory != null)) {
+	    RegExReferenceSectionExtractor regExReferenceSectionExtractor = new RegExReferenceSectionExtractor();
+	    regExReferenceSectionExtractor.extractInDir(this.preProcDirectory, this.refExtrDirectory);
 	}
     }
 }
