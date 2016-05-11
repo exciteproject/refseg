@@ -25,8 +25,8 @@ public class PDFTextExtractor extends Extractor {
 	// System.out.println(text);
 	// pdfTextExtractor.extract(new File(inputDirectory), new
 	// File(outputDirectory));
-	inputDirectory = "/media/data/masters-thesis/papers/40259.pdf";
-	outputDirectory = "/media/data/masters-thesis/papers/40259.pdf";
+	inputDirectory = "/media/data/masters-thesis/papers/33978.pdf";
+	outputDirectory = "/media/data/masters-thesis/papers/33978.pdf";
 	pdfTextExtractor.extract(new File(inputDirectory), new File(outputDirectory));
     }
 
@@ -85,6 +85,8 @@ public class PDFTextExtractor extends Extractor {
 	    }
 
 	} catch (ClassCastException e) {
+	    e.printStackTrace();
+	} catch (IllegalArgumentException e) {
 	    e.printStackTrace();
 	} finally {
 	    if (randomAccessFile != null) {
