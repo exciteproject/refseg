@@ -20,12 +20,13 @@ public class NameMatcher {
 	File taggedDir = new File(args[1]);
 	File outputDir = new File(args[2]);
 
-	long startTime = System.currentTimeMillis();
+	long startTime;
+	long endTime;
+	startTime = System.nanoTime();
 	NameMatcher nameContextExtractor = new NameMatcher(nameFile, "firstName", "lastName", "author");
+	endTime = System.nanoTime();
+	System.out.println("Building took " + (((endTime - startTime)) / 1000000) + " milliseconds");
 
-	long endTime = System.currentTimeMillis();
-	nameContextExtractor.matchDirectory(taggedDir, outputDir);
-	System.out.println("This took " + (endTime - startTime) + " milliseconds");
 	// Getting the runtime reference from system
 	Runtime runtime = Runtime.getRuntime();
 
@@ -43,6 +44,11 @@ public class NameMatcher {
 
 	// Print Maximum available memory
 	System.out.println("Max Memory:" + (runtime.maxMemory() / mb));
+
+	startTime = System.nanoTime();
+	nameContextExtractor.matchDirectory(taggedDir, outputDir);
+	endTime = System.nanoTime();
+	System.out.println("Matching took " + (((endTime - startTime)) / 1000000) + " milliseconds");
     }
 
     // generate name lookup
@@ -57,9 +63,14 @@ public class NameMatcher {
      * Format of names: Map<lastName,Set<firstNameVariation>>
      */
     private Map<String, Set<String>> namesLookup;
-    private String firstNameTag;
-    private String lastNameTag;
+    private final String firstNameTag;
+    private final String lastNameTag;
     private String authorTag;
+
+    // TODO remove
+    private int aggrSize = 0;
+    private int firstNameCount = 0;
+    private int lastNameCount = 0;
 
     /**
      * Constructor that generates a lookup for the names in nameFile TODO:
@@ -70,6 +81,8 @@ public class NameMatcher {
      */
     public NameMatcher(File nameFile, String firstNameTag, String lastNameTag, String authorTag) throws IOException {
 	this.namesLookup = this.generateNamesLookUp(nameFile);
+	System.out.println("last names: " + this.lastNameCount);
+	System.out.println("first names: " + this.firstNameCount);
 	this.firstNameTag = firstNameTag;
 	this.lastNameTag = lastNameTag;
 	this.authorTag = authorTag;
@@ -84,6 +97,7 @@ public class NameMatcher {
 		this.matchFile(inputFile,
 			new File(outputDirectory.getAbsolutePath() + File.separator + inputFile.getName()));
 	    }
+	    System.out.println(this.aggrSize);
 	} catch (NullPointerException e) {
 	    e.printStackTrace();
 	}
@@ -95,6 +109,7 @@ public class NameMatcher {
 	    inputString = FileHelper.readFile(inputFile);
 	} catch (IOException e) {
 	    e.printStackTrace();
+	    return;
 	}
 
 	NameSplit nameSplit = new NameSplit(inputString);
@@ -128,6 +143,7 @@ public class NameMatcher {
 	    // no author name starts with name at position i
 	    nameSplit.removeNameTag(i);
 	}
+	this.aggrSize += nameSplit.size();
 	try {
 	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	    bufferedWriter.write(nameSplit.toString());
@@ -162,10 +178,14 @@ public class NameMatcher {
 	    String lastName = lineSplit[1];
 	    if (namesLookup.containsKey(lastName)) {
 		for (String firstNameVariation : firstNameVariations) {
-		    namesLookup.get(lastName).add(firstNameVariation);
+		    if (namesLookup.get(lastName).add(firstNameVariation)) {
+			this.firstNameCount += 1;
+		    }
 		}
 	    } else {
+		this.lastNameCount += 1;
 		namesLookup.put(lastName, new HashSet<String>(firstNameVariations));
+		this.firstNameCount += firstNameVariations.size();
 	    }
 	}
 	nameReader.close();

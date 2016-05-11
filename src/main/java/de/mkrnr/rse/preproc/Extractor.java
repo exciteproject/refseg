@@ -10,12 +10,20 @@ public abstract class Extractor {
     public void extractInDir(File inputDir, File outputDir) {
 	outputDir.mkdirs();
 
-	for (File inputFile : inputDir.listFiles()) {
-	    try {
-		this.extract(inputFile, new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
-	    } catch (IOException e) {
-		System.err.print("IOException during extraction of file " + inputFile.getName() + ": ");
-		System.err.println(e.getMessage());
+	File[] inputDirFiles = null;
+	if (inputDir != null) {
+	    inputDirFiles = inputDir.listFiles();
+	}
+
+	if (inputDirFiles != null) {
+	    for (File inputFile : inputDirFiles) {
+		try {
+		    this.extract(inputFile,
+			    new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+		} catch (IOException e) {
+		    System.err.print("IOException during extraction of file " + inputFile.getName() + ": ");
+		    System.err.println(e.getMessage());
+		}
 	    }
 	}
     }

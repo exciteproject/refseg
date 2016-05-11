@@ -22,12 +22,19 @@ public class NameTagger {
 
 	File firstNameFile = new File(args[0]);
 	File lastNameFile = new File(args[1]);
+
+	long startTime;
+	long endTime;
 	NameTagger authorTagger = new NameTagger("firstName", "lastName");
+	startTime = System.nanoTime();
 	authorTagger.createTries(firstNameFile, lastNameFile);
-	long startTime = System.currentTimeMillis();
-	// authorTagger.tagDirectory(new File(args[2]), new File(args[3]));
-	long endTime = System.currentTimeMillis();
-	System.out.println("This took " + (endTime - startTime) + " milliseconds");
+	endTime = System.nanoTime();
+	System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
+
+	startTime = System.nanoTime();
+	authorTagger.tagDirectory(new File(args[2]), new File(args[3]));
+	endTime = System.nanoTime();
+	System.out.println("Tagging took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
 	// Getting the runtime reference from system
 	Runtime runtime = Runtime.getRuntime();
@@ -87,7 +94,6 @@ public class NameTagger {
     }
 
     public void tagFile(File inputFile, File outputFile) {
-	System.out.println("tag file");
 	String inputString = null;
 	try {
 	    inputString = FileHelper.readFile(inputFile);

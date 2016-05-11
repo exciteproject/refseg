@@ -8,14 +8,13 @@ import de.mkrnr.rse.util.XMLHelper;
 
 public class NameSplit {
 
-    // public static void main(String[] args) {
-    // NameSplit nameSplit = new NameSplit(
-    // "<lastName>Sassen</lastName>, <firstName>Saskia</firstName> (1991),
-    // <lastName>The</lastName> Global "
-    // + "City. <lastName>New</lastName> <lastName>York</lastName>,
-    // <lastName>London</lastName>, Tokyo,");
-    // System.out.println(nameSplit.toString());
-    // }
+    public static void main(String[] args) {
+	NameSplit nameSplit = new NameSplit(
+		"<lastName>Sassen</lastName>, <firstName>Saskia</firstName> (1991), <lastName>The</lastName> Global "
+			+ "City. <lastName>New</lastName> <lastName>York</lastName>, <lastName>London</lastName>, Tokyo,");
+	System.out.println(nameSplit.toString());
+
+    }
 
     List<String> nameSplit;
     List<String> nameSplitTag;

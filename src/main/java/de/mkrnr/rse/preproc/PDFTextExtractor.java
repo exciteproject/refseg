@@ -85,8 +85,11 @@ public class PDFTextExtractor extends Extractor {
 	    }
 
 	} catch (ClassCastException e) {
+	    // thrown e.g. by 40259.pdf
+
 	    e.printStackTrace();
 	} catch (IllegalArgumentException e) {
+	    // thrown e.g. by 33978.pdf
 	    e.printStackTrace();
 	} finally {
 	    if (randomAccessFile != null) {
