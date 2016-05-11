@@ -47,23 +47,15 @@ public class Main {
     private File preProcDirectory;
 
     private void run() {
-	if (this.pdfDirectory != null) {
-	    if (this.textDirectory != null) {
-		// TODO Add parameters for sortByPosition and addMoreFormatting
-		PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(this.pdfStartPage, null, null);
-		pdfTextExtractor.extractInDir(this.pdfDirectory, this.textDirectory);
-	    } else {
-		throw new ParameterException("\"-text\" needs to be set as output when \"-pdf\" is set");
-	    }
+	if ((this.pdfDirectory != null) && (this.textDirectory != null)) {
+	    // TODO Add parameters for sortByPosition and addMoreFormatting
+	    PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(this.pdfStartPage, null, null);
+	    pdfTextExtractor.extractInDir(this.pdfDirectory, this.textDirectory);
 	}
 
-	if (this.textDirectory != null) {
-	    if (this.preProcDirectory != null) {
-		PDFTextPreprocessor pdfTextPreprocessor = new PDFTextPreprocessor();
-		pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
-	    } else {
-		throw new ParameterException("\"-preproc\" needs to be set as output when \"-text\" is set");
-	    }
+	if ((this.textDirectory != null) && (this.preProcDirectory != null)) {
+	    PDFTextPreprocessor pdfTextPreprocessor = new PDFTextPreprocessor();
+	    pdfTextPreprocessor.extractInDir(this.textDirectory, this.preProcDirectory);
 	}
     }
 }
