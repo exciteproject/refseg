@@ -1,12 +1,16 @@
 package de.mkrnr.rse.distsup;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -14,25 +18,29 @@ import org.ahocorasick.trie.Token;
 import org.ahocorasick.trie.Trie;
 import org.ahocorasick.trie.Trie.TrieBuilder;
 
+import de.mkrnr.goddag.LeafNode;
+import de.mkrnr.rse.distsup.GoddagNameStructure.NodeType;
 import de.mkrnr.rse.util.FileHelper;
 
 public class NameTagger {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
 	File firstNameFile = new File(args[0]);
 	File lastNameFile = new File(args[1]);
 
 	long startTime;
 	long endTime;
-	NameTagger authorTagger = new NameTagger("firstName", "lastName");
+	NameTagger nameTagger = new NameTagger();
 	startTime = System.nanoTime();
-	authorTagger.createTries(firstNameFile, lastNameFile);
+	nameTagger.createTrie(firstNameFile, GoddagNameStructure.NodeType.FIRST_NAME);
+	nameTagger.createTrie(lastNameFile, GoddagNameStructure.NodeType.LAST_NAME);
 	endTime = System.nanoTime();
 	System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
 	startTime = System.nanoTime();
-	authorTagger.tagDirectory(new File(args[2]), new File(args[3]));
+	nameTagger.tagDirectory(new File(args[2]), new File(args[3]));
+	// nameTagger.tagFile(new File(args[2]), new File(args[3]));
 	endTime = System.nanoTime();
 	System.out.println("Tagging took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
@@ -55,28 +63,46 @@ public class NameTagger {
 	System.out.println("Max Memory:" + (runtime.maxMemory() / mb));
     }
 
-    private final String firstNameLabel;
-
-    private final String lastNameLabel;
-
     // map containing the tag name as key and the according Trie as value
-    private Map<String, Trie> tries;
+    private Map<NodeType, Trie> tries;
 
-    public NameTagger(String firstNameLabel, String lastNameLabel) {
-	this.firstNameLabel = firstNameLabel;
-	this.lastNameLabel = lastNameLabel;
+    private final String wordSplitRegex = "\\s";
+    private GoddagNameStructure goddagNameStructure;
 
+    private LeafNode currentLeafNode;
+
+    private Iterator<LeafNode> leafNodeIterator;
+
+    public NameTagger() {
+	this.tries = new HashMap<GoddagNameStructure.NodeType, Trie>();
     }
 
-    public void createTries(File firstNameFile, File lastNameFile) {
+    public void createTrie(File keywordFile, NodeType nodeType) throws IOException {
+
+	// TODO store as map with counts
+	List<String> keywords = new ArrayList<String>();
+	BufferedReader bufferedReader = new BufferedReader(new FileReader(keywordFile));
+	String line;
+	while ((line = bufferedReader.readLine()) != null) {
+	    String[] lineSplit = line.split("\\t");
+	    keywords.add(lineSplit[0]);
+	}
+	bufferedReader.close();
+
+	this.createTrie(keywords, nodeType);
+    }
+
+    public void createTrie(List<String> keywords, NodeType nodeType) {
 	System.out.println("read names");
-	DisjointNameMaps nameMaps = new DisjointNameMaps(firstNameFile, lastNameFile);
 
 	System.out.println("generate triebuilder");
 
-	this.tries = new HashMap<String, Trie>();
-	this.tries.put(this.firstNameLabel, this.createTrieBuilder(nameMaps.getFirstNameMap()).build());
-	this.tries.put(this.lastNameLabel, this.createTrieBuilder(nameMaps.getLastNameMap()).build());
+	TrieBuilder trieBuilder = Trie.builder().onlyWholeWords();
+	for (String keyword : keywords) {
+	    trieBuilder.addKeyword(keyword);
+	}
+
+	this.tries.put(nodeType, trieBuilder.build());
     }
 
     public void tagDirectory(File inputDirectory, File outputDirectory) {
@@ -101,42 +127,88 @@ public class NameTagger {
 	    e.printStackTrace();
 	}
 
-	String taggedFirstNameString = this.tagString(inputString, this.tries.get(this.firstNameLabel),
-		this.firstNameLabel);
-	String taggedFirstAndLastNameString = this.tagString(taggedFirstNameString, this.tries.get(this.lastNameLabel),
-		this.lastNameLabel);
+	this.initializeNameStructure(inputString);
+	for (Entry<NodeType, Trie> trieEntry : this.tries.entrySet()) {
+	    this.tagString(inputString, trieEntry.getValue(), trieEntry.getKey());
+	}
 
+	// System.out.println(this.goddagNameStructure);
 	try {
+	    // TODO serialize goddagNameStructure instead
 	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-	    bufferedWriter.write(taggedFirstAndLastNameString);
+	    bufferedWriter.write(this.goddagNameStructure.toString());
 	    bufferedWriter.close();
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
     }
 
-    private TrieBuilder createTrieBuilder(Map<String, Integer> nameMap) {
-	TrieBuilder trieBuilder = Trie.builder().removeOverlaps().onlyWholeWords();
-	for (Entry<String, Integer> nameMapEntry : nameMap.entrySet()) {
-	    trieBuilder.addKeyword(nameMapEntry.getKey());
-	}
-	return trieBuilder;
-    }
+    public GoddagNameStructure tagString(String inputString, Trie trie, NodeType nodeType) {
 
-    private String tagString(String inputString, Trie trie, String tagName) {
+	this.leafNodeIterator = this.goddagNameStructure.getLeafNodeIterator();
+	if (this.leafNodeIterator.hasNext()) {
+	    this.currentLeafNode = this.leafNodeIterator.next();
+	} else {
+	    throw new IllegalStateException("leafNodeIterator was empty after initialization");
+	}
+
 	Collection<Token> tokens = trie.tokenize(inputString);
-	StringBuffer taggedSequence = new StringBuffer();
 	Iterator<Token> tokenIterator = tokens.iterator();
+
 	while (tokenIterator.hasNext()) {
-	    Token token = tokenIterator.next();
+	    final Token token = tokenIterator.next();
+	    // System.out.println(token.getFragment());
 	    if (token.isMatch()) {
-		taggedSequence.append("<" + tagName + ">" + token.getFragment() + "</" + tagName + ">");
+		this.tagMatch(token.getFragment(), nodeType);
 	    } else {
-		taggedSequence.append(token.getFragment());
+		this.moveCurrentLeafNode(token.getFragment());
 	    }
 	}
-	return taggedSequence.toString();
-
+	// System.out.println(this.goddagNameStructure.toString());
+	return this.goddagNameStructure;
     }
 
+    private void initializeNameStructure(String inputString) {
+	this.goddagNameStructure = new GoddagNameStructure();
+	String[] inputStringSplit = inputString.split(this.wordSplitRegex);
+	for (String inputStringPart : inputStringSplit) {
+	    this.goddagNameStructure.addAsLeafNode(inputStringPart);
+	}
+    }
+
+    private void moveCurrentLeafNode(String text) {
+	String[] textSplit = text.split(this.wordSplitRegex);
+
+	for (String textPart : textSplit) {
+	    while (!this.currentLeafNode.getLabel().contains(textPart)) {
+		this.currentLeafNode = this.currentLeafNode.getNextLeafNode();
+		if (this.currentLeafNode == null) {
+		    throw new IllegalStateException("reached end of leafNodes while searching for match: " + textPart);
+		}
+	    }
+	}
+    }
+
+    private void tagMatch(String match, NodeType nodeType) {
+
+	String[] matchSplit = match.split(this.wordSplitRegex);
+
+	// move current leafNode until the last word of matchSplit
+	while (!this.currentLeafNode.getLabel().contains(matchSplit[matchSplit.length - 1])) {
+	    this.currentLeafNode = this.currentLeafNode.getNextLeafNode();
+	    if (this.currentLeafNode == null) {
+		throw new IllegalStateException("reached end of leafNodes while searching for match");
+	    }
+	}
+
+	ArrayList<LeafNode> matchingLeafNodes = new ArrayList<LeafNode>();
+	LeafNode currentMatchingLeafNode = this.currentLeafNode;
+
+	for (@SuppressWarnings("unused")
+	String element : matchSplit) {
+	    matchingLeafNodes.add(0, currentMatchingLeafNode);
+	    currentMatchingLeafNode = currentMatchingLeafNode.getPreviousLeafNode();
+	}
+	this.goddagNameStructure.tagNodesAs(matchingLeafNodes.toArray(new LeafNode[0]), nodeType);
+    }
 }

@@ -59,8 +59,9 @@ public class Main {
     private void run() throws IOException {
 	if ((this.inputDirectory != null) && (this.taggedDirectory != null) && (this.matchedDirectory != null)) {
 	    // TODO add label parameters
-	    NameTagger nameTagger = new NameTagger("firstName", "lastName");
-	    nameTagger.createTries(this.firstNamesFile, this.lastNamesFile);
+	    NameTagger nameTagger = new NameTagger();
+	    // TODO update
+	    // nameTagger.createTrie(this.firstNamesFile, this.lastNamesFile);
 	    nameTagger.tagDirectory(this.inputDirectory, this.taggedDirectory);
 
 	    NameMatcher nameMatcher = new NameMatcher(this.namesFile, "firstName", "lastName", "author");
