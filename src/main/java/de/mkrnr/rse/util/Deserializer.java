@@ -7,18 +7,12 @@ import java.io.ObjectInputStream;
 
 public class Deserializer {
 
-    public static Object deserialize(File serializedFile) {
-        Object object = null;
-        try {
-            ObjectInputStream in = new ObjectInputStream(new FileInputStream(serializedFile));
-            object = in.readObject();
-            in.close();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static Object deserialize(File serializedFile) throws IOException, ClassNotFoundException {
+	Object object = null;
+	ObjectInputStream in = new ObjectInputStream(new FileInputStream(serializedFile));
+	object = in.readObject();
+	in.close();
 
-        return object;
+	return object;
     }
 }

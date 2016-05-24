@@ -7,14 +7,10 @@ import java.io.ObjectOutputStream;
 
 public class Serializer {
 
-    public static void serialize(Object object, File serializedFile) {
-        try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(serializedFile));
-            objectOutputStream.writeObject(object);
-            objectOutputStream.close();
-            System.out.printf("Serialized data is saved in: " + serializedFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static void serialize(Object object, File serializedFile) throws IOException {
+	ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(serializedFile));
+	objectOutputStream.writeObject(object);
+	objectOutputStream.close();
+	System.out.printf("Serialized data is saved in: " + serializedFile);
     }
 }

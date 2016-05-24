@@ -67,11 +67,6 @@ public class NameMatcher {
     private final String lastNameTag;
     private String authorTag;
 
-    // TODO remove
-    private int aggrSize = 0;
-    private int firstNameCount = 0;
-    private int lastNameCount = 0;
-
     /**
      * Constructor that generates a lookup for the names in nameFile TODO:
      * specify format of nameFile
@@ -81,8 +76,6 @@ public class NameMatcher {
      */
     public NameMatcher(File nameFile, String firstNameTag, String lastNameTag, String authorTag) throws IOException {
 	this.namesLookup = this.generateNamesLookUp(nameFile);
-	System.out.println("last names: " + this.lastNameCount);
-	System.out.println("first names: " + this.firstNameCount);
 	this.firstNameTag = firstNameTag;
 	this.lastNameTag = lastNameTag;
 	this.authorTag = authorTag;
@@ -94,10 +87,11 @@ public class NameMatcher {
 	}
 	try {
 	    for (File inputFile : inputDirectory.listFiles()) {
+		String[] inputFileNameSplit = inputFile.getName().split("\\.");
+		String outputFileName = inputFileNameSplit[0] + ".ser";
 		this.matchFile(inputFile,
-			new File(outputDirectory.getAbsolutePath() + File.separator + inputFile.getName()));
+			new File(outputDirectory.getAbsolutePath() + File.separator + outputFileName));
 	    }
-	    System.out.println(this.aggrSize);
 	} catch (NullPointerException e) {
 	    e.printStackTrace();
 	}
@@ -143,7 +137,6 @@ public class NameMatcher {
 	    // no author name starts with name at position i
 	    nameSplit.removeNameTag(i);
 	}
-	this.aggrSize += nameSplit.size();
 	try {
 	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	    bufferedWriter.write(nameSplit.toString());
@@ -177,15 +170,8 @@ public class NameMatcher {
 	    Set<String> firstNameVariations = Name.getFirstNameVariations(lineSplit[0]);
 	    String lastName = lineSplit[1];
 	    if (namesLookup.containsKey(lastName)) {
-		for (String firstNameVariation : firstNameVariations) {
-		    if (namesLookup.get(lastName).add(firstNameVariation)) {
-			this.firstNameCount += 1;
-		    }
-		}
 	    } else {
-		this.lastNameCount += 1;
 		namesLookup.put(lastName, new HashSet<String>(firstNameVariations));
-		this.firstNameCount += firstNameVariations.size();
 	    }
 	}
 	nameReader.close();
