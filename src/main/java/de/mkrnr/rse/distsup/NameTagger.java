@@ -4,18 +4,17 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
-import org.ahocorasick.trie.Token;
-import org.ahocorasick.trie.Trie;
-import org.ahocorasick.trie.Trie.TrieBuilder;
+import org.apache.commons.io.FileUtils;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 import de.mkrnr.rse.util.FileHelper;
 
@@ -28,16 +27,17 @@ public class NameTagger {
 
 	long startTime;
 	long endTime;
-	NameTagger nameTagger = new NameTagger();
+	NameTagger nameTagger = new NameTagger(true);
 	startTime = System.nanoTime();
-	nameTagger.createTrie(firstNameFile, GoddagNameStructure.NodeType.FIRST_NAME.toString());
-	nameTagger.createTrie(lastNameFile, GoddagNameStructure.NodeType.LAST_NAME.toString());
+	nameTagger.createNameMap(firstNameFile, true, GoddagNameStructure.NodeType.FIRST_NAME.toString());
+	nameTagger.createNameMap(lastNameFile, false, GoddagNameStructure.NodeType.LAST_NAME.toString());
 	endTime = System.nanoTime();
 	System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
 	startTime = System.nanoTime();
 	nameTagger.tagDirectory(new File(args[2]), new File(args[3]));
-	// nameTagger.tagFile(new File(args[2]), new File(args[3]));
+	// nameTagger.tagFile(new File(args[2]).listFiles()[1], new
+	// File("/tmp/tagger-test.json"));
 	endTime = System.nanoTime();
 	System.out.println("Tagging took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
@@ -60,46 +60,54 @@ public class NameTagger {
 	System.out.println("Max Memory:" + (runtime.maxMemory() / mb));
     }
 
-    private Map<String, Trie> tries;
-
     private final String wordSplitRegex = "\\s";
+
     private GoddagNameStructure goddagNameStructure;
 
-    private List<Node> leafNodes;
+    private Map<String, Map<String, Integer>> nameMaps;
+    private final String wordPropertyKey = "word";
 
-    private int currentLeafNodeIndex;
+    private Gson gson;
 
-    public NameTagger() {
-	this.tries = new HashMap<String, Trie>();
+    public NameTagger(boolean prettyPrintJson) {
+	this.nameMaps = new HashMap<String, Map<String, Integer>>();
+	GsonBuilder gsonBuilder = new GsonBuilder();
+	if (prettyPrintJson) {
+	    gsonBuilder.setPrettyPrinting();
+	}
+	gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonSerializer());
+	gsonBuilder.registerTypeAdapter(Node.class, Node.getJsonSerializer());
+	this.gson = gsonBuilder.create();
+
     }
 
-    // TODO set Map<String,Integer> as input and generate first name variations
-    public void createTrie(File keywordFile, String nodeType) throws IOException {
+    public void createNameMap(File keywordFile, boolean createFirstNameVariations, String nodeType) throws IOException {
 
-	// TODO store as map with counts
-	List<String> keywords = new ArrayList<String>();
+	Map<String, Integer> nameMap = new HashMap<String, Integer>();
 	BufferedReader bufferedReader = new BufferedReader(new FileReader(keywordFile));
 	String line;
 	while ((line = bufferedReader.readLine()) != null) {
 	    String[] lineSplit = line.split("\\t");
-	    keywords.add(lineSplit[0]);
+	    nameMap.put(lineSplit[0], Integer.parseInt(lineSplit[1]));
 	}
 	bufferedReader.close();
 
-	this.createTrie(keywords, nodeType);
     }
 
-    public void createTrie(List<String> keywords, String nodeType) {
-	System.out.println("read names");
-
-	System.out.println("generate triebuilder");
-
-	TrieBuilder trieBuilder = Trie.builder().onlyWholeWords();
-	for (String keyword : keywords) {
-	    trieBuilder.addKeyword(keyword);
+    public void createNameMap(Map<String, Integer> names, boolean createFirstNameVariations, String nodeType) {
+	Map<String, Integer> nameMap = new HashMap<String, Integer>();
+	for (Entry<String, Integer> nameEntry : names.entrySet()) {
+	    if (createFirstNameVariations) {
+		Set<String> firstNameVariations = Name.getFirstNameVariations(nameEntry.getKey());
+		for (String firstNameVariation : firstNameVariations) {
+		    nameMap.put(firstNameVariation, nameEntry.getValue());
+		}
+	    } else {
+		nameMap.put(nameEntry.getKey(), nameEntry.getValue());
+	    }
 	}
+	this.nameMaps.put(nodeType, nameMap);
 
-	this.tries.put(nodeType, trieBuilder.build());
     }
 
     public void tagDirectory(File inputDirectory, File outputDirectory) throws IOException {
@@ -108,98 +116,62 @@ public class NameTagger {
 	}
 	try {
 	    for (File inputFile : inputDirectory.listFiles()) {
-		this.tagFile(inputFile,
-			new File(outputDirectory.getAbsolutePath() + File.separator + inputFile.getName()));
+		String[] inputFileNameSplit = inputFile.getName().split("\\.");
+		String outputFileName = inputFileNameSplit[0] + ".json";
+		this.tagFile(inputFile, new File(outputDirectory.getAbsolutePath() + File.separator + outputFileName));
 	    }
 	} catch (NullPointerException e) {
 	    e.printStackTrace();
 	}
     }
 
-    public void tagFile(File inputFile, File outputFile) {
+    public void tagFile(File inputFile, File outputFile) throws IOException {
+	System.out.println("tag file: " + inputFile);
 	String inputString = null;
 	try {
 	    inputString = FileHelper.readFile(inputFile);
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
+	Goddag goddag = this.tagString(inputString);
 
-	this.initializeNameStructure(inputString);
-	for (Entry<String, Trie> trieEntry : this.tries.entrySet()) {
-	    this.tagString(inputString, trieEntry.getValue(), trieEntry.getKey());
-	}
+	// GoddagVisualizer goddagVisualizer = new GoddagVisualizer();
+	// goddagVisualizer.visualize(this.goddagNameStructure.getGoddag());
 
-	System.out.println(this.goddagNameStructure);
+	FileUtils.writeStringToFile(outputFile, this.gson.toJson(goddag, Goddag.class));
+	// System.out.println(this.goddagNameStructure);
 	// JsonHelper.writeToFile(this.goddagNameStructure, outputFile);
 	// System.exit(1);
     }
 
-    public GoddagNameStructure tagString(String inputString, Trie trie, String nodeType) {
+    public Goddag tagString(String inputString) {
+	this.initializeNameStructure(inputString);
 
-	this.currentLeafNodeIndex = 0;
-
-	Collection<Token> tokens = trie.tokenize(inputString);
-	Iterator<Token> tokenIterator = tokens.iterator();
-
-	while (tokenIterator.hasNext()) {
-	    final Token token = tokenIterator.next();
-	    // System.out.println(token.getFragment());
-	    if (token.isMatch()) {
-		this.tagMatch(token.getFragment(), nodeType);
-	    } else {
-		this.moveCurrentLeafNode(token.getFragment());
-	    }
+	for (Entry<String, Map<String, Integer>> nameMap : this.nameMaps.entrySet()) {
+	    this.tagLeafNodes(nameMap.getValue(), nameMap.getKey());
 	}
-	// System.out.println(this.goddagNameStructure.toString());
-	return this.goddagNameStructure;
+
+	return this.goddagNameStructure.getGoddag();
     }
 
     private void initializeNameStructure(String inputString) {
 	this.goddagNameStructure = new GoddagNameStructure();
 	String[] inputStringSplit = inputString.split(this.wordSplitRegex);
 	for (String inputStringPart : inputStringSplit) {
-	    this.goddagNameStructure.addAsLeafNode(inputStringPart);
-	}
-	this.leafNodes = this.goddagNameStructure.getLeafNodes();
-    }
-
-    private void moveCurrentLeafNode(String text) {
-	String[] textSplit = text.split(this.wordSplitRegex);
-
-	for (String textPart : textSplit) {
-	    while (!this.leafNodes.get(this.currentLeafNodeIndex).getLabel().contains(textPart)) {
-		this.currentLeafNodeIndex++;
-		if (this.currentLeafNodeIndex >= this.leafNodes.size()) {
-		    throw new IllegalStateException("reached end of leafNodes while searching for match: " + textPart);
-		}
-	    }
+	    Node leafNode = this.goddagNameStructure.addAsLeafNode(this.goddagNameStructure.getGoddag().getRootNode(),
+		    inputStringPart);
+	    String inputStringPartWord = inputStringPart.replaceFirst("^(\\W)+", "").replaceFirst("(\\W+)$", "");
+	    leafNode.addProperty(this.wordPropertyKey, inputStringPartWord);
 	}
     }
 
-    private void tagMatch(String match, String nodeType) {
-
-	String[] matchSplit = match.split(this.wordSplitRegex);
-
-	// move current leafNode until the last word of matchSplit
-	while (!this.leafNodes.get(this.currentLeafNodeIndex).getLabel().contains(matchSplit[matchSplit.length - 1])) {
-	    this.currentLeafNodeIndex++;
-	    if (this.currentLeafNodeIndex >= this.leafNodes.size()) {
-		throw new IllegalStateException("reached over the end of leafNodes while searching for match");
+    private GoddagNameStructure tagLeafNodes(Map<String, Integer> nameMap, String nodeType) {
+	for (Node leafNode : this.goddagNameStructure.getLeafNodes()) {
+	    if (nameMap.containsKey(leafNode.getProperty(this.wordPropertyKey))) {
+		Node nonterminalNode = this.goddagNameStructure.createMatchNode(nodeType);
+		this.goddagNameStructure.tagNodeAs(leafNode, nonterminalNode);
 	    }
 	}
-
-	ArrayList<Node> matchingLeafNodes = new ArrayList<Node>();
-	int currentMatchingLeafNodeIndex = this.currentLeafNodeIndex;
-
-	for (@SuppressWarnings("unused")
-	String element : matchSplit) {
-	    matchingLeafNodes.add(0, this.leafNodes.get(currentMatchingLeafNodeIndex));
-	    currentMatchingLeafNodeIndex--;
-	    // if(currentMatchingLeafNodeIndex<0){
-	    // throw new IllegalStateException("reached end of leafNodes while
-	    // searching for match: " + textPart);
-	    // }
-	}
-	this.goddagNameStructure.tagNodesAs(matchingLeafNodes.toArray(new Node[0]), nodeType);
+	return this.goddagNameStructure;
     }
 }

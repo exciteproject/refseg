@@ -7,7 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,7 +61,7 @@ public class NameMatcher {
     /**
      * Format of names: Map<lastName,Set<firstNameVariation>>
      */
-    private Map<String, Set<String>> namesLookup;
+    private Map<String, Map<String, Integer>> namesLookup;
     private final String firstNameTag;
     private final String lastNameTag;
     private String authorTag;
@@ -87,10 +86,8 @@ public class NameMatcher {
 	}
 	try {
 	    for (File inputFile : inputDirectory.listFiles()) {
-		String[] inputFileNameSplit = inputFile.getName().split("\\.");
-		String outputFileName = inputFileNameSplit[0] + ".ser";
 		this.matchFile(inputFile,
-			new File(outputDirectory.getAbsolutePath() + File.separator + outputFileName));
+			new File(outputDirectory.getAbsolutePath() + File.separator + inputFile.getName()));
 	    }
 	} catch (NullPointerException e) {
 	    e.printStackTrace();
@@ -148,7 +145,7 @@ public class NameMatcher {
 
     private boolean containsAuthor(String firstName, String lastName) {
 	if (this.namesLookup.containsKey(lastName)) {
-	    if (this.namesLookup.get(lastName).contains(firstName)) {
+	    if (this.namesLookup.get(lastName).containsKey(firstName)) {
 		return true;
 	    }
 	}
@@ -156,8 +153,8 @@ public class NameMatcher {
 
     }
 
-    private Map<String, Set<String>> generateNamesLookUp(File nameFile) throws IOException {
-	Map<String, Set<String>> namesLookup = new HashMap<String, Set<String>>();
+    private Map<String, Map<String, Integer>> generateNamesLookUp(File nameFile) throws IOException {
+	Map<String, Map<String, Integer>> namesLookup = new HashMap<String, Map<String, Integer>>();
 	BufferedReader nameReader = new BufferedReader(new FileReader(nameFile));
 
 	String line;
@@ -169,9 +166,20 @@ public class NameMatcher {
 	    }
 	    Set<String> firstNameVariations = Name.getFirstNameVariations(lineSplit[0]);
 	    String lastName = lineSplit[1];
+	    Map<String, Integer> lastNameMap;
+	    int count = Integer.parseInt(lineSplit[2]);
 	    if (namesLookup.containsKey(lastName)) {
+		lastNameMap = namesLookup.get(lastName);
 	    } else {
-		namesLookup.put(lastName, new HashSet<String>(firstNameVariations));
+		lastNameMap = new HashMap<String, Integer>();
+		namesLookup.put(lastName, lastNameMap);
+	    }
+	    for (String firstNameVariation : firstNameVariations) {
+		if (lastNameMap.containsKey(firstNameVariation)) {
+		    lastNameMap.put(firstNameVariation, lastNameMap.get(firstNameVariation) + count);
+		} else {
+		    lastNameMap.put(firstNameVariation, count);
+		}
 	    }
 	}
 	nameReader.close();

@@ -16,10 +16,12 @@ public class Name {
 	}
 
 	firstNameVariations.add(firstName);
-	firstNameVariations.add(Name.getFirstNDot(firstNameSplit));
+	// firstNameVariations.add(Name.getFirstNDot(firstNameSplit));
 	firstNameVariations.add(Name.getFirstN(firstNameSplit));
-	firstNameVariations.add(Name.getFDotSpaceNDot(firstNameSplit));
-	firstNameVariations.add(Name.getFDotNDot(firstNameSplit));
+	// firstNameVariations.add(Name.getFDotSpaceNDot(firstNameSplit));
+	firstNameVariations.add(Name.getFDotSpaceN(firstNameSplit));
+	// firstNameVariations.add(Name.getFDotNDot(firstNameSplit));
+	firstNameVariations.add(Name.getFDotN(firstNameSplit));
 	firstNameVariations.add(Name.getFN(firstNameSplit));
 	return firstNameVariations;
     }
@@ -33,11 +35,31 @@ public class Name {
 
     }
 
+    private static String getFDotN(String[] firstNames) {
+	String result = "";
+	for (String firstName : firstNames) {
+	    result += firstName.substring(0, 1) + ".";
+	}
+	result = result.replaceFirst(".$", "");
+
+	return result;
+    }
+
     private static String getFDotNDot(String[] firstNames) {
 	String result = "";
 	for (String firstName : firstNames) {
 	    result += firstName.substring(0, 1) + ".";
 	}
+
+	return result;
+    }
+
+    private static String getFDotSpaceN(String[] firstNames) {
+	String result = "";
+	for (String firstName : firstNames) {
+	    result += firstName.substring(0, 1) + ". ";
+	}
+	result = result.replaceFirst(". $", "");
 
 	return result;
     }

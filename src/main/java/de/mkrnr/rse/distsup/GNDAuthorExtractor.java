@@ -18,6 +18,8 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.impl.LiteralImpl;
 import org.apache.jena.tdb.TDBFactory;
 
+import de.mkrnr.rse.preproc.NamePreprocessor;
+
 public class GNDAuthorExtractor {
 
     /**
@@ -25,9 +27,9 @@ public class GNDAuthorExtractor {
      * @param args[0]:
      *            tdb directory
      * @param args[1]:
-     *            output file for forenames
+     *            output file for firstNames
      * @param args[2]:
-     *            output file for surnames
+     *            output file for lastNames
      */
     public static void main(String[] args) {
 	File tdbDirectory = new File(args[0]);
@@ -56,7 +58,7 @@ public class GNDAuthorExtractor {
 	this.dataset.close();
     }
 
-    public void extractAuthorNames(File forenameOutputFile, File surnameOutputFile, File nameOutputFile) {
+    public void extractAuthorNames(File firstNameOutputFile, File lastNameOutputFile, File nameOutputFile) {
 	String prefixes = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n";
 	prefixes += "PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#> \n";
 	String queryString = prefixes + "SELECT ?forename ?surname WHERE " + "{ "
@@ -83,19 +85,21 @@ public class GNDAuthorExtractor {
 	while (results.hasNext()) {
 	    QuerySolution binding = results.nextSolution();
 
-	    LiteralImpl forename = (LiteralImpl) binding.get("forename");
-	    LiteralImpl surname = (LiteralImpl) binding.get("surname");
+	    LiteralImpl firstNameLiteral = (LiteralImpl) binding.get("forename");
+	    LiteralImpl lastNameLiteral = (LiteralImpl) binding.get("surname");
 
-	    this.addNamesToMap(forename.toString(), forenameMap);
-	    this.addNamesToMap(surname.toString(), surnameMap);
-	    this.addNamesToMap(forename.toString() + "\t" + surname.toString(), nameMap);
+	    String firstName = NamePreprocessor.preprocessName(firstNameLiteral.toString());
+	    String lastName = NamePreprocessor.preprocessName(lastNameLiteral.toString());
+	    this.addNamesToMap(firstName, forenameMap);
+	    this.addNamesToMap(lastName, surnameMap);
+	    this.addNamesToMap(firstName + "\t" + lastName, nameMap);
 
 	    count++;
 	}
 	System.out.println(count);
 
-	this.writeMapToFile(forenameMap, forenameOutputFile);
-	this.writeMapToFile(surnameMap, surnameOutputFile);
+	this.writeMapToFile(forenameMap, firstNameOutputFile);
+	this.writeMapToFile(surnameMap, lastNameOutputFile);
 	this.writeMapToFile(nameMap, nameOutputFile);
 
     }

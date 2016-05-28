@@ -8,6 +8,8 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
 
+import de.mkrnr.rse.distsup.GoddagNameStructure.NodeType;
+
 public class Main {
 
     public static void main(String[] args) throws IOException {
@@ -58,13 +60,14 @@ public class Main {
 
     private void run() throws IOException {
 	if ((this.inputDirectory != null) && (this.taggedDirectory != null) && (this.matchedDirectory != null)) {
-	    // TODO add label parameters
-	    NameTagger nameTagger = new NameTagger();
-	    // TODO update
-	    // nameTagger.createTrie(this.firstNamesFile, this.lastNamesFile);
+	    NameTagger nameTagger = new NameTagger(true);
+
+	    nameTagger.createNameMap(this.firstNamesFile, true, NodeType.FIRST_NAME.toString());
+	    nameTagger.createNameMap(this.lastNamesFile, false, NodeType.LAST_NAME.toString());
 	    nameTagger.tagDirectory(this.inputDirectory, this.taggedDirectory);
 
-	    NameMatcher nameMatcher = new NameMatcher(this.namesFile, "firstName", "lastName", "author");
+	    NameMatcher nameMatcher = new NameMatcher(this.namesFile, NodeType.FIRST_NAME.toString(),
+		    NodeType.LAST_NAME.toString(), NodeType.AUTHOR.toString());
 	    nameMatcher.matchDirectory(this.taggedDirectory, this.matchedDirectory);
 
 	}
