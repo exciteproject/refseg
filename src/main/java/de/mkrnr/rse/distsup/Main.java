@@ -62,12 +62,11 @@ public class Main {
 	if ((this.inputDirectory != null) && (this.taggedDirectory != null) && (this.matchedDirectory != null)) {
 	    NameTagger nameTagger = new NameTagger(true);
 
-	    nameTagger.createNameMap(this.firstNamesFile, true, NodeType.FIRST_NAME.toString());
-	    nameTagger.createNameMap(this.lastNamesFile, false, NodeType.LAST_NAME.toString());
+	    nameTagger.readNameMap(this.firstNamesFile, NodeType.FIRST_NAME.toString());
+	    nameTagger.readNameMap(this.lastNamesFile, NodeType.LAST_NAME.toString());
 	    nameTagger.tagDirectory(this.inputDirectory, this.taggedDirectory);
 
-	    NameMatcher nameMatcher = new NameMatcher(this.namesFile, NodeType.FIRST_NAME.toString(),
-		    NodeType.LAST_NAME.toString(), NodeType.AUTHOR.toString());
+	    NameMatcher nameMatcher = new NameMatcher(this.namesFile, true);
 	    nameMatcher.matchDirectory(this.taggedDirectory, this.matchedDirectory);
 
 	}

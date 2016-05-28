@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -24,7 +23,7 @@ public abstract class AuthorExtractor {
     private void addNameVariationsToMap(String firstNames, Map<String, Integer> firstNameVariationsMap) {
 	Set<String> firstNameVariations = Name.getFirstNameVariations(firstNames);
 	for (String firstNameVariation : firstNameVariations) {
-	    this.addNameToMap(firstNameVariation, firstNameVariationsMap);
+	    this.addNameSplitToMap(firstNameVariation, firstNameVariationsMap);
 	}
 
     }
@@ -47,12 +46,11 @@ public abstract class AuthorExtractor {
     }
 
     protected void addNameToMap(String name, Map<String, Integer> map) {
-	System.out.println(name);
 	if (map.containsKey(name)) {
 	    map.put(name, map.get(name) + 1);
 	} else {
 	    // check if name contains at least one letter
-	    if (name.matches("\\p{Alpha}+")) {
+	    if (name.matches(".*\\p{Alpha}+.*")) {
 		map.put(name, 1);
 	    }
 	}
@@ -82,8 +80,7 @@ public abstract class AuthorExtractor {
 
     protected void writeMapToFile(Map<String, Integer> map, File outputFile) {
 	try {
-	    BufferedWriter nameWriter = new BufferedWriter(
-		    new OutputStreamWriter(new FileOutputStream(outputFile), Charset.forName("UTF-8").newEncoder()));
+	    BufferedWriter nameWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile)));
 
 	    for (Entry<String, Integer> entry : map.entrySet()) {
 		nameWriter.write(entry.getKey() + "\t" + entry.getValue() + System.lineSeparator());

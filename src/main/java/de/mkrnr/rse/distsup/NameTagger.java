@@ -29,8 +29,8 @@ public class NameTagger {
 	long endTime;
 	NameTagger nameTagger = new NameTagger(true);
 	startTime = System.nanoTime();
-	nameTagger.createNameMap(firstNameFile, true, GoddagNameStructure.NodeType.FIRST_NAME.toString());
-	nameTagger.createNameMap(lastNameFile, false, GoddagNameStructure.NodeType.LAST_NAME.toString());
+	nameTagger.readNameMap(firstNameFile, GoddagNameStructure.NodeType.FIRST_NAME.toString());
+	nameTagger.readNameMap(lastNameFile, GoddagNameStructure.NodeType.LAST_NAME.toString());
 	endTime = System.nanoTime();
 	System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
@@ -81,19 +81,6 @@ public class NameTagger {
 
     }
 
-    public void createNameMap(File keywordFile, boolean createFirstNameVariations, String nodeType) throws IOException {
-
-	Map<String, Integer> nameMap = new HashMap<String, Integer>();
-	BufferedReader bufferedReader = new BufferedReader(new FileReader(keywordFile));
-	String line;
-	while ((line = bufferedReader.readLine()) != null) {
-	    String[] lineSplit = line.split("\\t");
-	    nameMap.put(lineSplit[0], Integer.parseInt(lineSplit[1]));
-	}
-	bufferedReader.close();
-
-    }
-
     public void createNameMap(Map<String, Integer> names, boolean createFirstNameVariations, String nodeType) {
 	Map<String, Integer> nameMap = new HashMap<String, Integer>();
 	for (Entry<String, Integer> nameEntry : names.entrySet()) {
@@ -108,6 +95,20 @@ public class NameTagger {
 	}
 	this.nameMaps.put(nodeType, nameMap);
 
+    }
+
+    public void readNameMap(File keywordFile, String nodeType) throws IOException {
+
+	Map<String, Integer> nameMap = new HashMap<String, Integer>();
+	BufferedReader bufferedReader = new BufferedReader(new FileReader(keywordFile));
+	String line;
+	while ((line = bufferedReader.readLine()) != null) {
+	    String[] lineSplit = line.split("\\t");
+	    nameMap.put(lineSplit[0], Integer.parseInt(lineSplit[1]));
+	}
+	bufferedReader.close();
+
+	this.createNameMap(nameMap, false, nodeType);
     }
 
     public void tagDirectory(File inputDirectory, File outputDirectory) throws IOException {
@@ -138,10 +139,11 @@ public class NameTagger {
 	// GoddagVisualizer goddagVisualizer = new GoddagVisualizer();
 	// goddagVisualizer.visualize(this.goddagNameStructure.getGoddag());
 
-	FileUtils.writeStringToFile(outputFile, this.gson.toJson(goddag, Goddag.class));
 	// System.out.println(this.goddagNameStructure);
 	// JsonHelper.writeToFile(this.goddagNameStructure, outputFile);
 	// System.exit(1);
+
+	FileUtils.writeStringToFile(outputFile, this.gson.toJson(goddag, Goddag.class));
     }
 
     public Goddag tagString(String inputString) {

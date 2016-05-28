@@ -19,7 +19,7 @@ public class Name {
 	// firstNameVariations.add(Name.getFirstNDot(firstNameSplit));
 	firstNameVariations.add(Name.getFirstN(firstNameSplit));
 	// firstNameVariations.add(Name.getFDotSpaceNDot(firstNameSplit));
-	firstNameVariations.add(Name.getFDotSpaceN(firstNameSplit));
+	// firstNameVariations.add(Name.getFDotSpaceN(firstNameSplit));
 	// firstNameVariations.add(Name.getFDotNDot(firstNameSplit));
 	firstNameVariations.add(Name.getFDotN(firstNameSplit));
 	firstNameVariations.add(Name.getFN(firstNameSplit));

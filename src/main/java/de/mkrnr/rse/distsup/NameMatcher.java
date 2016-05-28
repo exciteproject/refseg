@@ -1,16 +1,25 @@
 package de.mkrnr.rse.distsup;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import de.mkrnr.rse.util.FileHelper;
+import org.apache.commons.io.FileUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+
+import de.mkrnr.goddag.Goddag;
+import de.mkrnr.goddag.Node;
+import de.mkrnr.rse.distsup.GoddagNameStructure.NodeType;
 
 public class NameMatcher {
 
@@ -22,7 +31,7 @@ public class NameMatcher {
 	long startTime;
 	long endTime;
 	startTime = System.nanoTime();
-	NameMatcher nameContextExtractor = new NameMatcher(nameFile, "firstName", "lastName", "author");
+	NameMatcher nameMatcher = new NameMatcher(nameFile, true);
 	endTime = System.nanoTime();
 	System.out.println("Building took " + (((endTime - startTime)) / 1000000) + " milliseconds");
 
@@ -45,7 +54,10 @@ public class NameMatcher {
 	System.out.println("Max Memory:" + (runtime.maxMemory() / mb));
 
 	startTime = System.nanoTime();
-	nameContextExtractor.matchDirectory(taggedDir, outputDir);
+	nameMatcher.matchDirectory(taggedDir, outputDir);
+
+	// nameMatcher.matchFile(taggedDir.listFiles()[1], new
+	// File("/tmp/tagger-test.json"));
 	endTime = System.nanoTime();
 	System.out.println("Matching took " + (((endTime - startTime)) / 1000000) + " milliseconds");
     }
@@ -59,12 +71,12 @@ public class NameMatcher {
     // if yes, get context and print it/store in array
 
     /**
-     * Format of names: Map<lastName,Set<firstNameVariation>>
+     * Format of names: Map<lastName,Map<firstNameVariation,count>>
      */
     private Map<String, Map<String, Integer>> namesLookup;
-    private final String firstNameTag;
-    private final String lastNameTag;
-    private String authorTag;
+    private Gson gson;
+    private final String wordPropertyKey = "word";
+    private GoddagNameStructure goddagNameStructure;
 
     /**
      * Constructor that generates a lookup for the names in nameFile TODO:
@@ -73,83 +85,48 @@ public class NameMatcher {
      * @param nameFile
      * @throws IOException
      */
-    public NameMatcher(File nameFile, String firstNameTag, String lastNameTag, String authorTag) throws IOException {
+    public NameMatcher(File nameFile, boolean prettyPrintJson) throws IOException {
 	this.namesLookup = this.generateNamesLookUp(nameFile);
-	this.firstNameTag = firstNameTag;
-	this.lastNameTag = lastNameTag;
-	this.authorTag = authorTag;
+	GsonBuilder gsonBuilder = new GsonBuilder();
+	if (prettyPrintJson) {
+	    gsonBuilder.setPrettyPrinting();
+	}
+	gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonDeserializer());
+	gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonSerializer());
+	gsonBuilder.registerTypeAdapter(Node.class, Node.getJsonSerializer());
+	this.gson = gsonBuilder.create();
+
     }
 
-    public void matchDirectory(File inputDirectory, File outputDirectory) {
+    public void matchDirectory(File inputDirectory, File outputDirectory)
+	    throws JsonSyntaxException, JsonIOException, IOException {
 	if (!outputDirectory.exists()) {
 	    outputDirectory.mkdirs();
 	}
-	try {
-	    for (File inputFile : inputDirectory.listFiles()) {
-		this.matchFile(inputFile,
-			new File(outputDirectory.getAbsolutePath() + File.separator + inputFile.getName()));
-	    }
-	} catch (NullPointerException e) {
-	    e.printStackTrace();
+	for (File inputFile : inputDirectory.listFiles()) {
+	    this.matchFile(inputFile,
+		    new File((outputDirectory.getAbsolutePath() + File.separator + inputFile.getName())));
 	}
     }
 
-    public void matchFile(File inputFile, File outputFile) {
-	String inputString = null;
-	try {
-	    inputString = FileHelper.readFile(inputFile);
-	} catch (IOException e) {
-	    e.printStackTrace();
-	    return;
-	}
+    public void matchFile(File inputFile, File outputFile) throws JsonSyntaxException, JsonIOException, IOException {
+	Goddag goddag = this.gson.fromJson(new FileReader(inputFile), Goddag.class);
+	this.goddagNameStructure = new GoddagNameStructure(goddag);
 
-	NameSplit nameSplit = new NameSplit(inputString);
-
-	for (int i = 0; i < nameSplit.size(); i++) {
-	    String iNameSplitTag = nameSplit.getTag(i);
-	    if (iNameSplitTag == null) {
-		continue;
-	    }
-
-	    // if i is not the last word in nameSplit
-	    if ((i + 1) < nameSplit.size()) {
-		if ((this.firstNameTag.equals(iNameSplitTag) && this.lastNameTag.equals(nameSplit.getTag(i + 1)))) {
-		    if (this.containsAuthor(nameSplit.getName(i), nameSplit.getName(i + 1))) {
-			nameSplit.formatTaggedName(i, this.firstNameTag);
-			nameSplit.formatTaggedName(i + 1, this.lastNameTag);
-			nameSplit.addTag(i, i + 1, this.authorTag);
-			continue;
-		    }
-		}
-		if (this.lastNameTag.equals(iNameSplitTag) && this.firstNameTag.equals(nameSplit.getTag(i + 1))) {
-		    if (this.containsAuthor(nameSplit.getName(i + 1), nameSplit.getName(i))) {
-			nameSplit.formatTaggedName(i, this.lastNameTag);
-			nameSplit.formatTaggedName(i + 1, this.firstNameTag);
-			nameSplit.addTag(i, i + 1, this.authorTag);
-			continue;
-		    }
-		}
-	    }
-
-	    // no author name starts with name at position i
-	    nameSplit.removeNameTag(i);
-	}
-	try {
-	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-	    bufferedWriter.write(nameSplit.toString());
-	    bufferedWriter.close();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-    }
-
-    private boolean containsAuthor(String firstName, String lastName) {
-	if (this.namesLookup.containsKey(lastName)) {
-	    if (this.namesLookup.get(lastName).containsKey(firstName)) {
-		return true;
+	List<Node> leafNodes = this.goddagNameStructure.getLeafNodes();
+	for (int leafNodeIndex = 0; leafNodeIndex < leafNodes.size(); leafNodeIndex++) {
+	    Node lastNameParentNode = this.getParentNode(leafNodes.get(leafNodeIndex), NodeType.LAST_NAME);
+	    if (lastNameParentNode != null) {
+		this.searchAuthorsBefore(leafNodes, leafNodeIndex, lastNameParentNode);
+		this.searchAuthorsAfter(leafNodes, leafNodeIndex, lastNameParentNode);
 	    }
 	}
-	return false;
+	// System.out.println(this.goddagNameStructure.toString());
+
+	// GoddagVisualizer goddagVisualizer = new GoddagVisualizer();
+	// goddagVisualizer.visualize(goddag);
+
+	FileUtils.writeStringToFile(outputFile, this.gson.toJson(this.goddagNameStructure.getGoddag(), Goddag.class));
 
     }
 
@@ -185,5 +162,95 @@ public class NameMatcher {
 	nameReader.close();
 
 	return namesLookup;
+    }
+
+    private Node getParentNode(Node node, NodeType parentNodeType) {
+	for (Node firstNameBeforeParent : node.getParents()) {
+	    if (firstNameBeforeParent.getLabel().equals(parentNodeType.toString())) {
+		return firstNameBeforeParent;
+	    }
+	}
+	return null;
+    }
+
+    private boolean isName(List<Node> firstNameParentNodes, Node lastNameNode) {
+	String generatedFirstName = "";
+	for (Node firstNameNode : firstNameParentNodes) {
+	    generatedFirstName += firstNameNode.getFirstChild().getProperty(this.wordPropertyKey) + " ";
+	}
+	generatedFirstName = generatedFirstName.replaceFirst(" $", "");
+
+	String lastName = lastNameNode.getProperty(this.wordPropertyKey);
+	if (this.namesLookup.containsKey(lastName)) {
+	    if (this.namesLookup.get(lastName).containsKey(generatedFirstName)) {
+		return true;
+	    }
+	}
+	return false;
+
+    }
+
+    private void searchAuthorsAfter(List<Node> leafNodes, int lastNameIndex, Node lastNameParentNode) {
+	List<Node> firstNamesAfter = new ArrayList<Node>();
+	for (int indexAfterLeafNodeIndex = lastNameIndex + 1; indexAfterLeafNodeIndex < leafNodes
+		.size(); indexAfterLeafNodeIndex++) {
+	    Node firstNameParent = this.getParentNode(leafNodes.get(indexAfterLeafNodeIndex), NodeType.FIRST_NAME);
+	    if (firstNameParent == null) {
+		break;
+	    } else {
+		firstNamesAfter.add(firstNameParent);
+	    }
+	}
+
+	for (int firstNameIndex = 0; firstNameIndex < firstNamesAfter.size(); firstNameIndex++) {
+	    List<Node> currentFirstNameBefore = new ArrayList<Node>();
+	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex < firstNamesAfter
+		    .size(); firstNameGenerationIndex++) {
+		currentFirstNameBefore.add(firstNamesAfter.get(firstNameGenerationIndex));
+	    }
+
+	    if (this.isName(currentFirstNameBefore, leafNodes.get(lastNameIndex))) {
+		List<Node> nodesToTag = new ArrayList<Node>();
+		nodesToTag.add(lastNameParentNode);
+		for (Node currentFirstNameNode : currentFirstNameBefore) {
+		    nodesToTag.add(currentFirstNameNode);
+		}
+
+		this.goddagNameStructure.tagNodesAs(nodesToTag.toArray(new Node[0]), NodeType.AUTHOR.toString());
+	    }
+	}
+
+    }
+
+    private void searchAuthorsBefore(List<Node> leafNodes, int leafNodeIndex, Node lastNameParentNode) {
+	List<Node> firstNamesBefore = new ArrayList<Node>();
+	for (int indexBeforeLeafNodeIndex = leafNodeIndex
+		- 1; indexBeforeLeafNodeIndex >= 0; indexBeforeLeafNodeIndex--) {
+	    Node firstNameParent = this.getParentNode(leafNodes.get(indexBeforeLeafNodeIndex), NodeType.FIRST_NAME);
+	    if (firstNameParent == null) {
+		break;
+	    } else {
+		firstNamesBefore.add(0, firstNameParent);
+	    }
+	}
+
+	for (int firstNameIndex = 0; firstNameIndex < firstNamesBefore.size(); firstNameIndex++) {
+	    List<Node> currentFirstNameBefore = new ArrayList<Node>();
+	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex < firstNamesBefore
+		    .size(); firstNameGenerationIndex++) {
+		currentFirstNameBefore.add(firstNamesBefore.get(firstNameGenerationIndex));
+	    }
+
+	    if (this.isName(currentFirstNameBefore, leafNodes.get(leafNodeIndex))) {
+		List<Node> nodesToTag = new ArrayList<Node>();
+		for (Node currentFirstNameNode : currentFirstNameBefore) {
+		    nodesToTag.add(currentFirstNameNode);
+		}
+		nodesToTag.add(lastNameParentNode);
+
+		this.goddagNameStructure.tagNodesAs(nodesToTag.toArray(new Node[0]), NodeType.AUTHOR.toString());
+	    }
+	}
+
     }
 }

@@ -59,6 +59,10 @@ public class GoddagNameStructure {
 	this.goddag.setRootNode(rootNode);
     }
 
+    public GoddagNameStructure(Goddag goddag) {
+	this.goddag = goddag;
+    }
+
     public Node addAsLeafNode(Node parentNode, String string) {
 	Node leafNode = this.goddag.createLeafNode(string);
 	parentNode.addChild(leafNode);
