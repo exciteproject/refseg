@@ -31,7 +31,8 @@ public class NameMatcher {
 	long startTime;
 	long endTime;
 	startTime = System.nanoTime();
-	NameMatcher nameMatcher = new NameMatcher(nameFile, true);
+	NameMatcher nameMatcher = new NameMatcher(true);
+	nameMatcher.generateNamesLookUp(nameFile);
 	endTime = System.nanoTime();
 	System.out.println("Building took " + (((endTime - startTime)) / 1000000) + " milliseconds");
 
@@ -62,14 +63,6 @@ public class NameMatcher {
 	System.out.println("Matching took " + (((endTime - startTime)) / 1000000) + " milliseconds");
     }
 
-    // generate name lookup
-    // read file
-    // remove linebreaks
-    // sliding window:
-    // at position i, check if name at i with name at i+1 is in database (check
-    // all possibilities)
-    // if yes, get context and print it/store in array
-
     /**
      * Format of names: Map<lastName,Map<firstNameVariation,count>>
      */
@@ -85,8 +78,7 @@ public class NameMatcher {
      * @param nameFile
      * @throws IOException
      */
-    public NameMatcher(File nameFile, boolean prettyPrintJson) throws IOException {
-	this.namesLookup = this.generateNamesLookUp(nameFile);
+    public NameMatcher(boolean prettyPrintJson) throws IOException {
 	GsonBuilder gsonBuilder = new GsonBuilder();
 	if (prettyPrintJson) {
 	    gsonBuilder.setPrettyPrinting();
@@ -96,6 +88,38 @@ public class NameMatcher {
 	gsonBuilder.registerTypeAdapter(Node.class, Node.getJsonSerializer());
 	this.gson = gsonBuilder.create();
 
+    }
+
+    public void generateNamesLookUp(File nameFile) throws IOException {
+	this.namesLookup = new HashMap<String, Map<String, Integer>>();
+	BufferedReader nameReader = new BufferedReader(new FileReader(nameFile));
+
+	String line;
+	while ((line = nameReader.readLine()) != null) {
+	    String[] lineSplit = line.split("\t");
+	    if (lineSplit.length != 3) {
+		nameReader.close();
+		throw new IOException("line length != 3: \"" + line + "\"");
+	    }
+	    Set<String> firstNameVariations = Name.getFirstNameVariations(lineSplit[0]);
+	    String lastName = lineSplit[1];
+	    Map<String, Integer> lastNameMap;
+	    int count = Integer.parseInt(lineSplit[2]);
+	    if (this.namesLookup.containsKey(lastName)) {
+		lastNameMap = this.namesLookup.get(lastName);
+	    } else {
+		lastNameMap = new HashMap<String, Integer>();
+		this.namesLookup.put(lastName, lastNameMap);
+	    }
+	    for (String firstNameVariation : firstNameVariations) {
+		if (lastNameMap.containsKey(firstNameVariation)) {
+		    lastNameMap.put(firstNameVariation, lastNameMap.get(firstNameVariation) + count);
+		} else {
+		    lastNameMap.put(firstNameVariation, count);
+		}
+	    }
+	}
+	nameReader.close();
     }
 
     public void matchDirectory(File inputDirectory, File outputDirectory)
@@ -128,40 +152,6 @@ public class NameMatcher {
 
 	FileUtils.writeStringToFile(outputFile, this.gson.toJson(this.goddagNameStructure.getGoddag(), Goddag.class));
 
-    }
-
-    private Map<String, Map<String, Integer>> generateNamesLookUp(File nameFile) throws IOException {
-	Map<String, Map<String, Integer>> namesLookup = new HashMap<String, Map<String, Integer>>();
-	BufferedReader nameReader = new BufferedReader(new FileReader(nameFile));
-
-	String line;
-	while ((line = nameReader.readLine()) != null) {
-	    String[] lineSplit = line.split("\t");
-	    if (lineSplit.length != 3) {
-		nameReader.close();
-		throw new IOException("line length != 3: \"" + line + "\"");
-	    }
-	    Set<String> firstNameVariations = Name.getFirstNameVariations(lineSplit[0]);
-	    String lastName = lineSplit[1];
-	    Map<String, Integer> lastNameMap;
-	    int count = Integer.parseInt(lineSplit[2]);
-	    if (namesLookup.containsKey(lastName)) {
-		lastNameMap = namesLookup.get(lastName);
-	    } else {
-		lastNameMap = new HashMap<String, Integer>();
-		namesLookup.put(lastName, lastNameMap);
-	    }
-	    for (String firstNameVariation : firstNameVariations) {
-		if (lastNameMap.containsKey(firstNameVariation)) {
-		    lastNameMap.put(firstNameVariation, lastNameMap.get(firstNameVariation) + count);
-		} else {
-		    lastNameMap.put(firstNameVariation, count);
-		}
-	    }
-	}
-	nameReader.close();
-
-	return namesLookup;
     }
 
     private Node getParentNode(Node node, NodeType parentNodeType) {

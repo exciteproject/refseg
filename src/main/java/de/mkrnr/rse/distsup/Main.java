@@ -66,7 +66,9 @@ public class Main {
 	    nameTagger.readNameMap(this.lastNamesFile, NodeType.LAST_NAME.toString());
 	    nameTagger.tagDirectory(this.inputDirectory, this.taggedDirectory);
 
-	    NameMatcher nameMatcher = new NameMatcher(this.namesFile, true);
+	    NameMatcher nameMatcher = new NameMatcher(true);
+
+	    nameMatcher.generateNamesLookUp(this.namesFile);
 	    nameMatcher.matchDirectory(this.taggedDirectory, this.matchedDirectory);
 
 	}
