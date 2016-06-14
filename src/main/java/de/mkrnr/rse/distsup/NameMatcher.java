@@ -57,8 +57,7 @@ public class NameMatcher {
 	startTime = System.nanoTime();
 	nameMatcher.matchDirectory(taggedDir, outputDir);
 
-	// nameMatcher.matchFile(taggedDir.listFiles()[1], new
-	// File("/tmp/tagger-test.json"));
+	nameMatcher.matchFile(taggedDir.listFiles()[15], new File("/tmp/tagger-test.json"));
 	endTime = System.nanoTime();
 	System.out.println("Matching took " + (((endTime - startTime)) / 1000000) + " milliseconds");
     }
@@ -134,6 +133,7 @@ public class NameMatcher {
     }
 
     public void matchFile(File inputFile, File outputFile) throws JsonSyntaxException, JsonIOException, IOException {
+	System.out.println("matching: " + inputFile.getAbsolutePath());
 	Goddag goddag = this.gson.fromJson(new FileReader(inputFile), Goddag.class);
 	this.goddagNameStructure = new GoddagNameStructure(goddag);
 
@@ -192,16 +192,16 @@ public class NameMatcher {
 	    }
 	}
 
-	for (int firstNameIndex = 0; firstNameIndex < firstNamesAfter.size(); firstNameIndex++) {
+	for (int firstNameIndex = firstNamesAfter.size() - 1; firstNameIndex >= 0; firstNameIndex--) {
 	    List<Node> currentFirstNameBefore = new ArrayList<Node>();
-	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex < firstNamesAfter
-		    .size(); firstNameGenerationIndex++) {
-		currentFirstNameBefore.add(firstNamesAfter.get(firstNameGenerationIndex));
+	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex >= 0; firstNameGenerationIndex--) {
+		currentFirstNameBefore.add(0, firstNamesAfter.get(firstNameGenerationIndex));
 	    }
 
 	    if (this.isName(currentFirstNameBefore, leafNodes.get(lastNameIndex))) {
 		List<Node> nodesToTag = new ArrayList<Node>();
 		nodesToTag.add(lastNameParentNode);
+
 		for (Node currentFirstNameNode : currentFirstNameBefore) {
 		    nodesToTag.add(currentFirstNameNode);
 		}
