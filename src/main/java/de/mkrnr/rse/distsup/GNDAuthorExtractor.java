@@ -20,7 +20,7 @@ import org.apache.jena.tdb.TDBFactory;
 
 import de.mkrnr.rse.preproc.NamePreprocessor;
 
-public class GNDAuthorExtractor {
+public class GNDAuthorExtractor extends AuthorExtractor {
 
     /**
      *
@@ -35,7 +35,7 @@ public class GNDAuthorExtractor {
 	File tdbDirectory = new File(args[0]);
 	GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor(tdbDirectory);
 
-	gndAuthorExtractor.extractAuthorNames(new File(args[1]), new File(args[2]), new File(args[3]));
+	gndAuthorExtractor.extractAuthorNames(new File(args[1]));
 	gndAuthorExtractor.close();
     }
 
@@ -58,7 +58,7 @@ public class GNDAuthorExtractor {
 	this.dataset.close();
     }
 
-    public void extractAuthorNames(File firstNameOutputFile, File lastNameOutputFile, File nameOutputFile) {
+    public void extractAuthorNames(File outputDirectory) {
 	String prefixes = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n";
 	prefixes += "PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#> \n";
 	String queryString = prefixes + "SELECT ?forename ?surname WHERE " + "{ "
@@ -81,6 +81,7 @@ public class GNDAuthorExtractor {
 	HashMap<String, Integer> surnameMap = new HashMap<String, Integer>();
 	HashMap<String, Integer> nameMap = new HashMap<String, Integer>();
 
+	this.initializeMaps();
 	int count = 0;
 	while (results.hasNext()) {
 	    QuerySolution binding = results.nextSolution();
@@ -88,28 +89,16 @@ public class GNDAuthorExtractor {
 	    LiteralImpl firstNameLiteral = (LiteralImpl) binding.get("forename");
 	    LiteralImpl lastNameLiteral = (LiteralImpl) binding.get("surname");
 
-	    String firstName = NamePreprocessor.preprocessName(firstNameLiteral.toString());
-	    String lastName = NamePreprocessor.preprocessName(lastNameLiteral.toString());
-	    this.addNamesToMap(firstName, forenameMap);
-	    this.addNamesToMap(lastName, surnameMap);
-	    this.addNamesToMap(firstName + "\t" + lastName, nameMap);
+	    String firstNames = NamePreprocessor.preprocessName(firstNameLiteral.toString());
+	    String lastNames = NamePreprocessor.preprocessName(lastNameLiteral.toString());
+
+	    this.addNamesToMaps(firstNames, lastNames);
 
 	    count++;
 	}
 	System.out.println(count);
 
-	this.writeMapToFile(forenameMap, firstNameOutputFile);
-	this.writeMapToFile(surnameMap, lastNameOutputFile);
-	this.writeMapToFile(nameMap, nameOutputFile);
-
-    }
-
-    private void addNamesToMap(String names, HashMap<String, Integer> map) {
-	if (map.containsKey(names)) {
-	    map.put(names, map.get(names) + 1);
-	} else {
-	    map.put(names, 1);
-	}
+	this.writeMaps(outputDirectory);
 
     }
 
