@@ -50,6 +50,8 @@ public class NameConstraintBuilder {
 	Goddag goddag = this.gson.fromJson(new FileReader(goddagInputFile), Goddag.class);
 	GoddagNameStructure goddagNameStructure = new GoddagNameStructure(goddag);
 
+	// TODO modify iteration to bottom up to incorporate author frequency
+
 	// iterate over goddag tree to count first names and last names
 	for (Node rootChildNode : goddagNameStructure.getGoddag().getRootNode().getChildren()) {
 	    if (rootChildNode.getLabel().equals(GoddagNameStructure.NodeType.AUTHOR.toString())) {
@@ -57,7 +59,10 @@ public class NameConstraintBuilder {
 		    if ((authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))
 			    || (authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.LAST_NAME.toString()))) {
 			// TODO set word property instead of hardcoding it?
-			String nameWord = authorChildNode.getFirstChild().getProperty("word");
+			// String nameWord =
+			// authorChildNode.getFirstChild().getProperty("word");
+			String nameWord = authorChildNode.getFirstChild().getLabel();
+
 			if (!this.nameDistributions.containsKey(nameWord)) {
 			    this.nameDistributions.put(nameWord, new NameDistribution());
 			}
