@@ -10,22 +10,21 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
+import java.util.regex.Pattern;
 
 import cc.mallet.fst.CRF;
+import cc.mallet.fst.SimpleTagger.SimpleTaggerSentence2FeatureVectorSequence;
+import cc.mallet.fst.Transducer;
+import cc.mallet.fst.semi_supervised.CRFTrainerByGE;
 import cc.mallet.fst.semi_supervised.FSTConstraintUtil;
 import cc.mallet.fst.semi_supervised.constraints.GEConstraint;
 import cc.mallet.fst.semi_supervised.constraints.OneLabelKLGEConstraints;
-import cc.mallet.fst.semi_supervised.tui.SimpleTaggerWithConstraints;
-import cc.mallet.pipe.SerialPipes;
-import cc.mallet.types.Instance;
+import cc.mallet.pipe.Pipe;
+import cc.mallet.pipe.iterator.LineGroupIterator;
+import cc.mallet.types.Alphabet;
 import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
-import de.mkrnr.rse.pipe.FeaturePipeProvider;
-import de.mkrnr.rse.pipe.SerialPipesBuilder;
-import de.mkrnr.rse.util.InstanceListBuilder;
 import de.mkrnr.rse.util.TempFileHelper;
 
 public class NameTrainer {
@@ -49,6 +48,95 @@ public class NameTrainer {
 	nameTrainer.train(new File(args[0]), new File(args[1]), features);
     }
 
+    public void train(File trainingDataInputDirectory, File nameConstraintFile, List<String> features)
+	    throws IOException {
+	if (!trainingDataInputDirectory.isDirectory()) {
+	    throw new IllegalArgumentException("trainingDataInputDirectory is not a directory");
+	}
+
+	List<File> trainingFiles = Arrays.asList(trainingDataInputDirectory.listFiles());
+
+	// TODO change to true
+	File tempMergedTrainingFile = TempFileHelper.getTempFile("train", false);
+
+	this.createMergedTrainingFile(trainingFiles, tempMergedTrainingFile);
+
+	FileReader tempMergedTrainingFileReader = new FileReader(tempMergedTrainingFile);
+
+	FileReader nameConstraintFileReader = new FileReader(nameConstraintFile);
+
+	// TODO add firstname and lastname files or change method signature
+	// FeaturePipeProvider featurePipeProvider = new
+	// FeaturePipeProvider(null, null);
+	//
+	// SerialPipesBuilder serialPipesBuilder = new
+	// SerialPipesBuilder(featurePipeProvider);
+	//
+	// SerialPipes serialPipes =
+	// serialPipesBuilder.createSerialPipes(features);
+	//
+	//
+	// InstanceList inputInstances =
+	// InstanceListBuilder.build(tempMergedTrainingFile, serialPipes);
+
+	Pipe p = new SimpleTaggerSentence2FeatureVectorSequence();
+
+	p.getTargetAlphabet().lookupIndex("O");
+
+	p.setTargetProcessing(true);
+	InstanceList trainingInstances = new InstanceList(p);
+	trainingInstances
+		.addThruPipe(new LineGroupIterator(tempMergedTrainingFileReader, Pattern.compile("^\\s*$"), true));
+
+	Alphabet targets = p.getTargetAlphabet();
+	StringBuffer buf = new StringBuffer("Labels:");
+	for (int i = 0; i < targets.size(); i++) {
+	    buf.append(" ").append(targets.lookupObject(i).toString());
+	}
+
+	// TODO what does this do? remove target labels? any impact?
+	// Iterator<Instance> iter = trainingData.iterator();
+	// while (iter.hasNext()) {
+	// Instance instance = iter.next();
+	// instance.unLock();
+	// instance.setProperty("target", instance.getTarget());
+	// instance.setTarget(null);
+	// instance.lock();
+	// }
+
+	// BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new
+	// File("/tmp/trainingInstances.txt")));
+	// bufferedWriter.write(trainingInstances.getDataAlphabet().toString());
+	// bufferedWriter.close();
+
+	Pattern forbiddenPat = Pattern.compile("\\s");
+	Pattern allowedPat = Pattern.compile(".*");
+	CRF crf = new CRF(trainingInstances.getPipe(), (Pipe) null);
+	String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", forbiddenPat, allowedPat,
+		true);
+	for (int i = 0; i < crf.numStates(); i++) {
+	    crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT);
+	}
+	crf.getState(startName).setInitialWeight(0.0);
+	crf.setWeightsDimensionDensely();
+
+	ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(nameConstraintFile, trainingInstances);
+
+	// random split between training and testing
+	// double trainingFraction = 0.8;
+	// Random r = new Random(0);
+	// InstanceList[] trainingLists = trainingData.split(r, new double[] {
+	// trainingFraction, 1 - trainingFraction });
+	// InstanceList trainingInstances = trainingLists[0];
+	// InstanceList testingInstances = trainingLists[1];
+
+	CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, 1);
+	trainer.setGaussianPriorVariance(10.0);
+	trainer.setNumResets(4);
+	trainer.train(trainingInstances, 500);
+
+    }
+
     /**
      * Merges the inputFiles at the end of outputFile.
      *
@@ -57,7 +145,7 @@ public class NameTrainer {
      * @return
      * @throws IOException
      */
-    public File createMergedTrainingFile(List<File> inputFiles, File outputFile) throws IOException {
+    private File createMergedTrainingFile(List<File> inputFiles, File outputFile) throws IOException {
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 
 	for (File inputFile : inputFiles) {
@@ -81,70 +169,6 @@ public class NameTrainer {
 	}
 	bufferedWriter.close();
 	return outputFile;
-    }
-
-    public void train(File trainingDataInputDirectory, File nameConstraintFile, List<String> features)
-	    throws IOException {
-	if (!trainingDataInputDirectory.isDirectory()) {
-	    throw new IllegalArgumentException("trainingDataInputDirectory is not a directory");
-	}
-
-	List<File> trainingFiles = Arrays.asList(trainingDataInputDirectory.listFiles());
-
-	// TODO change to true
-	File tempMergedTrainingFile = TempFileHelper.getTempFile("train", false);
-
-	System.out.println(tempMergedTrainingFile);
-
-	this.createMergedTrainingFile(trainingFiles, tempMergedTrainingFile);
-
-	// TODO add firstname and lastname files or change method signature
-	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
-
-	SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
-
-	SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(features);
-
-	InstanceList inputInstances = InstanceListBuilder.build(tempMergedTrainingFile, serialPipes);
-
-	Iterator<Instance> iter = inputInstances.iterator();
-	while (iter.hasNext()) {
-	    Instance instance = iter.next();
-	    instance.unLock();
-	    instance.setProperty("target", instance.getTarget());
-	    instance.setTarget(null);
-	    instance.lock();
-	}
-
-	// BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new
-	// File("/tmp/trainingInstances.txt")));
-	// bufferedWriter.write(trainingInstances.getDataAlphabet().toString());
-	// bufferedWriter.close();
-
-	ArrayList<GEConstraint> klGEConstraints = this.getKLGEConstraints(nameConstraintFile, inputInstances);
-
-	// random split between training and testing
-	double trainingFraction = 0.8;
-	Random r = new Random(0);
-	InstanceList[] trainingLists = inputInstances.split(r, new double[] { trainingFraction, 1 - trainingFraction });
-	InstanceList trainingInstances = trainingLists[0];
-	InstanceList testingInstances = trainingLists[1];
-
-	// CRF crf = getCRF(trainingInstances, ordersOption.value,
-	// defaultOption.value, forbiddenOption.value, allowedOption.value,
-	// true);
-	CRF crf = SimpleTaggerWithConstraints.getCRF(trainingInstances, new int[] { 1 }, "O", "\\s", ".*", true);
-
-	// crf = trainGE(trainingInstances, testingInstances, klGEConstraints,
-	// crf, eval, iterationsOption.value, gaussianVarianceOption.value,
-	// numResets.value);
-
-	// TODO fix training
-	crf = SimpleTaggerWithConstraints.trainGE(trainingInstances, testingInstances, klGEConstraints, crf, null, 500,
-		10.0, 4);
-	// System.out.println(trainingInstances.getDataAlphabet().lookupIndex("Rao",
-	// false));
-
     }
 
     private ArrayList<GEConstraint> getKLGEConstraints(File nameConstraintFile, InstanceList trainingInstances)

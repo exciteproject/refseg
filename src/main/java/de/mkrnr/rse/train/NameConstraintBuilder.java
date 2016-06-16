@@ -117,6 +117,11 @@ public class NameConstraintBuilder {
 	    line += firstNameLabel + ":" + nameEntry.getValue().getFirstNamePercentage();
 	    line += " ";
 	    line += lastNameLabel + ":" + nameEntry.getValue().getLastNamePercentage();
+
+	    // TODO parameterize
+	    line += " ";
+	    line += "O" + ":" + "0.0";
+
 	    line += System.lineSeparator();
 	    bufferedWriter.write(line);
 	}
