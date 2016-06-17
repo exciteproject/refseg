@@ -55,31 +55,28 @@ public class NameConstraintBuilder {
 	    if (rootChildNode.getLabel().equals(GoddagNameStructure.NodeType.AUTHOR.toString())) {
 		boolean isBeginning = true;
 		for (Node authorChildNode : rootChildNode.getChildren()) {
-		    if ((authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))
-			    || (authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.LAST_NAME.toString()))) {
-
-			String nameWord = authorChildNode.getFirstChild().getLabel();
-
-			if (!this.nameDistributions.containsKey(nameWord)) {
-			    this.nameDistributions.put(nameWord, new NameDistribution());
-			}
-
-			if ((authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))) {
-			    if (isBeginning) {
-				this.nameDistributions.get(nameWord).bFirstNameCount += 1;
-			    } else {
-				this.nameDistributions.get(nameWord).iFirstNameCount += 1;
-			    }
+		    String nameWord = authorChildNode.getFirstChild().getLabel();
+		    if (!this.nameDistributions.containsKey(nameWord)) {
+			this.nameDistributions.put(nameWord, new NameDistribution());
+		    }
+		    if ((authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))) {
+			if (isBeginning) {
+			    this.nameDistributions.get(nameWord).bFirstNameCount += 1;
 			} else {
-			    if (authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.LAST_NAME.toString())) {
+			    this.nameDistributions.get(nameWord).iFirstNameCount += 1;
+			}
+		    } else {
+			if (authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.LAST_NAME.toString())) {
+			    if (isBeginning) {
 				this.nameDistributions.get(nameWord).bLastNameCount += 1;
 			    } else {
 				this.nameDistributions.get(nameWord).iLastNameCount += 1;
 			    }
 			}
-			if (isBeginning) {
-			    isBeginning = false;
-			}
+
+		    }
+		    if (isBeginning) {
+			isBeginning = false;
 		    }
 		}
 	    }
