@@ -29,7 +29,7 @@ public class NameConstraintBuilder {
 	}
 
 	// nameConstraintBuilder.printContraints();
-	nameConstraintBuilder.writeDistributions(new File(args[1]), "fn", "ln");
+	nameConstraintBuilder.writeDistributions(new File(args[1]), "B-FN", "I-FN", "B-LN", "I-LN");
     }
 
     private Gson gson;
@@ -50,17 +50,14 @@ public class NameConstraintBuilder {
 	Goddag goddag = this.gson.fromJson(new FileReader(goddagInputFile), Goddag.class);
 	GoddagNameStructure goddagNameStructure = new GoddagNameStructure(goddag);
 
-	// TODO modify iteration to bottom up to incorporate author frequency
-
 	// iterate over goddag tree to count first names and last names
 	for (Node rootChildNode : goddagNameStructure.getGoddag().getRootNode().getChildren()) {
 	    if (rootChildNode.getLabel().equals(GoddagNameStructure.NodeType.AUTHOR.toString())) {
+		boolean isBeginning = true;
 		for (Node authorChildNode : rootChildNode.getChildren()) {
 		    if ((authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))
 			    || (authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.LAST_NAME.toString()))) {
-			// TODO set word property instead of hardcoding it?
-			// String nameWord =
-			// authorChildNode.getFirstChild().getProperty("word");
+
 			String nameWord = authorChildNode.getFirstChild().getLabel();
 
 			if (!this.nameDistributions.containsKey(nameWord)) {
@@ -68,23 +65,35 @@ public class NameConstraintBuilder {
 			}
 
 			if ((authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))) {
-			    this.nameDistributions.get(nameWord).addToFirstNameCount(1);
+			    if (isBeginning) {
+				this.nameDistributions.get(nameWord).bFirstNameCount += 1;
+			    } else {
+				this.nameDistributions.get(nameWord).iFirstNameCount += 1;
+			    }
 			} else {
 			    if (authorChildNode.getLabel().equals(GoddagNameStructure.NodeType.LAST_NAME.toString())) {
-				this.nameDistributions.get(nameWord).addToLastNameCount(1);
+				this.nameDistributions.get(nameWord).bLastNameCount += 1;
+			    } else {
+				this.nameDistributions.get(nameWord).iLastNameCount += 1;
 			    }
+			}
+			if (isBeginning) {
+			    isBeginning = false;
 			}
 		    }
 		}
 	    }
 	}
+
     }
 
     public void printContraints() {
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    System.out.println(nameEntry.getKey());
-	    System.out.println("\tfirstName: " + nameEntry.getValue().getFirstNamePercentage());
-	    System.out.println("\tlastName: " + nameEntry.getValue().getLastNamePercentage());
+	    System.out.println("\tB-FN: " + nameEntry.getValue().bFirstNameCount);
+	    System.out.println("\tI-FN: " + nameEntry.getValue().iFirstNameCount);
+	    System.out.println("\tB-LN: " + nameEntry.getValue().bLastNameCount);
+	    System.out.println("\tI-LN: " + nameEntry.getValue().iLastNameCount);
 	}
     }
 
@@ -95,16 +104,23 @@ public class NameConstraintBuilder {
      * the file contains lines following this example: Friedrich fn:0.4 ln:0.6
      *
      * @param outputFile
-     * @param firstNameLabel
-     *            label for first name distribution, is not allowed to contain
-     *            colons
-     * @param lastNameLabel
-     *            label for last name distribution, is not allowed to contain
-     *            colons
+     * @param bFirstNameLabel
+     *            label for beginning first name distribution, is not allowed to
+     *            contain colons
+     * @param iFirstNameLabel
+     *            label for intermediate first name distribution, is not allowed
+     *            to contain colons
+     * @param bLastNameLabel
+     *            label for beginning last name distribution, is not allowed to
+     *            contain colons
+     * @param iLastNameLabel
+     *            label for intermediate last name distribution, is not allowed
+     *            to contain colons
      *
      * @throws IOException
      */
-    public void writeDistributions(File outputFile, String firstNameLabel, String lastNameLabel) throws IOException {
+    public void writeDistributions(File outputFile, String bFirstNameLabel, String iFirstNameLabel,
+	    String bLastNameLabel, String iLastNameLabel) throws IOException {
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    String name = nameEntry.getKey();
@@ -112,11 +128,20 @@ public class NameConstraintBuilder {
 		bufferedWriter.close();
 		throw new IllegalStateException("name contains space: " + name);
 	    }
+
+	    double bFirstNamePercentage = (double) nameEntry.getValue().bFirstNameCount / nameEntry.getValue().getSum();
+	    double iFirstNamePercentage = (double) nameEntry.getValue().iFirstNameCount / nameEntry.getValue().getSum();
+	    double bLastNamePercentage = (double) nameEntry.getValue().bLastNameCount / nameEntry.getValue().getSum();
+	    double iLastNamePercentage = (double) nameEntry.getValue().iLastNameCount / nameEntry.getValue().getSum();
 	    String line = name;
 	    line += " ";
-	    line += firstNameLabel + ":" + nameEntry.getValue().getFirstNamePercentage();
+	    line += bFirstNameLabel + ":" + bFirstNamePercentage;
 	    line += " ";
-	    line += lastNameLabel + ":" + nameEntry.getValue().getLastNamePercentage();
+	    line += iFirstNameLabel + ":" + iFirstNamePercentage;
+	    line += " ";
+	    line += bLastNameLabel + ":" + bLastNamePercentage;
+	    line += " ";
+	    line += iLastNameLabel + ":" + iLastNamePercentage;
 
 	    // TODO parameterize
 	    line += " ";

@@ -14,17 +14,21 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import cc.mallet.fst.CRF;
-import cc.mallet.fst.SimpleTagger.SimpleTaggerSentence2FeatureVectorSequence;
 import cc.mallet.fst.Transducer;
+import cc.mallet.fst.TransducerTrainer;
+import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.fst.semi_supervised.CRFTrainerByGE;
 import cc.mallet.fst.semi_supervised.FSTConstraintUtil;
 import cc.mallet.fst.semi_supervised.constraints.GEConstraint;
 import cc.mallet.fst.semi_supervised.constraints.OneLabelKLGEConstraints;
 import cc.mallet.pipe.Pipe;
-import cc.mallet.pipe.iterator.LineGroupIterator;
+import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.Alphabet;
 import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
+import de.mkrnr.rse.pipe.FeaturePipeProvider;
+import de.mkrnr.rse.pipe.SerialPipesBuilder;
+import de.mkrnr.rse.util.InstanceListBuilder;
 import de.mkrnr.rse.util.TempFileHelper;
 
 public class NameTrainer {
@@ -61,34 +65,20 @@ public class NameTrainer {
 
 	this.createMergedTrainingFile(trainingFiles, tempMergedTrainingFile);
 
-	FileReader tempMergedTrainingFileReader = new FileReader(tempMergedTrainingFile);
-
-	FileReader nameConstraintFileReader = new FileReader(nameConstraintFile);
-
 	// TODO add firstname and lastname files or change method signature
-	// FeaturePipeProvider featurePipeProvider = new
-	// FeaturePipeProvider(null, null);
-	//
-	// SerialPipesBuilder serialPipesBuilder = new
-	// SerialPipesBuilder(featurePipeProvider);
-	//
-	// SerialPipes serialPipes =
-	// serialPipesBuilder.createSerialPipes(features);
-	//
-	//
-	// InstanceList inputInstances =
-	// InstanceListBuilder.build(tempMergedTrainingFile, serialPipes);
+	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
 
-	Pipe p = new SimpleTaggerSentence2FeatureVectorSequence();
+	SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
 
-	p.getTargetAlphabet().lookupIndex("O");
+	SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(features);
 
-	p.setTargetProcessing(true);
-	InstanceList trainingInstances = new InstanceList(p);
-	trainingInstances
-		.addThruPipe(new LineGroupIterator(tempMergedTrainingFileReader, Pattern.compile("^\\s*$"), true));
+	InstanceList trainingInstances = InstanceListBuilder.build(tempMergedTrainingFile, serialPipes);
 
-	Alphabet targets = p.getTargetAlphabet();
+	serialPipes.getTargetAlphabet().lookupIndex("O");
+	serialPipes.setTargetProcessing(true);
+
+	Alphabet targets = serialPipes.getTargetAlphabet();
+
 	StringBuffer buf = new StringBuffer("Labels:");
 	for (int i = 0; i < targets.size(); i++) {
 	    buf.append(" ").append(targets.lookupObject(i).toString());
@@ -132,6 +122,18 @@ public class NameTrainer {
 
 	CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, 1);
 	trainer.setGaussianPriorVariance(10.0);
+	ViterbiWriter viterbiWriter = new ViterbiWriter("dis_con_crf", // output
+								       // file
+								       // prefix
+		// new InstanceList[]{trainingInstances, testingInstances},
+		new InstanceList[] { trainingInstances }, new String[] { "train" }) {
+
+	    @Override
+	    public boolean precondition(TransducerTrainer tt) {
+		return (tt.getIteration() % 10) == 0;
+	    }
+	};
+	trainer.addEvaluator(viterbiWriter);
 	trainer.setNumResets(4);
 	trainer.train(trainingInstances, 500);
 
@@ -157,9 +159,17 @@ public class NameTrainer {
 		    if (!word.isEmpty()) {
 			// TODO do this more elegant
 			if (Math.random() > 0.5) {
-			    bufferedWriter.write(word + " " + "fn" + System.lineSeparator());
+			    if (Math.random() > 0.5) {
+				bufferedWriter.write(word + " " + "B-FN" + System.lineSeparator());
+			    } else {
+				bufferedWriter.write(word + " " + "I-FN" + System.lineSeparator());
+			    }
 			} else {
-			    bufferedWriter.write(word + " " + "ln" + System.lineSeparator());
+			    if (Math.random() > 0.5) {
+				bufferedWriter.write(word + " " + "B-LN" + System.lineSeparator());
+			    } else {
+				bufferedWriter.write(word + " " + "I-LN" + System.lineSeparator());
+			    }
 			}
 		    }
 		}
