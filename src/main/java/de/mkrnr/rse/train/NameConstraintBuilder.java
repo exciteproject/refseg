@@ -29,7 +29,7 @@ public class NameConstraintBuilder {
 	}
 
 	// nameConstraintBuilder.printContraints();
-	nameConstraintBuilder.writeDistributions(new File(args[1]), "B-FN", "I-FN", "B-LN", "I-LN");
+	nameConstraintBuilder.writeDistributions(new File(args[1]), "B-FN", "I-FN", "B-LN", "I-LN", "O");
     }
 
     private Gson gson;
@@ -73,11 +73,26 @@ public class NameConstraintBuilder {
 				this.nameDistributions.get(nameWord).iLastNameCount += 1;
 			    }
 			}
-
 		    }
 		    if (isBeginning) {
 			isBeginning = false;
 		    }
+		}
+	    } else {
+		// TODO rewrite
+		if (Math.random() < 0.2) {
+		    Node childNode = rootChildNode;
+		    while (childNode.hasChildren()) {
+			childNode = childNode.getFirstChild();
+		    }
+		    String word = childNode.getLabel();
+		    if (word.isEmpty()) {
+			continue;
+		    }
+		    if (!this.nameDistributions.containsKey(word)) {
+			this.nameDistributions.put(word, new NameDistribution());
+		    }
+		    this.nameDistributions.get(word).otherCount += 1;
 		}
 	    }
 	}
@@ -116,8 +131,9 @@ public class NameConstraintBuilder {
      *
      * @throws IOException
      */
-    public void writeDistributions(File outputFile, String bFirstNameLabel, String iFirstNameLabel,
-	    String bLastNameLabel, String iLastNameLabel) throws IOException {
+    public int writeDistributions(File outputFile, String bFirstNameLabel, String iFirstNameLabel,
+	    String bLastNameLabel, String iLastNameLabel, String otherLabel) throws IOException {
+	int nameCount = 0;
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    String name = nameEntry.getKey();
@@ -126,10 +142,13 @@ public class NameConstraintBuilder {
 		throw new IllegalStateException("name contains space: " + name);
 	    }
 
+	    nameCount += 1;
+
 	    double bFirstNamePercentage = (double) nameEntry.getValue().bFirstNameCount / nameEntry.getValue().getSum();
 	    double iFirstNamePercentage = (double) nameEntry.getValue().iFirstNameCount / nameEntry.getValue().getSum();
 	    double bLastNamePercentage = (double) nameEntry.getValue().bLastNameCount / nameEntry.getValue().getSum();
 	    double iLastNamePercentage = (double) nameEntry.getValue().iLastNameCount / nameEntry.getValue().getSum();
+	    double otherPercentage = (double) nameEntry.getValue().otherCount / nameEntry.getValue().getSum();
 	    String line = name;
 	    line += " ";
 	    line += bFirstNameLabel + ":" + bFirstNamePercentage;
@@ -142,13 +161,13 @@ public class NameConstraintBuilder {
 
 	    // TODO parameterize
 	    line += " ";
-	    line += "O" + ":" + "0.0";
+	    line += otherLabel + ":" + otherPercentage;
 
 	    line += System.lineSeparator();
 	    bufferedWriter.write(line);
 	}
 	bufferedWriter.close();
-
+	return nameCount;
     }
 
 }

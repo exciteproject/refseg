@@ -6,8 +6,10 @@ public class NameDistribution {
     public int iFirstNameCount;
     public int bLastNameCount;
     public int iLastNameCount;
+    public int otherCount;
 
     public int getSum() {
-	return this.bFirstNameCount + this.iFirstNameCount + this.bLastNameCount + this.iLastNameCount;
+	return this.bFirstNameCount + this.iFirstNameCount + this.bLastNameCount + this.iLastNameCount
+		+ this.otherCount;
     }
 }

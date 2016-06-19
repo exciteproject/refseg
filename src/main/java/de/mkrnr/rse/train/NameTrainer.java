@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.Transducer;
@@ -48,12 +47,14 @@ public class NameTrainer {
 	features.add("BRACES");
 	features.add("MONTH");
 	features.add("YEAR");
+	features.add("FIRSTNAME");
+	features.add("LASTNAME");
 
-	nameTrainer.train(new File(args[0]), new File(args[1]), features);
+	nameTrainer.train(new File(args[0]), new File(args[1]), features, new File(args[2]), new File(args[3]));
     }
 
-    public void train(File trainingDataInputDirectory, File nameConstraintFile, List<String> features)
-	    throws IOException {
+    public void train(File trainingDataInputDirectory, File nameConstraintFile, List<String> features,
+	    File firstNameFile, File lastNameFile) throws IOException {
 	if (!trainingDataInputDirectory.isDirectory()) {
 	    throw new IllegalArgumentException("trainingDataInputDirectory is not a directory");
 	}
@@ -66,7 +67,7 @@ public class NameTrainer {
 	this.createMergedTrainingFile(trainingFiles, tempMergedTrainingFile);
 
 	// TODO add firstname and lastname files or change method signature
-	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(null, null);
+	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(firstNameFile, lastNameFile);
 
 	SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
 
@@ -99,11 +100,10 @@ public class NameTrainer {
 	// bufferedWriter.write(trainingInstances.getDataAlphabet().toString());
 	// bufferedWriter.close();
 
-	Pattern forbiddenPat = Pattern.compile("\\s");
-	Pattern allowedPat = Pattern.compile(".*");
+	// Pattern forbiddenPat = Pattern.compile("\\s");
+	// Pattern allowedPat = Pattern.compile(".*");
 	CRF crf = new CRF(trainingInstances.getPipe(), (Pipe) null);
-	String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", forbiddenPat, allowedPat,
-		true);
+	String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", null, null, true);
 	for (int i = 0; i < crf.numStates(); i++) {
 	    crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT);
 	}
