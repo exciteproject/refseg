@@ -8,6 +8,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import cc.mallet.util.CharSequenceLexer;
@@ -20,18 +22,31 @@ public class XMLAuthorExtractor {
     public static void main(String[] args) throws FileNotFoundException {
 	Pattern tokenPattern = Pattern.compile("\\S+");
 
-	XMLAuthorExtractor xmlTargetExtractor = new XMLAuthorExtractor(tokenPattern, "other", false);
+	Map<String, String> mappings = new HashMap<String, String>();
+	mappings.put("firstName", "FN");
+	mappings.put("firstAndMiddleName", "FN");
+	mappings.put("middleName", "FN");
+	mappings.put("lastName", "LN");
+	mappings.put("prefix", "LN");
+	mappings.put("other", "O");
+
+	String authorTag = "author";
+	String otherLabel = "O";
+
+	XMLAuthorExtractor xmlTargetExtractor = new XMLAuthorExtractor(mappings, tokenPattern, otherLabel, false);
 	// xmlTargetExtractor.extractAuthors(new File(args[0]), new
 	// File(args[1]));
-	xmlTargetExtractor.extractAuthorsInDir(new File(args[0]), new File(args[1]), ".*-tagged.txt");
+	xmlTargetExtractor.extractAuthorsInDir(authorTag, new File(args[0]), new File(args[1]));
     }
 
     private CharSequenceLexer lexer;
     private String untaggedLabel;
     private boolean setLastMark;
+    private Map<String, String> mappings;
 
     /**
      *
+     * @param mappings
      * @param regex:
      *            used by a lexer to split the strings into tokens
      * @param untaggedLabel:
@@ -39,19 +54,19 @@ public class XMLAuthorExtractor {
      * @param setLastMark:
      *            if true: marks the last author element as such
      */
-    public XMLAuthorExtractor(Pattern regex, String untaggedLabel, boolean setLastMark) {
+    public XMLAuthorExtractor(Map<String, String> mappings, Pattern regex, String untaggedLabel, boolean setLastMark) {
+	this.mappings = mappings;
 	this.lexer = new CharSequenceLexer(regex);
 	this.untaggedLabel = untaggedLabel;
 	this.setLastMark = setLastMark;
     }
 
-    public void extractAuthors(File inputFile, File outputFile) {
+    public void extractAuthors(String authorTag, File inputFile, File outputFile) {
 	System.out.println(inputFile.getAbsolutePath());
 	try {
 	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
 	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 
-	    String authorTag = "author";
 	    boolean authorTagOpened = false;
 	    String authorContent = "";
 	    String line;
@@ -111,15 +126,12 @@ public class XMLAuthorExtractor {
 	}
     }
 
-    public void extractAuthorsInDir(File inputDir, File outputDir, String fileNameRegularExpression)
-	    throws FileNotFoundException {
+    public void extractAuthorsInDir(String authorTag, File inputDir, File outputDir) throws FileNotFoundException {
 	outputDir.mkdirs();
 	try {
 	    for (File inputFile : inputDir.listFiles()) {
-		if (inputFile.getName().matches(fileNameRegularExpression)) {
-		    this.extractAuthors(inputFile,
-			    new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
-		}
+		this.extractAuthors(authorTag, inputFile,
+			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
 	    }
 	} catch (NullPointerException e) {
 	    throw new FileNotFoundException();
@@ -167,15 +179,23 @@ public class XMLAuthorExtractor {
 	for (int i = 0; i < authorTokenStrings.size(); i++) {
 	    String prefix = "";
 	    if (i == 0) {
-		prefix = "b-";
+		prefix = "B-";
 	    } else {
 		if ((i == (authorTokenStrings.size() - 1)) && this.setLastMark) {
-		    prefix = "e-";
+		    prefix = "E-";
 		} else {
-		    prefix = "i-";
+		    prefix = "I-";
 		}
 	    }
-	    this.writeTokenAndLabel(authorTokenStrings.get(i), prefix + authorTags.get(i), bufferedWriter);
+	    String tagLabel = "";
+	    if (this.mappings.containsKey(authorTags.get(i))) {
+		tagLabel = this.mappings.get(authorTags.get(i));
+	    } else {
+		System.err.println("Author tag not found: " + authorTags.get(i));
+		System.out.println(authorTokenStrings.get(i));
+		System.exit(1);
+	    }
+	    this.writeTokenAndLabel(authorTokenStrings.get(i), prefix + tagLabel, bufferedWriter);
 
 	}
     }

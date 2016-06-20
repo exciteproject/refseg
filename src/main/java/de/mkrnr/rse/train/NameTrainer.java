@@ -10,9 +10,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import cc.mallet.fst.CRF;
+import cc.mallet.fst.PerClassAccuracyEvaluator;
 import cc.mallet.fst.Transducer;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.fst.ViterbiWriter;
@@ -23,10 +25,12 @@ import cc.mallet.fst.semi_supervised.constraints.OneLabelKLGEConstraints;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.Alphabet;
+import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
+import de.mkrnr.rse.util.FileMerger;
 import de.mkrnr.rse.util.InstanceListBuilder;
 import de.mkrnr.rse.util.TempFileHelper;
 
@@ -50,11 +54,12 @@ public class NameTrainer {
 	features.add("FIRSTNAME");
 	features.add("LASTNAME");
 
-	nameTrainer.train(new File(args[0]), new File(args[1]), features, new File(args[2]), new File(args[3]));
+	nameTrainer.train(new File(args[0]), new File(args[1]), new File(args[2]), features, new File(args[3]),
+		new File(args[4]));
     }
 
-    public void train(File trainingDataInputDirectory, File nameConstraintFile, List<String> features,
-	    File firstNameFile, File lastNameFile) throws IOException {
+    public void train(File trainingDataInputDirectory, File testingDataInputDirectory, File nameConstraintFile,
+	    List<String> features, File firstNameFile, File lastNameFile) throws IOException {
 	if (!trainingDataInputDirectory.isDirectory()) {
 	    throw new IllegalArgumentException("trainingDataInputDirectory is not a directory");
 	}
@@ -66,7 +71,13 @@ public class NameTrainer {
 
 	this.createMergedTrainingFile(trainingFiles, tempMergedTrainingFile);
 
-	// TODO add firstname and lastname files or change method signature
+	List<File> testingFiles = Arrays.asList(testingDataInputDirectory.listFiles());
+
+	// TODO change to true
+	File tempMergedTestingFile = TempFileHelper.getTempFile("test", false);
+
+	FileMerger.mergeFiles(testingFiles, tempMergedTestingFile);
+
 	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(firstNameFile, lastNameFile);
 
 	SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
@@ -74,6 +85,7 @@ public class NameTrainer {
 	SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(features);
 
 	InstanceList trainingInstances = InstanceListBuilder.build(tempMergedTrainingFile, serialPipes);
+	InstanceList testingInstances = InstanceListBuilder.build(tempMergedTestingFile, serialPipes);
 
 	serialPipes.getTargetAlphabet().lookupIndex("O");
 	serialPipes.setTargetProcessing(true);
@@ -85,20 +97,15 @@ public class NameTrainer {
 	    buf.append(" ").append(targets.lookupObject(i).toString());
 	}
 
-	// TODO what does this do? remove target labels? any impact?
-	// Iterator<Instance> iter = trainingData.iterator();
-	// while (iter.hasNext()) {
-	// Instance instance = iter.next();
-	// instance.unLock();
-	// instance.setProperty("target", instance.getTarget());
-	// instance.setTarget(null);
-	// instance.lock();
-	// }
-
-	// BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new
-	// File("/tmp/trainingInstances.txt")));
-	// bufferedWriter.write(trainingInstances.getDataAlphabet().toString());
-	// bufferedWriter.close();
+	// TODO only use this if no viterbiWriter for training data
+	Iterator<Instance> iter = trainingInstances.iterator();
+	while (iter.hasNext()) {
+	    Instance instance = iter.next();
+	    instance.unLock();
+	    // instance.setProperty("target", instance.getTarget());
+	    instance.setTarget(null);
+	    instance.lock();
+	}
 
 	// Pattern forbiddenPat = Pattern.compile("\\s");
 	// Pattern allowedPat = Pattern.compile(".*");
@@ -112,29 +119,33 @@ public class NameTrainer {
 
 	ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(nameConstraintFile, trainingInstances);
 
-	// random split between training and testing
-	// double trainingFraction = 0.8;
-	// Random r = new Random(0);
-	// InstanceList[] trainingLists = trainingData.split(r, new double[] {
-	// trainingFraction, 1 - trainingFraction });
-	// InstanceList trainingInstances = trainingLists[0];
-	// InstanceList testingInstances = trainingLists[1];
-
 	CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, 1);
 	trainer.setGaussianPriorVariance(10.0);
-	ViterbiWriter viterbiWriter = new ViterbiWriter("dis_con_crf", // output
-								       // file
-								       // prefix
-		// new InstanceList[]{trainingInstances, testingInstances},
-		new InstanceList[] { trainingInstances }, new String[] { "train" }) {
+	trainer.setNumResets(4);
+	// ViterbiWriter viterbiTrainWriter = new ViterbiWriter("dis_con_crf",
+	// // output
+	// new InstanceList[] { trainingInstances }, new String[] { "train" }) {
+	//
+	// @Override
+	// public boolean precondition(TransducerTrainer tt) {
+	// return (tt.getIteration() % 10) == 0;
+	// }
+	// };
+	// trainer.addEvaluator(viterbiTrainWriter);
+
+	ViterbiWriter viterbiTestWriter = new ViterbiWriter("dis_con_crf", // output
+		new InstanceList[] { testingInstances }, new String[] { "test" }) {
 
 	    @Override
 	    public boolean precondition(TransducerTrainer tt) {
 		return (tt.getIteration() % 10) == 0;
 	    }
 	};
-	trainer.addEvaluator(viterbiWriter);
-	trainer.setNumResets(4);
+	trainer.addEvaluator(viterbiTestWriter);
+
+	// add evaluator
+	trainer.addEvaluator(new PerClassAccuracyEvaluator(testingInstances, "testing"));
+
 	trainer.train(trainingInstances, 500);
 
     }
@@ -157,18 +168,22 @@ public class NameTrainer {
 		String[] lineSplit = line.split("\\s+");
 		for (String word : lineSplit) {
 		    if (!word.isEmpty()) {
-			// TODO do this more elegant
-			if (Math.random() > 0.5) {
-			    if (Math.random() > 0.5) {
-				bufferedWriter.write(word + " " + "B-FN" + System.lineSeparator());
-			    } else {
-				bufferedWriter.write(word + " " + "I-FN" + System.lineSeparator());
-			    }
+			if (Math.random() < 0.1) {
+			    bufferedWriter.write(word + " " + "I-O" + System.lineSeparator());
 			} else {
+			    // TODO do this more elegant
 			    if (Math.random() > 0.5) {
-				bufferedWriter.write(word + " " + "B-LN" + System.lineSeparator());
+				if (Math.random() > 0.5) {
+				    bufferedWriter.write(word + " " + "B-FN" + System.lineSeparator());
+				} else {
+				    bufferedWriter.write(word + " " + "I-FN" + System.lineSeparator());
+				}
 			    } else {
-				bufferedWriter.write(word + " " + "I-LN" + System.lineSeparator());
+				if (Math.random() > 0.5) {
+				    bufferedWriter.write(word + " " + "B-LN" + System.lineSeparator());
+				} else {
+				    bufferedWriter.write(word + " " + "I-LN" + System.lineSeparator());
+				}
 			    }
 			}
 		    }

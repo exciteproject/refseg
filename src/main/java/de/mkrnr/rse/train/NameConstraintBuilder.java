@@ -29,7 +29,7 @@ public class NameConstraintBuilder {
 	}
 
 	// nameConstraintBuilder.printContraints();
-	nameConstraintBuilder.writeDistributions(new File(args[1]), "B-FN", "I-FN", "B-LN", "I-LN", "O");
+	nameConstraintBuilder.writeDistributions(new File(args[1]), "B-FN", "I-FN", "B-LN", "I-LN", "O", "I-O");
     }
 
     private Gson gson;
@@ -128,11 +128,16 @@ public class NameConstraintBuilder {
      * @param iLastNameLabel
      *            label for intermediate last name distribution, is not allowed
      *            to contain colons
+     * @param otherLabel
+     *            label for other distribution, is not allowed to contain colons
+     * @param iOtherLabel
+     *            label for intermediate other distribution, is not allowed to
+     *            contain colons
      *
      * @throws IOException
      */
     public int writeDistributions(File outputFile, String bFirstNameLabel, String iFirstNameLabel,
-	    String bLastNameLabel, String iLastNameLabel, String otherLabel) throws IOException {
+	    String bLastNameLabel, String iLastNameLabel, String otherLabel, String iOtherLabel) throws IOException {
 	int nameCount = 0;
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
@@ -159,9 +164,11 @@ public class NameConstraintBuilder {
 	    line += " ";
 	    line += iLastNameLabel + ":" + iLastNamePercentage;
 
-	    // TODO parameterize
 	    line += " ";
 	    line += otherLabel + ":" + otherPercentage;
+
+	    line += " ";
+	    line += iOtherLabel + ":" + "0.0";
 
 	    line += System.lineSeparator();
 	    bufferedWriter.write(line);
