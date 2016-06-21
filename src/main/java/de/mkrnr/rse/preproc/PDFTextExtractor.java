@@ -17,17 +17,19 @@ public class PDFTextExtractor extends Extractor {
 
     public static void main(String[] args) throws IOException {
 
-	String inputDirectory = args[0];
-	String outputDirectory = args[1];
-	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(2, null, null);
+	File inputDirectory = new File(args[0]);
+	File outputDirectory = new File(args[1]);
+	PDFTextExtractor pdfTextExtractor = new PDFTextExtractor(2, null, true);
+	pdfTextExtractor.extractInDir(inputDirectory, outputDirectory);
 	// String filePath = args[0];
 	// String text = pdfTextExtractor.extractText(new File(filePath));
 	// System.out.println(text);
 	// pdfTextExtractor.extract(new File(inputDirectory), new
 	// File(outputDirectory));
-	inputDirectory = "/media/data/masters-thesis/papers/33978.pdf";
-	outputDirectory = "/media/data/masters-thesis/papers/33978.pdf";
-	pdfTextExtractor.extract(new File(inputDirectory), new File(outputDirectory));
+	// inputDirectory = "/media/data/masters-thesis/papers/33978.pdf";
+	// outputDirectory = "/media/data/masters-thesis/papers/33978.pdf";
+	// pdfTextExtractor.extract(new File(inputDirectory), new
+	// File(outputDirectory));
     }
 
     private Boolean sortByPosition;
@@ -71,7 +73,7 @@ public class PDFTextExtractor extends Extractor {
 		pdfTextStripper.setSortByPosition(this.sortByPosition);
 	    }
 	    if (this.addMoreFormatting != null) {
-		pdfTextStripper.setAddMoreFormatting(true);
+		pdfTextStripper.setAddMoreFormatting(this.addMoreFormatting);
 	    }
 
 	    String text = pdfTextStripper.getText(pdDocument);

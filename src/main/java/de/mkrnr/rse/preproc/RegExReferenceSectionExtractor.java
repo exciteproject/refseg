@@ -15,8 +15,8 @@ public class RegExReferenceSectionExtractor extends Extractor {
     private static final String REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Bibliography|"
 	    + "BIBLIOGRAPHY|Bibliographie|BIBLIOGRAPHIE|Referenzen|REFERENZEN|References|REFERENCES|Reference List|REFERENCE LIST|Literatur|LITERATUR|Sources|SOURCES|Schrifttum).*";
 
-    private static final String AFTER_REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Anmerkungen|ANMERKUNGEN|Appendix|"
-	    + "ANHANG|Anhang|APPENDIX|Author|AUTHOR|Autor|AUTOR|Bemerkungen|Die Schriftenreihe|Discussion|DISCUSSION|Eingereicht am|Forschungsschwerpunkt|Stiftungsmaterialien|Table|TABLE|Zur Person|Zusammenfassung).*";
+    private static final String AFTER_REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Tabellenanhang|ANNEXES|Abstract|ABSTRACT|Sonstige|Sonstiges|Notes|NOTES|Anmerkungen|ANMERKUNGEN|Appendix|APPENDIX|"
+	    + "ANHANG|Anhang|Author|AUTHOR|Autor|AUTOR|Bemerkungen|Die Schriftenreihe|Discussion|DISCUSSION|Eingereicht am|Forschungsschwerpunkt|Stiftungsmaterialien|Table|TABLE|Zur Person|Zusammenfassung).*";
 
     public static void main(String[] args) throws IOException {
 	long startTime = System.currentTimeMillis();
@@ -28,6 +28,8 @@ public class RegExReferenceSectionExtractor extends Extractor {
 	System.out.println();
 	System.out.println("This took " + (endTime - startTime) + " milliseconds");
     }
+
+    private int maxLines = 500;
 
     @Override
     public void extract(File inputFile, File outputFile) {
@@ -65,7 +67,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
 		}
 	    }
 	    // TODO check parscit paper for ratio
-	    if (referenceSectionFound) {
+	    if (referenceSectionFound && (lineCount <= this.maxLines)) {
 		// if (referenceSectionFound) {
 		BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 		bufferedWriter.write(referenceSection.toString());
