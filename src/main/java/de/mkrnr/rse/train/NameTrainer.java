@@ -1,20 +1,14 @@
 package de.mkrnr.rse.train;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import cc.mallet.fst.CRF;
-import cc.mallet.fst.PerClassAccuracyEvaluator;
 import cc.mallet.fst.Transducer;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.fst.ViterbiWriter;
@@ -23,89 +17,15 @@ import cc.mallet.fst.semi_supervised.FSTConstraintUtil;
 import cc.mallet.fst.semi_supervised.constraints.GEConstraint;
 import cc.mallet.fst.semi_supervised.constraints.OneLabelKLGEConstraints;
 import cc.mallet.pipe.Pipe;
-import cc.mallet.pipe.SerialPipes;
-import cc.mallet.types.Alphabet;
-import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
-import de.mkrnr.rse.pipe.FeaturePipeProvider;
-import de.mkrnr.rse.pipe.SerialPipesBuilder;
-import de.mkrnr.rse.util.FileMerger;
-import de.mkrnr.rse.util.InstanceListBuilder;
-import de.mkrnr.rse.util.TempFileHelper;
+import de.mkrnr.rse.eval.Evaluation;
+import de.mkrnr.rse.eval.StructuredPerClassAccuracyEvaluator;
 
 public class NameTrainer {
-    public static void main(String[] args) throws IOException {
-	NameTrainer nameTrainer = new NameTrainer();
 
-	List<String> features = new ArrayList<String>();
-	features.add("CAPITALIZED");
-	features.add("ONELETTER");
-	features.add("ENDSWITHPERIOD");
-	features.add("PERIOD");
-	features.add("PERIODS");
-	features.add("ENDSWITHCOMMA");
-	features.add("NUMBER");
-	features.add("NUMBERS");
-	features.add("BRACKETS");
-	features.add("BRACES");
-	features.add("MONTH");
-	features.add("YEAR");
-	features.add("FIRSTNAME");
-	features.add("LASTNAME");
-
-	nameTrainer.train(new File(args[0]), new File(args[1]), new File(args[2]), features, new File(args[3]),
-		new File(args[4]));
-    }
-
-    public void train(File trainingDataInputDirectory, File testingDataInputDirectory, File nameConstraintFile,
+    public void train(InstanceList trainingInstances, InstanceList testingInstances, File nameConstraintFile,
 	    List<String> features, File firstNameFile, File lastNameFile) throws IOException {
-	if (!trainingDataInputDirectory.isDirectory()) {
-	    throw new IllegalArgumentException("trainingDataInputDirectory is not a directory");
-	}
-
-	List<File> trainingFiles = Arrays.asList(trainingDataInputDirectory.listFiles());
-
-	// TODO change to true
-	File tempMergedTrainingFile = TempFileHelper.getTempFile("train", false);
-
-	this.createMergedTrainingFile(trainingFiles, tempMergedTrainingFile);
-
-	List<File> testingFiles = Arrays.asList(testingDataInputDirectory.listFiles());
-
-	// TODO change to true
-	File tempMergedTestingFile = TempFileHelper.getTempFile("test", false);
-
-	FileMerger.mergeFiles(testingFiles, tempMergedTestingFile);
-
-	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(firstNameFile, lastNameFile);
-
-	SerialPipesBuilder serialPipesBuilder = new SerialPipesBuilder(featurePipeProvider);
-
-	SerialPipes serialPipes = serialPipesBuilder.createSerialPipes(features);
-
-	InstanceList trainingInstances = InstanceListBuilder.build(tempMergedTrainingFile, serialPipes);
-	InstanceList testingInstances = InstanceListBuilder.build(tempMergedTestingFile, serialPipes);
-
-	serialPipes.getTargetAlphabet().lookupIndex("O");
-	serialPipes.setTargetProcessing(true);
-
-	Alphabet targets = serialPipes.getTargetAlphabet();
-
-	StringBuffer buf = new StringBuffer("Labels:");
-	for (int i = 0; i < targets.size(); i++) {
-	    buf.append(" ").append(targets.lookupObject(i).toString());
-	}
-
-	// TODO only use this if no viterbiWriter for training data
-	Iterator<Instance> iter = trainingInstances.iterator();
-	while (iter.hasNext()) {
-	    Instance instance = iter.next();
-	    instance.unLock();
-	    // instance.setProperty("target", instance.getTarget());
-	    instance.setTarget(null);
-	    instance.lock();
-	}
 
 	// Pattern forbiddenPat = Pattern.compile("\\s");
 	// Pattern allowedPat = Pattern.compile(".*");
@@ -143,57 +63,16 @@ public class NameTrainer {
 	};
 	trainer.addEvaluator(viterbiTestWriter);
 
+	StructuredPerClassAccuracyEvaluator structuredPerClassAccuracyEvaluator = new StructuredPerClassAccuracyEvaluator(
+		testingInstances, "testing", new String[] { "O", "I-O" });
+
 	// add evaluator
-	trainer.addEvaluator(new PerClassAccuracyEvaluator(testingInstances, "testing"));
+	trainer.addEvaluator(structuredPerClassAccuracyEvaluator);
 
-	trainer.train(trainingInstances, 500);
+	trainer.train(trainingInstances, 50);
 
-    }
-
-    /**
-     * Merges the inputFiles at the end of outputFile.
-     *
-     * @param inputFiles
-     * @param outputFile
-     * @return
-     * @throws IOException
-     */
-    private File createMergedTrainingFile(List<File> inputFiles, File outputFile) throws IOException {
-	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-
-	for (File inputFile : inputFiles) {
-	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
-	    String line;
-	    while ((line = bufferedReader.readLine()) != null) {
-		String[] lineSplit = line.split("\\s+");
-		for (String word : lineSplit) {
-		    if (!word.isEmpty()) {
-			if (Math.random() < 0.1) {
-			    bufferedWriter.write(word + " " + "I-O" + System.lineSeparator());
-			} else {
-			    // TODO do this more elegant
-			    if (Math.random() > 0.5) {
-				if (Math.random() > 0.5) {
-				    bufferedWriter.write(word + " " + "B-FN" + System.lineSeparator());
-				} else {
-				    bufferedWriter.write(word + " " + "I-FN" + System.lineSeparator());
-				}
-			    } else {
-				if (Math.random() > 0.5) {
-				    bufferedWriter.write(word + " " + "B-LN" + System.lineSeparator());
-				} else {
-				    bufferedWriter.write(word + " " + "I-LN" + System.lineSeparator());
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    bufferedReader.close();
-	    bufferedWriter.write(System.lineSeparator());
-	}
-	bufferedWriter.close();
-	return outputFile;
+	Evaluation evaluation = structuredPerClassAccuracyEvaluator.getEvaluation();
+	evaluation.printEvaluationResults();
     }
 
     private ArrayList<GEConstraint> getKLGEConstraints(File nameConstraintFile, InstanceList trainingInstances)
