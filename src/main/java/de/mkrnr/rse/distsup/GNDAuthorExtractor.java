@@ -1,11 +1,6 @@
 package de.mkrnr.rse.distsup;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map.Entry;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
@@ -77,10 +72,6 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 	QueryExecution qexec = QueryExecutionFactory.create(query, this.model);
 	ResultSet results = qexec.execSelect();
 
-	HashMap<String, Integer> forenameMap = new HashMap<String, Integer>();
-	HashMap<String, Integer> surnameMap = new HashMap<String, Integer>();
-	HashMap<String, Integer> nameMap = new HashMap<String, Integer>();
-
 	this.initializeMaps();
 	int count = 0;
 	while (results.hasNext()) {
@@ -102,18 +93,4 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 
     }
 
-    private void writeMapToFile(HashMap<String, Integer> map, File outputFile) {
-	try {
-	    BufferedWriter nameWriter = new BufferedWriter(new FileWriter(outputFile));
-
-	    for (Entry<String, Integer> entry : map.entrySet()) {
-		nameWriter.write(entry.getKey() + "\t" + entry.getValue() + System.lineSeparator());
-	    }
-
-	    nameWriter.close();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-
-    }
 }
