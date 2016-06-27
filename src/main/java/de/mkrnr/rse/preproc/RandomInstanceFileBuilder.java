@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -78,5 +79,40 @@ public class RandomInstanceFileBuilder {
 	List<File> shuffeledList = new ArrayList<>(inputFiles);
 	Collections.shuffle(shuffeledList);
 	return shuffeledList.subList(0, numberOfFiles);
+    }
+
+    public static void main(String[] args) throws IOException {
+
+	File inputDirectory = new File(args[1]);
+	File outputFile = new File(args[2]);
+	String[] labels = new String[] { "B-FN", "I-FN", "B-LN", "I-LN", "O", "I-O" };
+	if (args[0].equals("create")) {
+	    RandomInstanceFileBuilder.createInstanceFile(Arrays.asList(inputDirectory.listFiles()), outputFile, labels);
+	} else {
+	    if (args[0].equals("merge")) {
+		RandomInstanceFileBuilder.mergeInstanceFiles(Arrays.asList(inputDirectory.listFiles()), outputFile);
+
+	    } else {
+		throw new IllegalArgumentException("first argument has to be \"create\" or \"merge\"");
+	    }
+	}
+    }
+
+    public static File mergeInstanceFiles(List<File> inputFiles, File outputFile) throws IOException {
+	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+
+	for (File inputFile : inputFiles) {
+	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
+	    String line;
+	    while ((line = bufferedReader.readLine()) != null) {
+		bufferedWriter.write(line + System.lineSeparator());
+	    }
+	    bufferedReader.close();
+	    // empty line to separate the different inputFiles in the merged
+	    // outputFile
+	    bufferedWriter.write(System.lineSeparator());
+	}
+	bufferedWriter.close();
+	return outputFile;
     }
 }

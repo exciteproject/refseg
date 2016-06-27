@@ -77,8 +77,8 @@ public class Main {
     private List<Configuration> crfConfigurations;
 
     @Parameter(names = { "-trainer",
-	    "--trainer-configurations" }, description = "list of key=value forconfiguring the trainer building", variableArity = true, converter = ConfigurationConverter.class)
-    private List<Configuration> transducerTrainerConfigurations = new ArrayList<Configuration>();
+	    "--trainer-configurations" }, description = "list of key=valueforconfiguring the trainer building", variableArity = true, converter = ConfigurationConverter.class)
+    private List<Configuration> trainerConfigurations = new ArrayList<Configuration>();
 
     @Parameter(names = { "-other",
 	    "--other-label" }, description = "label that is used to specitfy other instances in the training set")
@@ -109,6 +109,6 @@ public class Main {
 
 	NameTrainer nameTrainer = new NameTrainer();
 	nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile, this.features, this.firstNameFile,
-		this.lastNameFile);
+		this.lastNameFile, this.crfConfigurations, this.trainerConfigurations);
     }
 }

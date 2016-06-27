@@ -78,7 +78,6 @@ public class NameTagger {
 	gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonSerializer());
 	gsonBuilder.registerTypeAdapter(Node.class, Node.getJsonSerializer());
 	this.gson = gsonBuilder.create();
-
     }
 
     public void createNameMap(Map<String, Integer> names, boolean createFirstNameVariations, String nodeType) {
@@ -98,7 +97,6 @@ public class NameTagger {
     }
 
     public void readNameMap(File keywordFile, String nodeType) throws IOException {
-
 	Map<String, Integer> nameMap = new HashMap<String, Integer>();
 	BufferedReader bufferedReader = new BufferedReader(new FileReader(keywordFile));
 	String line;

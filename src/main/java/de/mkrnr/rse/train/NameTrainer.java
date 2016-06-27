@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.Transducer;
@@ -21,20 +23,29 @@ import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
 import de.mkrnr.rse.eval.Evaluation;
 import de.mkrnr.rse.eval.StructuredPerClassAccuracyEvaluator;
+import de.mkrnr.rse.util.Configuration;
+import de.mkrnr.rse.util.ConfigurationHelper;
 
 public class NameTrainer {
 
     public void train(InstanceList trainingInstances, InstanceList testingInstances, File nameConstraintFile,
-	    List<String> features, File firstNameFile, File lastNameFile) throws IOException {
+	    List<String> features, File firstNameFile, File lastNameFile, List<Configuration> crfConfigurations,
+	    List<Configuration> trainerConfigurations) throws IOException {
+	Map<String, String> crfConfigurationMap = ConfigurationHelper.asMap(crfConfigurations);
+	Map<String, String> trainerConfigurationMap = ConfigurationHelper.asMap(trainerConfigurations);
 
-	// Pattern forbiddenPat = Pattern.compile("\\s");
-	// Pattern allowedPat = Pattern.compile(".*");
+	Pattern forbiddenPat = Pattern.compile("\\s");
+	Pattern allowedPat = Pattern.compile(".*");
 	CRF crf = new CRF(trainingInstances.getPipe(), (Pipe) null);
-	String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", null, null, true);
-	for (int i = 0; i < crf.numStates(); i++) {
-	    crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT);
+	if (crfConfigurationMap.containsKey("addOrderNStates")) {
+	    String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", forbiddenPat,
+		    allowedPat, true);
+	    for (int i = 0; i < crf.numStates(); i++) {
+		crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT);
+	    }
+	    crf.getState(startName).setInitialWeight(0.0);
+
 	}
-	crf.getState(startName).setInitialWeight(0.0);
 	crf.setWeightsDimensionDensely();
 
 	ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(nameConstraintFile, trainingInstances);

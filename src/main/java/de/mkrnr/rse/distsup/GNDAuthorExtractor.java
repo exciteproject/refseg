@@ -22,9 +22,7 @@ public class GNDAuthorExtractor extends AuthorExtractor {
      * @param args[0]:
      *            tdb directory
      * @param args[1]:
-     *            output file for firstNames
-     * @param args[2]:
-     *            output file for lastNames
+     *            output directory for name files
      */
     public static void main(String[] args) {
 	File tdbDirectory = new File(args[0]);
