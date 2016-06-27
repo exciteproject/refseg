@@ -80,7 +80,8 @@ public class NameTrainer {
 	// add evaluator
 	trainer.addEvaluator(structuredPerClassAccuracyEvaluator);
 
-	trainer.train(trainingInstances, 50);
+	// TODO add as parameter
+	trainer.train(trainingInstances, 1000);
 
 	Evaluation evaluation = structuredPerClassAccuracyEvaluator.getEvaluation();
 	evaluation.printEvaluationResults();
