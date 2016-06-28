@@ -26,7 +26,11 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
 
     @Override
     public void evaluateInstanceList(TransducerTrainer tt, InstanceList data, String description) {
-	this.evaluation = new Evaluation();
+	Evaluation evaluation = new Evaluation();
+
+	// add general information on this iteration
+	evaluation.setIteration(tt.getIteration());
+
 	Transducer model = tt.getTransducer();
 	Alphabet dict = model.getInputPipe().getTargetAlphabet();
 	int numLabels = dict.size();
@@ -95,13 +99,13 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
 	    }
 
 	    if (!precision.isNaN()) {
-		this.evaluation.addEvaluationResult(label + " precision", precision);
+		evaluation.addEvaluationResult(label.toString(), "precision", precision);
 	    }
 	    if (!recall.isNaN()) {
-		this.evaluation.addEvaluationResult(label + " recall", recall);
+		evaluation.addEvaluationResult(label.toString(), "recall", recall);
 	    }
 	    if (!f1.isNaN()) {
-		this.evaluation.addEvaluationResult(label + " f1", f1);
+		evaluation.addEvaluationResult(label.toString(), "f1", f1);
 	    }
 
 	    if (!this.otherLabels.contains(label.toString())) {
@@ -118,7 +122,7 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
 	}
 	Double f1Mean = aggregatedF1 / allF1.size();
 	if (!f1Mean.isNaN()) {
-	    this.evaluation.addEvaluationResult("mean f1 ", f1Mean);
+	    evaluation.addEvaluationResult("mean", "f1", f1Mean);
 	}
 
 	Double totalPrecision = ((double) totalNumCorrectTokens) / totalNumPredTokens;
@@ -126,14 +130,15 @@ public class StructuredPerClassAccuracyEvaluator extends StructuredTransducerEva
 	Double totalF1 = (2 * totalPrecision * totalRecall) / (totalPrecision + totalRecall);
 
 	if (!totalPrecision.isNaN()) {
-	    this.evaluation.addEvaluationResult("total precision ", totalPrecision);
+	    evaluation.addEvaluationResult("total", "precision", totalPrecision);
 	}
 	if (!totalRecall.isNaN()) {
-	    this.evaluation.addEvaluationResult("total recall ", totalRecall);
+	    evaluation.addEvaluationResult("total", "recall", totalRecall);
 	}
 	if (!totalF1.isNaN()) {
-	    this.evaluation.addEvaluationResult("total f1 ", totalF1);
+	    evaluation.addEvaluationResult("total", "f1", totalF1);
 	}
-
+	this.evaluations.add(evaluation);
+	evaluation.printEvaluationResults();
     }
 }

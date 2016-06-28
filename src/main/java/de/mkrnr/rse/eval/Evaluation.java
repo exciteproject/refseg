@@ -1,6 +1,8 @@
 package de.mkrnr.rse.eval;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -9,43 +11,56 @@ public class Evaluation implements Serializable {
     private static final long serialVersionUID = -1428096929001039702L;
 
     public static void main(String[] args) {
-        // TODO Auto-generated method stub
+	// TODO Auto-generated method stub
 
     }
 
-    private TreeMap<String, Double> evaluationResults;
-    private String name;
+    private Map<String, Map<String, Double>> evaluationResults;
+    private int iteration;
 
     public Evaluation() {
-        this("");
+	this("");
     }
 
     public Evaluation(String name) {
-        this.name = name;
-        this.evaluationResults = new TreeMap<String, Double>();
+	this.evaluationResults = new TreeMap<String, Map<String, Double>>();
     }
 
-    public void addEvaluationResult(String resultName, double result) {
-        this.evaluationResults.put(resultName, result);
+    public void addEvaluationResult(String evaluatedElement, String metric, double result) {
+	if (!this.evaluationResults.containsKey(evaluatedElement)) {
+	    this.evaluationResults.put(evaluatedElement, new TreeMap<String, Double>());
+	}
+	this.evaluationResults.get(evaluatedElement).put(metric, result);
     }
 
-    public TreeMap<String, Double> getEvaluationResults() {
-        return this.evaluationResults;
+    public Map<String, Map<String, Double>> getEvaluationResults() {
+	return this.evaluationResults;
     }
 
-    public String getName() {
-        return this.name;
+    public int getIteration() {
+	return this.iteration;
     }
 
     public void printEvaluationResults() {
-        System.out.println("Evaluation: " + this.name);
-        for (Entry<String, Double> resultEntry : this.evaluationResults.entrySet()) {
-            System.out.println(resultEntry.getKey() + " " + resultEntry.getValue());
-        }
+	System.out.println("Evaluation: ");
+	System.out.println("Iteration: " + this.getIteration());
+
+	for (Entry<String, Map<String, Double>> resultEntry : this.evaluationResults.entrySet()) {
+	    System.out.print(resultEntry.getKey());
+	    for (Entry<String, Double> resultValue : resultEntry.getValue().entrySet()) {
+		int doublePrecision = 5;
+		Double roundedValue = new BigDecimal(resultValue.getValue())
+			.setScale(doublePrecision, BigDecimal.ROUND_HALF_UP).doubleValue();
+		System.out.print("\t");
+		System.out.print(resultValue.getKey() + ": ");
+		System.out.printf("%." + doublePrecision + "f", roundedValue);
+	    }
+	    System.out.println();
+	}
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setIteration(int iteration) {
+	this.iteration = iteration;
     }
 
     // @Override

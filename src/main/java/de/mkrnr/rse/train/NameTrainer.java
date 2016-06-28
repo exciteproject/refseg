@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,8 +15,8 @@ import java.util.regex.Pattern;
 
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.Transducer;
+import cc.mallet.fst.TransducerEvaluator;
 import cc.mallet.fst.TransducerTrainer;
-import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.fst.semi_supervised.CRFTrainerByGE;
 import cc.mallet.fst.semi_supervised.FSTConstraintUtil;
 import cc.mallet.fst.semi_supervised.constraints.GEConstraint;
@@ -21,16 +24,14 @@ import cc.mallet.fst.semi_supervised.constraints.OneLabelKLGEConstraints;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
-import de.mkrnr.rse.eval.Evaluation;
-import de.mkrnr.rse.eval.StructuredPerClassAccuracyEvaluator;
 import de.mkrnr.rse.util.Configuration;
 import de.mkrnr.rse.util.ConfigurationHelper;
 
 public class NameTrainer {
 
-    public void train(InstanceList trainingInstances, InstanceList testingInstances, File nameConstraintFile,
-	    List<String> features, File firstNameFile, File lastNameFile, List<Configuration> crfConfigurations,
-	    List<Configuration> trainerConfigurations) throws IOException {
+    public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
+	    File nameConstraintFile, List<Configuration> crfConfigurations, List<Configuration> trainerConfigurations,
+	    List<TransducerEvaluator> trainingEvaluators, Map<String, String> trainingInformation) throws IOException {
 	Map<String, String> crfConfigurationMap = ConfigurationHelper.asMap(crfConfigurations);
 	Map<String, String> trainerConfigurationMap = ConfigurationHelper.asMap(trainerConfigurations);
 
@@ -53,38 +54,25 @@ public class NameTrainer {
 	CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, 1);
 	trainer.setGaussianPriorVariance(10.0);
 	trainer.setNumResets(4);
-	// ViterbiWriter viterbiTrainWriter = new ViterbiWriter("dis_con_crf",
-	// // output
-	// new InstanceList[] { trainingInstances }, new String[] { "train" }) {
-	//
-	// @Override
-	// public boolean precondition(TransducerTrainer tt) {
-	// return (tt.getIteration() % 10) == 0;
-	// }
-	// };
-	// trainer.addEvaluator(viterbiTrainWriter);
 
-	ViterbiWriter viterbiTestWriter = new ViterbiWriter("dis_con_crf", // output
-		new InstanceList[] { testingInstances }, new String[] { "test" }) {
+	for (TransducerEvaluator trainingEvaluator : trainingEvaluators) {
+	    trainer.addEvaluator(trainingEvaluator);
+	}
 
-	    @Override
-	    public boolean precondition(TransducerTrainer tt) {
-		return (tt.getIteration() % 10) == 0;
-	    }
-	};
-	trainer.addEvaluator(viterbiTestWriter);
+	Instant start = Instant.now();
+	// TODO add iterations as parameter
+	boolean converged = trainer.train(trainingInstances, 5);
+	Instant end = Instant.now();
 
-	StructuredPerClassAccuracyEvaluator structuredPerClassAccuracyEvaluator = new StructuredPerClassAccuracyEvaluator(
-		testingInstances, "testing", new String[] { "O", "I-O" });
+	trainingInformation.put("timeInMillis", Long.toString(Duration.between(start, end).toMillis()));
+	trainingInformation.put("date", LocalDateTime.now().toString());
 
-	// add evaluator
-	trainer.addEvaluator(structuredPerClassAccuracyEvaluator);
-
-	// TODO add as parameter
-	trainer.train(trainingInstances, 1000);
-
-	Evaluation evaluation = structuredPerClassAccuracyEvaluator.getEvaluation();
-	evaluation.printEvaluationResults();
+	trainingInformation.put("iterations", Integer.toString(trainer.getIteration()));
+	trainingInformation.put("converged", Boolean.toString(converged));
+	// Evaluation evaluation =
+	// structuredPerClassAccuracyEvaluator.getEvaluation();
+	// evaluation.printEvaluationResults();
+	return trainer;
     }
 
     private ArrayList<GEConstraint> getKLGEConstraints(File nameConstraintFile, InstanceList trainingInstances)

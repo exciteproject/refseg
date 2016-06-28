@@ -3,17 +3,24 @@ package de.mkrnr.rse.train;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
 
+import cc.mallet.fst.TransducerEvaluator;
+import cc.mallet.fst.TransducerTrainer;
+import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
+import de.mkrnr.rse.eval.StructuredPerClassAccuracyEvaluator;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.util.Configuration;
@@ -107,8 +114,34 @@ public class Main {
 	    instance.lock();
 	}
 
+	// create list of evaluators that are passed to the trainer for
+	// evaluations during every iteration
+	List<TransducerEvaluator> trainingEvaluators = new ArrayList<TransducerEvaluator>();
+
+	ViterbiWriter viterbiTestWriter = new ViterbiWriter("dis_con_crf", // output
+		new InstanceList[] { testingInstances }, new String[] { "test" }) {
+
+	    @Override
+	    public boolean precondition(TransducerTrainer tt) {
+		return (tt.getIteration() % 10) == 0;
+	    }
+	};
+	trainingEvaluators.add(viterbiTestWriter);
+
+	StructuredPerClassAccuracyEvaluator structuredPerClassAccuracyEvaluator = new StructuredPerClassAccuracyEvaluator(
+		testingInstances, "testing", new String[] { "O", "I-O" });
+	trainingEvaluators.add(structuredPerClassAccuracyEvaluator);
+
 	NameTrainer nameTrainer = new NameTrainer();
-	nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile, this.features, this.firstNameFile,
-		this.lastNameFile, this.crfConfigurations, this.trainerConfigurations);
+	Map<String, String> trainingInformation = new HashMap<String, String>();
+	TransducerTrainer trainedTrainer = nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile,
+		this.crfConfigurations, this.trainerConfigurations, trainingEvaluators, trainingInformation);
+
+	for (Entry<String, String> trainingInformationEntry : trainingInformation.entrySet()) {
+	    System.out.println(trainingInformationEntry.getKey() + "\t" + trainingInformationEntry.getValue());
+	}
+
+	// do evaluations with finished trainer
+
     }
 }
