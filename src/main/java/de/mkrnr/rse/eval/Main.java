@@ -1,4 +1,4 @@
-package de.mkrnr.rse.train;
+package de.mkrnr.rse.eval;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,9 +20,9 @@ import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
-import de.mkrnr.rse.eval.StructuredPerClassAccuracyEvaluator;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
+import de.mkrnr.rse.train.NameTrainer;
 import de.mkrnr.rse.util.Configuration;
 import de.mkrnr.rse.util.ConfigurationConverter;
 import de.mkrnr.rse.util.InstanceListBuilder;
