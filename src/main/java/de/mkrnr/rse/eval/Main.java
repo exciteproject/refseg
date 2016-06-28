@@ -53,7 +53,7 @@ public class Main {
 
     @Parameter(names = { "-log-eval",
 	    "--log-eval-during-training" }, description = "logs information about precision, recall, and f1 scores during training")
-    private boolean evaluateDuringTraining = false;
+    private boolean evaluateDuringTraining = true;
 
     @Parameter(names = { "-test",
 	    "--testing-file" }, description = "file that contains per line: word <space> label", required = true, converter = FileConverter.class)
@@ -104,7 +104,7 @@ public class Main {
 
 	serialPipes.setTargetProcessing(false);
 
-	// TODO only use this if no viterbiWriter for training data
+	// remove target from instances
 	Iterator<Instance> iter = trainingInstances.iterator();
 	while (iter.hasNext()) {
 	    Instance instance = iter.next();
@@ -114,28 +114,31 @@ public class Main {
 	    instance.lock();
 	}
 
-	// create list of evaluators that are passed to the trainer for
-	// evaluations during every iteration
 	List<TransducerEvaluator> trainingEvaluators = new ArrayList<TransducerEvaluator>();
+	if (this.evaluateDuringTraining) {
+	    // create list of evaluators that are passed to the trainer for
+	    // evaluations during every iteration
 
-	ViterbiWriter viterbiTestWriter = new ViterbiWriter("dis_con_crf", // output
-		new InstanceList[] { testingInstances }, new String[] { "test" }) {
+	    ViterbiWriter viterbiTestWriter = new ViterbiWriter("crf", // output
+		    new InstanceList[] { testingInstances }, new String[] { "test" }) {
 
-	    @Override
-	    public boolean precondition(TransducerTrainer tt) {
-		return (tt.getIteration() % 10) == 0;
-	    }
-	};
-	trainingEvaluators.add(viterbiTestWriter);
+		@Override
+		public boolean precondition(TransducerTrainer tt) {
+		    return (tt.getIteration() % 10) == 0;
+		}
+	    };
+	    trainingEvaluators.add(viterbiTestWriter);
 
-	StructuredPerClassAccuracyEvaluator structuredPerClassAccuracyEvaluator = new StructuredPerClassAccuracyEvaluator(
-		testingInstances, "testing", new String[] { "O", "I-O" });
-	trainingEvaluators.add(structuredPerClassAccuracyEvaluator);
+	    StructuredAccuracyEvaluator structuredPerClassAccuracyEvaluator = new StructuredAccuracyEvaluator(
+		    testingInstances, "testing", new String[] { "O", });
+	    trainingEvaluators.add(structuredPerClassAccuracyEvaluator);
+	}
 
+	EvaluationResults evaluationResults = new EvaluationResults();
 	NameTrainer nameTrainer = new NameTrainer();
 	Map<String, String> trainingInformation = new HashMap<String, String>();
 	TransducerTrainer trainedTrainer = nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile,
-		this.crfConfigurations, this.trainerConfigurations, trainingEvaluators, trainingInformation);
+		this.crfConfigurations, this.trainerConfigurations, trainingEvaluators, evaluationResults);
 
 	for (Entry<String, String> trainingInformationEntry : trainingInformation.entrySet()) {
 	    System.out.println(trainingInformationEntry.getKey() + "\t" + trainingInformationEntry.getValue());
@@ -143,5 +146,18 @@ public class Main {
 
 	// do evaluations with finished trainer
 
+	// write evaluations to json file
+
+	for (TransducerEvaluator trainingEvaluator : trainingEvaluators) {
+	    if (StructuredTransducerEvaluator.class.isAssignableFrom(trainingEvaluator.getClass())) {
+		StructuredTransducerEvaluator structuredTrainingEvaluator = (StructuredTransducerEvaluator) trainingEvaluator;
+		List<Evaluation> evaluations = structuredTrainingEvaluator.getEvaluations();
+		for (Evaluation evaluation : evaluations) {
+		    evaluationResults.addEvaluation(evaluation);
+		}
+	    }
+	}
+
+	evaluationResults.writeAsJson(new File("/home/martin/eval-test.json"));
     }
 }

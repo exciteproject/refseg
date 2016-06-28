@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +23,7 @@ import cc.mallet.fst.semi_supervised.constraints.OneLabelKLGEConstraints;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
+import de.mkrnr.rse.eval.EvaluationResults;
 import de.mkrnr.rse.util.Configuration;
 import de.mkrnr.rse.util.ConfigurationHelper;
 
@@ -31,7 +31,7 @@ public class NameTrainer {
 
     public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
 	    File nameConstraintFile, List<Configuration> crfConfigurations, List<Configuration> trainerConfigurations,
-	    List<TransducerEvaluator> trainingEvaluators, Map<String, String> trainingInformation) throws IOException {
+	    List<TransducerEvaluator> trainingEvaluators, EvaluationResults evaluationResults) throws IOException {
 	Map<String, String> crfConfigurationMap = ConfigurationHelper.asMap(crfConfigurations);
 	Map<String, String> trainerConfigurationMap = ConfigurationHelper.asMap(trainerConfigurations);
 
@@ -61,14 +61,13 @@ public class NameTrainer {
 
 	Instant start = Instant.now();
 	// TODO add iterations as parameter
-	boolean converged = trainer.train(trainingInstances, 5);
+	boolean converged = trainer.train(trainingInstances, 50);
 	Instant end = Instant.now();
 
-	trainingInformation.put("timeInMillis", Long.toString(Duration.between(start, end).toMillis()));
-	trainingInformation.put("date", LocalDateTime.now().toString());
+	evaluationResults.setTimeInMillis(Duration.between(start, end).toMillis());
 
-	trainingInformation.put("iterations", Integer.toString(trainer.getIteration()));
-	trainingInformation.put("converged", Boolean.toString(converged));
+	evaluationResults.setIterations(trainer.getIteration());
+	evaluationResults.setConverged(converged);
 	// Evaluation evaluation =
 	// structuredPerClassAccuracyEvaluator.getEvaluation();
 	// evaluation.printEvaluationResults();

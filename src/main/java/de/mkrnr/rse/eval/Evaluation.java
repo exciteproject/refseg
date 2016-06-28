@@ -15,7 +15,7 @@ public class Evaluation implements Serializable {
 
     }
 
-    private Map<String, Map<String, Double>> evaluationResults;
+    private Map<String, Map<String, Double>> results;
     private int iteration;
 
     public Evaluation() {
@@ -23,18 +23,18 @@ public class Evaluation implements Serializable {
     }
 
     public Evaluation(String name) {
-	this.evaluationResults = new TreeMap<String, Map<String, Double>>();
+	this.results = new TreeMap<String, Map<String, Double>>();
     }
 
     public void addEvaluationResult(String evaluatedElement, String metric, double result) {
-	if (!this.evaluationResults.containsKey(evaluatedElement)) {
-	    this.evaluationResults.put(evaluatedElement, new TreeMap<String, Double>());
+	if (!this.results.containsKey(evaluatedElement)) {
+	    this.results.put(evaluatedElement, new TreeMap<String, Double>());
 	}
-	this.evaluationResults.get(evaluatedElement).put(metric, result);
+	this.results.get(evaluatedElement).put(metric, result);
     }
 
     public Map<String, Map<String, Double>> getEvaluationResults() {
-	return this.evaluationResults;
+	return this.results;
     }
 
     public int getIteration() {
@@ -45,7 +45,7 @@ public class Evaluation implements Serializable {
 	System.out.println("Evaluation: ");
 	System.out.println("Iteration: " + this.getIteration());
 
-	for (Entry<String, Map<String, Double>> resultEntry : this.evaluationResults.entrySet()) {
+	for (Entry<String, Map<String, Double>> resultEntry : this.results.entrySet()) {
 	    System.out.print(resultEntry.getKey());
 	    for (Entry<String, Double> resultValue : resultEntry.getValue().entrySet()) {
 		int doublePrecision = 5;
