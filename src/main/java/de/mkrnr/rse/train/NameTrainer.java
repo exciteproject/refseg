@@ -61,7 +61,7 @@ public class NameTrainer {
 
 	Instant start = Instant.now();
 	// TODO add iterations as parameter
-	boolean converged = trainer.train(trainingInstances, 50);
+	boolean converged = trainer.train(trainingInstances, 1000);
 	Instant end = Instant.now();
 
 	evaluationResults.setTimeInMillis(Duration.between(start, end).toMillis());

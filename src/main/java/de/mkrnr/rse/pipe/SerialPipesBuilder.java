@@ -7,7 +7,6 @@ import cc.mallet.pipe.Pipe;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.pipe.SimpleTaggerSentence2TokenSequence;
 import cc.mallet.pipe.TokenSequence2FeatureVectorSequence;
-import cc.mallet.pipe.tsf.OffsetConjunctions;
 
 public class SerialPipesBuilder {
 
@@ -23,10 +22,10 @@ public class SerialPipesBuilder {
 	pipes.add(new SimpleTaggerSentence2TokenSequence());
 
 	// TODO handle conjunctions and suffixes somewhere else
-	int[][] conjunctions = new int[2][];
-	conjunctions[0] = new int[] { -1 };
-	conjunctions[1] = new int[] { 1 };
-	pipes.add(new OffsetConjunctions(conjunctions));
+	// int[][] conjunctions = new int[2][];
+	// conjunctions[0] = new int[] { -1 };
+	// conjunctions[1] = new int[] { 1 };
+	// pipes.add(new OffsetConjunctions(conjunctions));
 
 	// pipes.add(new TokenTextCharSuffix("C1=", 1));
 	// pipes.add(new TokenTextCharSuffix("C2=", 2));

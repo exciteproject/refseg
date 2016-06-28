@@ -63,6 +63,10 @@ public class Main {
 	    "--training-file" }, description = "file that contains per line: word <space> label", required = true, converter = FileConverter.class)
     private File trainingFile;
 
+    @Parameter(names = { "-eval",
+	    "--evaluation-file" }, description = "file in which the evaluation results are saved", required = true, converter = FileConverter.class)
+    private File evaluationFile;
+
     @Parameter(names = { "-constraints",
 	    "--constraints-file" }, description = "file that contains per line: word <space> label", required = true, converter = FileConverter.class)
     private File constraintsFile;
@@ -158,6 +162,6 @@ public class Main {
 	    }
 	}
 
-	evaluationResults.writeAsJson(new File("/home/martin/eval-test.json"));
+	evaluationResults.writeAsJson(this.evaluationFile);
     }
 }
