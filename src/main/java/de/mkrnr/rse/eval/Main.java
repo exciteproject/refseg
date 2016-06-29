@@ -3,11 +3,8 @@ package de.mkrnr.rse.eval;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -136,17 +133,14 @@ public class Main {
 
 	EvaluationResults evaluationResults = new EvaluationResults();
 	NameTrainer nameTrainer = new NameTrainer();
-	Map<String, String> trainingInformation = new HashMap<String, String>();
 	TransducerTrainer trainedTrainer = nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile,
 		this.trainerConfigurations, trainingEvaluators, evaluationResults);
-
-	for (Entry<String, String> trainingInformationEntry : trainingInformation.entrySet()) {
-	    System.out.println(trainingInformationEntry.getKey() + "\t" + trainingInformationEntry.getValue());
-	}
 
 	// do evaluations with finished trainer
 
 	// write evaluations to json file
+
+	// TODO add features to evaluationResults
 
 	for (TransducerEvaluator trainingEvaluator : trainingEvaluators) {
 	    if (StructuredTransducerEvaluator.class.isAssignableFrom(trainingEvaluator.getClass())) {

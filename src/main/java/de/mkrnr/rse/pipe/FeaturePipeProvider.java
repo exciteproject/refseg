@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 
 import cc.mallet.pipe.Pipe;
+import cc.mallet.pipe.tsf.OffsetConjunctions;
 
 public class FeaturePipeProvider {
 
@@ -106,6 +107,11 @@ public class FeaturePipeProvider {
 	    String lastNamePipeLabel = "LASTNAME";
 	    this.featurePipes.put(lastNamePipeLabel, new NamePipe(lastNamePipeLabel, this.lastNameFile));
 	}
+
+	int[][] conjunctions = new int[2][];
+	conjunctions[0] = new int[] { -1 };
+	conjunctions[1] = new int[] { 1 };
+	this.featurePipes.put("CONJUNCTIONS", new OffsetConjunctions(conjunctions));
 
     }
 
