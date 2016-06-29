@@ -27,6 +27,7 @@ public class StructuredAccuracyEvaluator extends StructuredTransducerEvaluator {
 
 	// add general information on this iteration
 	evaluation.setIteration(tt.getIteration());
+	evaluation.setDescription(description);
 
 	Transducer model = tt.getTransducer();
 	Alphabet dict = model.getInputPipe().getTargetAlphabet();

@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import cc.mallet.fst.CRF;
@@ -25,20 +24,39 @@ import cc.mallet.types.InstanceList;
 import cc.mallet.util.Maths;
 import de.mkrnr.rse.eval.EvaluationResults;
 import de.mkrnr.rse.util.Configuration;
-import de.mkrnr.rse.util.ConfigurationHelper;
 
 public class NameTrainer {
 
-    public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
-	    File nameConstraintFile, List<Configuration> crfConfigurations, List<Configuration> trainerConfigurations,
-	    List<TransducerEvaluator> trainingEvaluators, EvaluationResults evaluationResults) throws IOException {
-	Map<String, String> crfConfigurationMap = ConfigurationHelper.asMap(crfConfigurations);
-	Map<String, String> trainerConfigurationMap = ConfigurationHelper.asMap(trainerConfigurations);
+    public static final String ADD_ORDER_N_STATES_CONFIG_LABEL = "addOrderNStates";
+    public static final String GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL = "gaussianPriorVariance";
+    public static final String NUM_ITERATIONS_CONFIG_LABEL = "numIterations";
+    public static final String NUM_RESETS_CONFIG_LABEL = "numResets";
+    public static final String NUM_THREADS_CONFIG_LABEL = "numThreads";
+    private double gaussianPriorVariance;
+    private int numIterations;
+    private int numResets;
+    private int numTreads;
+    private boolean addOrderNStates;
 
+    public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
+	    File nameConstraintFile, List<Configuration> trainerConfigurations,
+	    List<TransducerEvaluator> trainingEvaluators, EvaluationResults evaluationResults) throws IOException {
+
+	// set default values
+	this.gaussianPriorVariance = 10.0;
+	this.numIterations = 1000;
+	this.numResets = 4;
+	this.numTreads = 1;
+
+	// load configurations
+	this.setConfigurations(trainerConfigurations);
+
+	// TODO add parameters
 	Pattern forbiddenPat = Pattern.compile("\\s");
 	Pattern allowedPat = Pattern.compile(".*");
+
 	CRF crf = new CRF(trainingInstances.getPipe(), (Pipe) null);
-	if (crfConfigurationMap.containsKey("addOrderNStates")) {
+	if (this.addOrderNStates) {
 	    String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", forbiddenPat,
 		    allowedPat, true);
 	    for (int i = 0; i < crf.numStates(); i++) {
@@ -51,26 +69,27 @@ public class NameTrainer {
 
 	ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(nameConstraintFile, trainingInstances);
 
-	CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, 1);
-	trainer.setGaussianPriorVariance(10.0);
-	trainer.setNumResets(4);
+	CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, this.numTreads);
+	trainer.setGaussianPriorVariance(this.gaussianPriorVariance);
+	trainer.setNumResets(this.numResets);
 
 	for (TransducerEvaluator trainingEvaluator : trainingEvaluators) {
 	    trainer.addEvaluator(trainingEvaluator);
 	}
 
 	Instant start = Instant.now();
-	// TODO add iterations as parameter
-	boolean converged = trainer.train(trainingInstances, 1000);
+	boolean converged = trainer.train(trainingInstances, this.numIterations);
 	Instant end = Instant.now();
 
 	evaluationResults.setTimeInMillis(Duration.between(start, end).toMillis());
 
 	evaluationResults.setIterations(trainer.getIteration());
 	evaluationResults.setConverged(converged);
-	// Evaluation evaluation =
-	// structuredPerClassAccuracyEvaluator.getEvaluation();
-	// evaluation.printEvaluationResults();
+
+	evaluationResults.addConfiguration(GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL, this.gaussianPriorVariance);
+	evaluationResults.addConfiguration(NUM_ITERATIONS_CONFIG_LABEL, this.numIterations);
+	evaluationResults.addConfiguration(NUM_RESETS_CONFIG_LABEL, this.numResets);
+	evaluationResults.addConfiguration(NUM_THREADS_CONFIG_LABEL, this.numTreads);
 	return trainer;
     }
 
@@ -111,6 +130,31 @@ public class NameTrainer {
 	}
 	constraintsList.add(geConstraints);
 	return constraintsList;
+    }
+
+    private void setConfigurations(List<Configuration> configurations) {
+
+	for (Configuration configuration : configurations) {
+	    switch (configuration.getName()) {
+	    case NameTrainer.ADD_ORDER_N_STATES_CONFIG_LABEL:
+		this.addOrderNStates = Boolean.parseBoolean(configuration.getValue());
+		break;
+	    case NameTrainer.GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL:
+		this.gaussianPriorVariance = Double.parseDouble(configuration.getValue());
+		break;
+	    case NameTrainer.NUM_ITERATIONS_CONFIG_LABEL:
+		this.numIterations = Integer.parseInt(configuration.getValue());
+		break;
+	    case NameTrainer.NUM_RESETS_CONFIG_LABEL:
+		this.numResets = Integer.parseInt(configuration.getValue());
+		break;
+	    case NameTrainer.NUM_THREADS_CONFIG_LABEL:
+		this.numTreads = Integer.parseInt(configuration.getValue());
+		break;
+	    default:
+		throw new IllegalArgumentException("configuration name not known: " + configuration.getName());
+	    }
+	}
     }
 
 }

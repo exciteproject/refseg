@@ -83,12 +83,8 @@ public class Main {
 	    "--last-names-file" }, description = "file containing last names and counts, separated by tab", required = true, converter = FileConverter.class)
     private File lastNameFile;
 
-    @Parameter(names = { "-crf",
-	    "--crf-configurations" }, description = "list of key=value for configuring the CRF building", variableArity = true, required = true, converter = ConfigurationConverter.class)
-    private List<Configuration> crfConfigurations;
-
-    @Parameter(names = { "-trainer",
-	    "--trainer-configurations" }, description = "list of key=valueforconfiguring the trainer building", variableArity = true, converter = ConfigurationConverter.class)
+    @Parameter(names = { "-config",
+	    "--trainer-configurations" }, description = "list of key=value for configuring the trainer building, see static variables in NameTrainer", variableArity = true, converter = ConfigurationConverter.class)
     private List<Configuration> trainerConfigurations = new ArrayList<Configuration>();
 
     @Parameter(names = { "-other",
@@ -133,16 +129,16 @@ public class Main {
 	    };
 	    trainingEvaluators.add(viterbiTestWriter);
 
-	    StructuredAccuracyEvaluator structuredPerClassAccuracyEvaluator = new StructuredAccuracyEvaluator(
+	    StructuredAccuracyEvaluator structuredTestingAccuracyEvaluator = new StructuredAccuracyEvaluator(
 		    testingInstances, "testing", new String[] { "O", });
-	    trainingEvaluators.add(structuredPerClassAccuracyEvaluator);
+	    trainingEvaluators.add(structuredTestingAccuracyEvaluator);
 	}
 
 	EvaluationResults evaluationResults = new EvaluationResults();
 	NameTrainer nameTrainer = new NameTrainer();
 	Map<String, String> trainingInformation = new HashMap<String, String>();
 	TransducerTrainer trainedTrainer = nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile,
-		this.crfConfigurations, this.trainerConfigurations, trainingEvaluators, evaluationResults);
+		this.trainerConfigurations, trainingEvaluators, evaluationResults);
 
 	for (Entry<String, String> trainingInformationEntry : trainingInformation.entrySet()) {
 	    System.out.println(trainingInformationEntry.getKey() + "\t" + trainingInformationEntry.getValue());

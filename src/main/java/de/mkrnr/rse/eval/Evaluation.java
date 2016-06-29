@@ -10,30 +10,30 @@ public class Evaluation implements Serializable {
 
     private static final long serialVersionUID = -1428096929001039702L;
 
-    public static void main(String[] args) {
-	// TODO Auto-generated method stub
-
-    }
-
-    private Map<String, Map<String, Double>> results;
+    private Map<String, Map<String, Object>> results;
     private int iteration;
+    private String description;
 
     public Evaluation() {
 	this("");
     }
 
     public Evaluation(String name) {
-	this.results = new TreeMap<String, Map<String, Double>>();
+	this.results = new TreeMap<String, Map<String, Object>>();
     }
 
-    public void addEvaluationResult(String evaluatedElement, String metric, double result) {
+    public void addEvaluationResult(String evaluatedElement, String metric, Object result) {
 	if (!this.results.containsKey(evaluatedElement)) {
-	    this.results.put(evaluatedElement, new TreeMap<String, Double>());
+	    this.results.put(evaluatedElement, new TreeMap<String, Object>());
 	}
 	this.results.get(evaluatedElement).put(metric, result);
     }
 
-    public Map<String, Map<String, Double>> getEvaluationResults() {
+    public String getDescription() {
+	return this.description;
+    }
+
+    public Map<String, Map<String, Object>> getEvaluationResults() {
 	return this.results;
     }
 
@@ -42,21 +42,45 @@ public class Evaluation implements Serializable {
     }
 
     public void printEvaluationResults() {
-	System.out.println("Evaluation: ");
-	System.out.println("Iteration: " + this.getIteration());
+	System.out.println("Evaluation: " + this.description);
+	System.out.println("Iteration: " + this.iteration);
 
-	for (Entry<String, Map<String, Double>> resultEntry : this.results.entrySet()) {
-	    System.out.print(resultEntry.getKey());
-	    for (Entry<String, Double> resultValue : resultEntry.getValue().entrySet()) {
-		int doublePrecision = 5;
-		Double roundedValue = new BigDecimal(resultValue.getValue())
-			.setScale(doublePrecision, BigDecimal.ROUND_HALF_UP).doubleValue();
-		System.out.print("\t");
-		System.out.print(resultValue.getKey() + ": ");
-		System.out.printf("%." + doublePrecision + "f", roundedValue);
+	int doublePrecision = 6;
+	for (Entry<String, Map<String, Object>> resultEntry : this.results.entrySet()) {
+	    String resultLine = resultEntry.getKey();
+	    resultLine += "\t";
+	    for (Entry<String, Object> resultValue : resultEntry.getValue().entrySet()) {
+		resultLine += resultValue.getKey() + ": ";
+
+		if (resultValue.getValue() instanceof Integer) {
+		    int value = (Integer) resultValue.getValue();
+		    resultLine += value;
+
+		    // Fill the optical gap
+
+		    int missingSpaces = (doublePrecision + 2) - String.valueOf(value).length();
+		    while (missingSpaces > 0) {
+			resultLine += " ";
+			missingSpaces -= 1;
+		    }
+		} else {
+		    if (resultValue.getValue() instanceof Double) {
+			double roundedValue = new BigDecimal((Double) resultValue.getValue())
+				.setScale(doublePrecision, BigDecimal.ROUND_HALF_UP).doubleValue();
+			resultLine += String.format("%." + doublePrecision + "f", roundedValue);
+		    } else {
+			throw new ClassCastException("resultValue is neither integer no double");
+		    }
+		}
+		resultLine += "  ";
 	    }
-	    System.out.println();
+	    resultLine = resultLine.replaceFirst("\\s*$", "");
+	    System.out.println(resultLine);
 	}
+    }
+
+    public void setDescription(String description) {
+	this.description = description;
     }
 
     public void setIteration(int iteration) {
