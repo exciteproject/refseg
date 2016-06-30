@@ -18,20 +18,33 @@ public class EvaluationResults {
 	evaluationResults.addEvaluation(evaluation);
 	evaluationResults.setConverged(true);
 	evaluationResults.setTimeInMillis(42);
-	evaluationResults.writeAsJson(new File("/home/martin/eval-test.json"));
+	EvaluationResults.writeAsJson(evaluationResults, new File("/home/martin/eval-test.json"));
 
-	EvaluationResults readEvaluationsFile = new EvaluationResults();
-	readEvaluationsFile.readFromJson(new File("/home/martin/eval-test.json"));
+	EvaluationResults readEvaluationsFile = EvaluationResults.readFromJson(new File("/home/martin/eval-test.json"));
 	System.out.println(readEvaluationsFile.evaluations.size());
 	System.out.println(readEvaluationsFile.converged);
+    }
+
+    public static EvaluationResults readFromJson(File inputFile) {
+	return (EvaluationResults) JsonHelper.readFromFile(EvaluationResults.class, inputFile);
+    }
+
+    public static void writeAsJson(EvaluationResults evaluationResults, File outputFile) {
+	JsonHelper.writeToFile(evaluationResults, outputFile);
     }
 
     private Map<String, Object> configurations;
     private Boolean converged;
     private LocalDateTime endOfExecution;
     private List<Evaluation> evaluations;
+    private List<String> features;
+    private Integer iterations;
+    private LocalDateTime localDateTime;
+    private File testingFile;
+
     private Long timeInMillis;
-    private int iterations;
+
+    private File trainingFile;
 
     public EvaluationResults() {
 	this.evaluations = new ArrayList<Evaluation>();
@@ -62,21 +75,28 @@ public class EvaluationResults {
 	return this.evaluations;
     }
 
+    public List<String> getFeatures() {
+	return this.features;
+    }
+
     public int getIterations() {
 	return this.iterations;
+    }
+
+    public LocalDateTime getLocalDateTime() {
+	return this.localDateTime;
+    }
+
+    public File getTestingFile() {
+	return this.testingFile;
     }
 
     public long getTimeInMillis() {
 	return this.timeInMillis;
     }
 
-    public void readFromJson(File inputFile) {
-	EvaluationResults readEvaluations = (EvaluationResults) JsonHelper.readFromFile(this.getClass(), inputFile);
-	this.configurations = readEvaluations.configurations;
-	this.converged = readEvaluations.converged;
-	this.endOfExecution = readEvaluations.endOfExecution;
-	this.evaluations = readEvaluations.evaluations;
-	this.timeInMillis = readEvaluations.timeInMillis;
+    public File getTrainingFile() {
+	return this.trainingFile;
     }
 
     public void setConverged(boolean converged) {
@@ -87,15 +107,27 @@ public class EvaluationResults {
 	this.endOfExecution = endOfExecution;
     }
 
+    public void setFeatures(List<String> features) {
+	this.features = features;
+    }
+
     public void setIterations(int iterations) {
 	this.iterations = iterations;
+    }
+
+    public void setLocalDateTime(LocalDateTime localDateTime) {
+	this.localDateTime = localDateTime;
+    }
+
+    public void setTestingFile(File testingFile) {
+	this.testingFile = testingFile;
     }
 
     public void setTimeInMillis(long timeInMillis) {
 	this.timeInMillis = timeInMillis;
     }
 
-    public void writeAsJson(File outputFile) {
-	JsonHelper.writeToFile(this, outputFile);
+    public void setTrainingFile(File trainingFile) {
+	this.trainingFile = trainingFile;
     }
 }

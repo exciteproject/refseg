@@ -90,7 +90,7 @@ public class StructuredAccuracyEvaluator extends StructuredTransducerEvaluator {
 	this.addCounts("labels", labelsNumCorrectTokens, labelsNumPredTokens, labelsNumTrueTokens, evaluation);
 
 	this.evaluations.add(evaluation);
-	evaluation.printEvaluationResults();
+	System.out.println(evaluation);
     }
 
     private void addAccuracy(String label, Double precision, Double recall, Double f1, Evaluation evaluation) {

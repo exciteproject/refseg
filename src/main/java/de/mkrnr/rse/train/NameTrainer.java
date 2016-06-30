@@ -11,6 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import cc.mallet.fst.CRF;
 import cc.mallet.fst.Transducer;
 import cc.mallet.fst.TransducerEvaluator;
@@ -27,16 +29,18 @@ import de.mkrnr.rse.util.Configuration;
 
 public class NameTrainer {
 
-    public static final String ADD_ORDER_N_STATES_CONFIG_LABEL = "addOrderNStates";
     public static final String GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL = "gaussianPriorVariance";
     public static final String NUM_ITERATIONS_CONFIG_LABEL = "numIterations";
     public static final String NUM_RESETS_CONFIG_LABEL = "numResets";
     public static final String NUM_THREADS_CONFIG_LABEL = "numThreads";
+    public static final String ORDER_ZERO_STATES_CONFIG_LABEL = "orderZeroStates";
+    public static final String ORDER_ONE_STATES_CONFIG_LABEL = "orderOneStates";
     private double gaussianPriorVariance;
     private int numIterations;
     private int numResets;
     private int numTreads;
-    private boolean addOrderNStates;
+    private boolean orderZeroStates;
+    private boolean orderOneStates;
 
     public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
 	    File nameConstraintFile, List<Configuration> trainerConfigurations,
@@ -47,24 +51,35 @@ public class NameTrainer {
 	this.numIterations = 1000;
 	this.numResets = 4;
 	this.numTreads = 1;
+	this.orderZeroStates = false;
+	this.orderOneStates = false;
 
 	// load configurations
 	this.setConfigurations(trainerConfigurations);
 
-	// TODO add parameters
 	Pattern forbiddenPat = Pattern.compile("\\s");
 	Pattern allowedPat = Pattern.compile(".*");
 
 	CRF crf = new CRF(trainingInstances.getPipe(), (Pipe) null);
-	if (this.addOrderNStates) {
-	    String startName = crf.addOrderNStates(trainingInstances, new int[] { 1 }, null, "O", forbiddenPat,
-		    allowedPat, true);
-	    for (int i = 0; i < crf.numStates(); i++) {
-		crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT);
-	    }
-	    crf.getState(startName).setInitialWeight(0.0);
 
+	List<Integer> orders = new ArrayList<Integer>();
+	if (this.orderZeroStates) {
+	    orders.add(0);
 	}
+	if (this.orderOneStates) {
+	    orders.add(1);
+	}
+	int[] ordersArray = null;
+	if (orders.size() > 0) {
+	    ordersArray = ArrayUtils.toPrimitive(orders.toArray(new Integer[orders.size()]));
+	}
+	String startName = crf.addOrderNStates(trainingInstances, ordersArray, null, "O", forbiddenPat, allowedPat,
+		true);
+	for (int i = 0; i < crf.numStates(); i++) {
+	    crf.getState(i).setInitialWeight(Transducer.IMPOSSIBLE_WEIGHT);
+	}
+	crf.getState(startName).setInitialWeight(0.0);
+
 	crf.setWeightsDimensionDensely();
 
 	ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(nameConstraintFile, trainingInstances);
@@ -90,6 +105,8 @@ public class NameTrainer {
 	evaluationResults.addConfiguration(NUM_ITERATIONS_CONFIG_LABEL, this.numIterations);
 	evaluationResults.addConfiguration(NUM_RESETS_CONFIG_LABEL, this.numResets);
 	evaluationResults.addConfiguration(NUM_THREADS_CONFIG_LABEL, this.numTreads);
+	evaluationResults.addConfiguration(ORDER_ZERO_STATES_CONFIG_LABEL, this.orderZeroStates);
+	evaluationResults.addConfiguration(ORDER_ONE_STATES_CONFIG_LABEL, this.orderOneStates);
 	return trainer;
     }
 
@@ -136,9 +153,6 @@ public class NameTrainer {
 
 	for (Configuration configuration : configurations) {
 	    switch (configuration.getName()) {
-	    case NameTrainer.ADD_ORDER_N_STATES_CONFIG_LABEL:
-		this.addOrderNStates = Boolean.parseBoolean(configuration.getValue());
-		break;
 	    case NameTrainer.GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL:
 		this.gaussianPriorVariance = Double.parseDouble(configuration.getValue());
 		break;
@@ -150,6 +164,12 @@ public class NameTrainer {
 		break;
 	    case NameTrainer.NUM_THREADS_CONFIG_LABEL:
 		this.numTreads = Integer.parseInt(configuration.getValue());
+		break;
+	    case NameTrainer.ORDER_ZERO_STATES_CONFIG_LABEL:
+		this.orderZeroStates = Boolean.parseBoolean(configuration.getValue());
+		break;
+	    case NameTrainer.ORDER_ONE_STATES_CONFIG_LABEL:
+		this.orderOneStates = Boolean.parseBoolean(configuration.getValue());
 		break;
 	    default:
 		throw new IllegalArgumentException("configuration name not known: " + configuration.getName());

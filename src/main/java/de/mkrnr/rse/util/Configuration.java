@@ -1,20 +1,20 @@
 package de.mkrnr.rse.util;
 
 public class Configuration {
-    private String configurationName;
-    private String configurationValue;
+    private String name;
+    private String value;
 
-    public Configuration(String configurationName, String configurationValue) {
-	this.configurationName = configurationName;
-	this.configurationValue = configurationValue;
+    public Configuration(String name, String value) {
+	this.name = name;
+	this.value = value;
     }
 
     public String getName() {
-	return this.configurationName;
+	return this.name;
     }
 
     public String getValue() {
-	return this.configurationValue;
+	return this.value;
     }
 
 }

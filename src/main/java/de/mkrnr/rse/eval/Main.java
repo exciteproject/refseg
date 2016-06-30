@@ -2,6 +2,7 @@ package de.mkrnr.rse.eval;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -140,7 +141,9 @@ public class Main {
 
 	// write evaluations to json file
 
-	// TODO add features to evaluationResults
+	evaluationResults.setTrainingFile(this.trainingFile);
+	evaluationResults.setTestingFile(this.testingFile);
+	evaluationResults.setFeatures(this.features);
 
 	for (TransducerEvaluator trainingEvaluator : trainingEvaluators) {
 	    if (StructuredTransducerEvaluator.class.isAssignableFrom(trainingEvaluator.getClass())) {
@@ -151,7 +154,8 @@ public class Main {
 		}
 	    }
 	}
+	evaluationResults.setLocalDateTime(LocalDateTime.now());
 
-	evaluationResults.writeAsJson(this.evaluationFile);
+	EvaluationResults.writeAsJson(evaluationResults, this.evaluationFile);
     }
 }

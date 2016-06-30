@@ -15,10 +15,6 @@ public class Evaluation implements Serializable {
     private String description;
 
     public Evaluation() {
-	this("");
-    }
-
-    public Evaluation(String name) {
 	this.results = new TreeMap<String, Map<String, Object>>();
     }
 
@@ -41,9 +37,19 @@ public class Evaluation implements Serializable {
 	return this.iteration;
     }
 
-    public void printEvaluationResults() {
-	System.out.println("Evaluation: " + this.description);
-	System.out.println("Iteration: " + this.iteration);
+    public void setDescription(String description) {
+	this.description = description;
+    }
+
+    public void setIteration(int iteration) {
+	this.iteration = iteration;
+    }
+
+    @Override
+    public String toString() {
+	String string = "";
+	string += "Evaluation: " + this.description + System.lineSeparator();
+	string += "Iteration: " + this.iteration + System.lineSeparator();
 
 	int doublePrecision = 6;
 	for (Entry<String, Map<String, Object>> resultEntry : this.results.entrySet()) {
@@ -75,28 +81,9 @@ public class Evaluation implements Serializable {
 		resultLine += "  ";
 	    }
 	    resultLine = resultLine.replaceFirst("\\s*$", "");
-	    System.out.println(resultLine);
+	    string += resultLine + System.lineSeparator();
 	}
+	return string;
+
     }
-
-    public void setDescription(String description) {
-	this.description = description;
-    }
-
-    public void setIteration(int iteration) {
-	this.iteration = iteration;
-    }
-
-    // @Override
-    // public String toString() {
-    // String evaluationString = "Evaluation: " + this.name + "\n";
-    // for (Entry<String, Double> evaluationResult :
-    // this.evaluationResults.entrySet()) {
-    // evaluationString += "\t" + evaluationResult.getKey() + ": " +
-    // evaluationResult.getValue() + "\n";
-    // }
-
-    // return evaluationString;
-    // }
-
 }
