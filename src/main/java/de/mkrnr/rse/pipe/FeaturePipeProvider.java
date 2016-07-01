@@ -70,6 +70,9 @@ public class FeaturePipeProvider {
 	// matches tokens that end with a comma
 	this.addRegexPipe("ENDSWITHCOMMA", ".*\\,");
 
+	// matches tokens that end with a dash
+	this.addRegexPipe("ENDSWITHDASH", ".*-");
+
 	// matches tokens with exactly one number
 	this.addRegexPipe("NUMBER", "\\D*\\d+\\D*");
 

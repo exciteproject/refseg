@@ -53,8 +53,10 @@ public class Main {
     private File filterDirectory;
 
     @Parameter(names = { "-labels",
-	    "--label-list" }, description = "comma separated list of labels that are randomly added", variableArity = true, required = true)
+	    "--label-list" }, description = "comma separated list of labels that are randomly added", variableArity = true)
     private List<String> labels;
+
+    // TODO add double for percentage
 
     @Parameter(names = { "-create", "--create-instances" }, description = "creates random instances if true")
     private boolean createInstances = false;
