@@ -59,19 +59,19 @@ public class Main {
     private File lastNamesFile;
 
     private void run() throws IOException {
-	if ((this.inputDirectory != null) && (this.taggedDirectory != null) && (this.matchedDirectory != null)) {
+	if ((this.inputDirectory != null) && (this.taggedDirectory != null)) {
 	    NameTagger nameTagger = new NameTagger(true);
 
 	    nameTagger.readNameMap(this.firstNamesFile, NodeType.FIRST_NAME.toString());
 	    nameTagger.readNameMap(this.lastNamesFile, NodeType.LAST_NAME.toString());
 	    nameTagger.tagDirectory(this.inputDirectory, this.taggedDirectory);
 
+	}
+	if ((this.taggedDirectory != null) && (this.matchedDirectory != null)) {
 	    NameMatcher nameMatcher = new NameMatcher(true);
 
 	    nameMatcher.generateNamesLookUp(this.namesFile);
 	    nameMatcher.matchDirectory(this.taggedDirectory, this.matchedDirectory);
-
 	}
-
     }
 }

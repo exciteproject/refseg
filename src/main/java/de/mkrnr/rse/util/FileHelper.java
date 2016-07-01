@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 
 public class FileHelper {
+
     public static String readFile(File file) throws IOException {
 	return FileHelper.readFile(file, Charset.defaultCharset());
     }
@@ -16,6 +17,13 @@ public class FileHelper {
     public static String readFile(File file, Charset encoding) throws IOException {
 	byte[] encoded = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
 	return new String(encoded, encoding);
+    }
+
+    public static void renameFiles(File fileDirectory, String regex, String replacement) {
+	for (File file : fileDirectory.listFiles()) {
+	    File newFile = new File(file.getAbsolutePath().replaceFirst(regex, replacement));
+	    file.renameTo(newFile);
+	}
     }
 
     public static void resetDirectory(File directory) {

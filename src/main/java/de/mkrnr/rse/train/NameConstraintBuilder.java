@@ -7,29 +7,50 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+
+import org.apache.commons.io.FilenameUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 import de.mkrnr.rse.distsup.GoddagNameStructure;
+import de.mkrnr.rse.util.JsonHelper;
 
 public class NameConstraintBuilder {
 
     public static void main(String[] args) throws JsonSyntaxException, JsonIOException, IOException {
 	NameConstraintBuilder nameConstraintBuilder = new NameConstraintBuilder();
-	File goddagDirectory = new File(args[0]);
-	for (File goddagFile : goddagDirectory.listFiles()) {
-	    nameConstraintBuilder.extractAuthorStatistics(goddagFile);
+
+	@SuppressWarnings("unchecked")
+	List<File> filesToUse = (List<File>) JsonHelper.readFromFile(new TypeToken<List<File>>() {
+	}.getType(), new File(args[0]));
+	Set<String> fileIds = new HashSet<String>();
+	for (File inputFile : filesToUse) {
+	    fileIds.add(FilenameUtils.removeExtension(inputFile.getName()));
 	}
+	File goddagDirectory = new File(args[1]);
+	int count = 0;
+	for (File goddagFile : goddagDirectory.listFiles()) {
+	    String goddagFileId = FilenameUtils.removeExtension(goddagFile.getName());
+	    if (fileIds.contains(goddagFileId)) {
+		count++;
+		nameConstraintBuilder.extractAuthorStatistics(goddagFile);
+	    }
+	}
+	System.out.println(count);
 
 	// nameConstraintBuilder.printContraints();
-	nameConstraintBuilder.writeDistributions(new File(args[1]), "B-FN", "I-FN", "B-LN", "I-LN", "O", "I-O");
+	nameConstraintBuilder.writeDistributions(new File(args[2]), "B-FN", "I-FN", "B-LN", "I-LN", "O", "I-O");
     }
 
     private Gson gson;

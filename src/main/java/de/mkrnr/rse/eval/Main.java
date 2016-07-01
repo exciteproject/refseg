@@ -18,12 +18,12 @@ import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
+import de.mkrnr.rse.inst.InstanceListBuilder;
 import de.mkrnr.rse.pipe.FeaturePipeProvider;
 import de.mkrnr.rse.pipe.SerialPipesBuilder;
 import de.mkrnr.rse.train.NameTrainer;
 import de.mkrnr.rse.util.Configuration;
 import de.mkrnr.rse.util.ConfigurationConverter;
-import de.mkrnr.rse.util.InstanceListBuilder;
 
 public class Main {
 
@@ -66,7 +66,7 @@ public class Main {
     private File evaluationFile;
 
     @Parameter(names = { "-constraints",
-	    "--constraints-file" }, description = "file that contains per line: word <space> label", required = true, converter = FileConverter.class)
+	    "--constraints-file" }, description = "json file that lists goddag files that are used for building constraints", required = true, converter = FileConverter.class)
     private File constraintsFile;
 
     @Parameter(names = { "-feat",

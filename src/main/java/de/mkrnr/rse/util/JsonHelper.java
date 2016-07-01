@@ -2,6 +2,7 @@ package de.mkrnr.rse.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 import org.apache.commons.io.FileUtils;
 
@@ -18,7 +19,16 @@ public class JsonHelper {
 	    e.printStackTrace();
 	}
 	return new Gson().fromJson(jsonString, objectClass);
+    }
 
+    public static Object readFromFile(Type objectType, File inputFile) {
+	String jsonString = null;
+	try {
+	    jsonString = FileUtils.readFileToString(inputFile);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+	return new Gson().fromJson(jsonString, objectType);
     }
 
     public static void writeToFile(Object object, File outputFile) {
