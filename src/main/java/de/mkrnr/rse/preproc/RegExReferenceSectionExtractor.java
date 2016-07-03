@@ -29,7 +29,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
 	System.out.println("This took " + (endTime - startTime) + " milliseconds");
     }
 
-    private int maxLines = 500;
+    private int maxLines = 2000;
 
     @Override
     public void extract(File inputFile, File outputFile) {
@@ -42,6 +42,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
 	    boolean referenceSectionFound = false;
 	    boolean afterReferenceSectionFound = false;
 	    int lineCount = 0;
+	    int referenceSectionLineCount = 0;
 	    while ((line = bufferedReader.readLine()) != null) {
 		// System.out.println(line);
 		if (!afterReferenceSectionFound) {
@@ -58,6 +59,8 @@ public class RegExReferenceSectionExtractor extends Extractor {
 			    break;
 			}
 			referenceSection.append(line + System.getProperty("line.separator"));
+			referenceSectionLineCount++;
+
 			continue;
 		    }
 
@@ -67,7 +70,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
 		}
 	    }
 	    // TODO check parscit paper for ratio
-	    if (referenceSectionFound && (lineCount <= this.maxLines)) {
+	    if (referenceSectionFound && (referenceSectionLineCount <= this.maxLines)) {
 		// if (referenceSectionFound) {
 		BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 		bufferedWriter.write(referenceSection.toString());
