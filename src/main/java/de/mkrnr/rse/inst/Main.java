@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.jena.reasoner.IllegalParameterException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -56,7 +57,13 @@ public class Main {
 	    "--label-list" }, description = "comma separated list of labels that are randomly added", variableArity = true)
     private List<String> labels;
 
-    // TODO add double for percentage
+    @Parameter(names = { "-percent",
+	    "--keep-percentage" }, description = "percent of file list that should be kept (after filtering)")
+    private double keepPercent;
+
+    @Parameter(names = { "-count",
+	    "--keep-count" }, description = "number of file list that should be kept (after filtering)")
+    private int keepCount;
 
     @Parameter(names = { "-create", "--create-instances" }, description = "creates random instances if true")
     private boolean createInstances = false;
@@ -73,6 +80,16 @@ public class Main {
 
 	    List<File> inputFiles = Arrays.asList(this.inputDirectory.listFiles());
 	    List<File> filteredFiles = ListHelper.removeFilesFromList(inputFiles, filesToRemove);
+
+	    if ((this.keepCount > 0) && (this.keepPercent > 0.0)) {
+		throw new IllegalParameterException("-count and -percent can't be used together");
+	    }
+	    if (this.keepPercent > 0.0) {
+		filteredFiles = ListHelper.getRandomSubList(filteredFiles, this.keepPercent);
+	    }
+	    if (this.keepCount > 0) {
+		filteredFiles = ListHelper.getRandomSubList(filteredFiles, this.keepCount);
+	    }
 
 	    if (this.createInstances) {
 		if (this.labels == null) {
