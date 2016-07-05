@@ -65,6 +65,15 @@ public abstract class AuthorExtractor {
 
     }
 
+    protected String preprocessLine(String line) {
+	line = line.replaceAll("(\\s)?\\(.*\\) and tr", "");
+	line = line.replaceAll("(\\s)?\\(.*\\) tr", "");
+	line = line.replaceAll("(\\s)?\\(.*\\) and comp", "");
+	line = line.replaceAll("(\\s)?\\(.*\\)", "");
+	line = line.replaceAll("(\\s)?\\[.*\\]", "");
+	return line;
+    }
+
     protected void writeMaps(File outputDirectory) {
 	this.writeMapToFile(this.firstNamesMap,
 		new File(outputDirectory.getAbsolutePath() + File.separator + "first-names.csv"));

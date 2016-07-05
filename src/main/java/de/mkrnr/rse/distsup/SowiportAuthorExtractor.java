@@ -23,14 +23,21 @@ public class SowiportAuthorExtractor extends AuthorExtractor {
 	String line;
 	while ((line = bufferedReader.readLine()) != null) {
 	    if (line.startsWith("      <str>")) {
+		if (line.matches(".*&[a-z]+;.*")) {
+		    continue;
+		}
 		line = line.replaceFirst("^      <str>", "");
 		line = line.replaceFirst("</str>$", "");
-		String[] authorSplit = line.split(", ");
-		if (authorSplit.length == 2) {
-		    String lastNames = NamePreprocessor.preprocessName(authorSplit[0]);
-		    String firstNames = NamePreprocessor.preprocessName(authorSplit[1]);
 
-		    this.addNamesToMaps(firstNames, lastNames);
+		line = this.preprocessLine(line);
+
+		if (line.contains(";")) {
+		    String[] authors = line.split(";");
+		    for (String author : authors) {
+			this.addAuthor(author);
+		    }
+		} else {
+		    this.addAuthor(line);
 		}
 	    }
 	}
@@ -39,4 +46,12 @@ public class SowiportAuthorExtractor extends AuthorExtractor {
 	this.writeMaps(outputDirectory);
     }
 
+    private void addAuthor(String nameString) {
+	String[] nameSplit = nameString.split(", ");
+	if (nameSplit.length == 2) {
+	    String lastNames = NamePreprocessor.preprocessName(nameSplit[0]);
+	    String firstNames = NamePreprocessor.preprocessName(nameSplit[1]);
+	    this.addNamesToMaps(firstNames, lastNames);
+	}
+    }
 }

@@ -7,8 +7,8 @@ public class NamePreprocessor {
 	String preprocessedName = name;
 	String nonLetterRegex = "\\W*";
 	// String nonLetterRegex = "";
-	preprocessedName = preprocessedName.replaceAll("\\(", "");
-	preprocessedName = preprocessedName.replaceAll("\\)", "");
+	preprocessedName = preprocessedName.replaceAll("\\(.*\\)", "");
+	preprocessedName = preprocessedName.replaceAll("\\[.*\\]", "");
 	preprocessedName = preprocessedName.replaceAll("^" + nonLetterRegex, "");
 	preprocessedName = preprocessedName.replaceAll(nonLetterRegex + "$", "");
 	preprocessedName = preprocessedName.replaceAll("\\.+\\s*", " ");
