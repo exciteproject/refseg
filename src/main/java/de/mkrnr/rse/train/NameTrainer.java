@@ -96,7 +96,10 @@ public class NameTrainer {
 	boolean converged = trainer.train(trainingInstances, this.numIterations);
 	Instant end = Instant.now();
 
+	Runtime runtime = Runtime.getRuntime();
+
 	evaluationResults.setTimeInMillis(Duration.between(start, end).toMillis());
+	evaluationResults.setMemoryInBytes(runtime.totalMemory());
 
 	evaluationResults.setIterations(trainer.getIteration());
 	evaluationResults.setConverged(converged);

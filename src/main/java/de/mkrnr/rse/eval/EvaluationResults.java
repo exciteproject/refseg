@@ -45,6 +45,7 @@ public class EvaluationResults {
     private Long timeInMillis;
 
     private File trainingFile;
+    private long memoryInBytes;
 
     public EvaluationResults() {
 	this.evaluations = new ArrayList<Evaluation>();
@@ -87,6 +88,10 @@ public class EvaluationResults {
 	return this.localDateTime;
     }
 
+    public long getMemoryInBytes() {
+	return this.memoryInBytes;
+    }
+
     public File getTestingFile() {
 	return this.testingFile;
     }
@@ -117,6 +122,11 @@ public class EvaluationResults {
 
     public void setLocalDateTime(LocalDateTime localDateTime) {
 	this.localDateTime = localDateTime;
+    }
+
+    public void setMemoryInBytes(long memoryInBytes) {
+	this.memoryInBytes = memoryInBytes;
+
     }
 
     public void setTestingFile(File testingFile) {
