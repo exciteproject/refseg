@@ -44,7 +44,7 @@ public class NameConstraintBuilder {
 	    String goddagFileId = FilenameUtils.removeExtension(goddagFile.getName());
 	    if (fileIds.contains(goddagFileId)) {
 		count++;
-		nameConstraintBuilder.extractAuthorStatistics(goddagFile);
+		nameConstraintBuilder.extractAuthorStatistics(goddagFile, Double.parseDouble(args[2]));
 	    }
 	}
 	System.out.println(count);
@@ -66,7 +66,7 @@ public class NameConstraintBuilder {
 
     }
 
-    public void extractAuthorStatistics(File goddagInputFile)
+    public void extractAuthorStatistics(File goddagInputFile, double otherPercentage)
 	    throws JsonSyntaxException, JsonIOException, FileNotFoundException {
 	Goddag goddag = this.gson.fromJson(new FileReader(goddagInputFile), Goddag.class);
 	GoddagNameStructure goddagNameStructure = new GoddagNameStructure(goddag);
@@ -100,8 +100,7 @@ public class NameConstraintBuilder {
 		    }
 		}
 	    } else {
-		// TODO rewrite
-		if (Math.random() < 0.2) {
+		if (Math.random() <= otherPercentage) {
 		    Node childNode = rootChildNode;
 		    while (childNode.hasChildren()) {
 			childNode = childNode.getFirstChild();
