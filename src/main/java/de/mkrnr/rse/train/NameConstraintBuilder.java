@@ -31,26 +31,38 @@ public class NameConstraintBuilder {
     public static void main(String[] args) throws JsonSyntaxException, JsonIOException, IOException {
 	NameConstraintBuilder nameConstraintBuilder = new NameConstraintBuilder();
 
+	String jsonFileToUsePath = args[0];
+	String goddagDictionaryPath = args[1];
+	String constraintsOutputFilePath = args[2];
+	double unlabeledPercentage = Double.parseDouble(args[3]);
+	double bFnPercentage = Double.parseDouble(args[4]);
+	double bLnPercentage = Double.parseDouble(args[5]);
+	double iFnPercentage = Double.parseDouble(args[6]);
+	double iLnPercentage = Double.parseDouble(args[7]);
+	double iOPercentage = Double.parseDouble(args[8]);
+	double oPercentage = Double.parseDouble(args[9]);
 	@SuppressWarnings("unchecked")
 	List<File> filesToUse = (List<File>) JsonHelper.readFromFile(new TypeToken<List<File>>() {
-	}.getType(), new File(args[0]));
+	}.getType(), new File(jsonFileToUsePath));
 	Set<String> fileIds = new HashSet<String>();
 	for (File inputFile : filesToUse) {
 	    fileIds.add(FilenameUtils.removeExtension(inputFile.getName()));
 	}
-	File goddagDirectory = new File(args[1]);
+	File goddagDirectory = new File(goddagDictionaryPath);
 	int count = 0;
 	for (File goddagFile : goddagDirectory.listFiles()) {
 	    String goddagFileId = FilenameUtils.removeExtension(goddagFile.getName());
 	    if (fileIds.contains(goddagFileId)) {
 		count++;
-		nameConstraintBuilder.extractAuthorStatistics(goddagFile, Double.parseDouble(args[3]));
+		nameConstraintBuilder.extractAuthorStatistics(goddagFile, unlabeledPercentage, bFnPercentage,
+			bLnPercentage, iFnPercentage, iLnPercentage, iOPercentage, oPercentage);
 	    }
 	}
 	System.out.println(count);
 
 	// nameConstraintBuilder.printContraints();
-	nameConstraintBuilder.writeDistributions(new File(args[2]), "B-FN", "I-FN", "B-LN", "I-LN", "O", "I-O");
+	nameConstraintBuilder.writeDistributions(new File(constraintsOutputFilePath), "B-FN", "B-LN", "I-FN", "I-LN",
+		"I-O", "O");
     }
 
     private Gson gson;
@@ -66,8 +78,14 @@ public class NameConstraintBuilder {
 
     }
 
-    public void extractAuthorStatistics(File goddagInputFile, double otherPercentage)
+    public void extractAuthorStatistics(File goddagInputFile, double unlabeledPercentage, double bFnPercentage,
+	    double bLnPercentage, double iFnPercentage, double iLnPercentage, double iOPercentage, double oPercentage)
 	    throws JsonSyntaxException, JsonIOException, FileNotFoundException {
+	double totalPercentage = bFnPercentage + bLnPercentage + iFnPercentage + iLnPercentage + iOPercentage
+		+ oPercentage;
+	if ((totalPercentage - 1.0) != 0) {
+	    throw new IllegalArgumentException("percentages don't sum up to one");
+	}
 	Goddag goddag = this.gson.fromJson(new FileReader(goddagInputFile), Goddag.class);
 	GoddagNameStructure goddagNameStructure = new GoddagNameStructure(goddag);
 
@@ -100,7 +118,7 @@ public class NameConstraintBuilder {
 		    }
 		}
 	    } else {
-		if (Math.random() <= otherPercentage) {
+		if (Math.random() < unlabeledPercentage) {
 		    Node childNode = rootChildNode;
 		    while (childNode.hasChildren()) {
 			childNode = childNode.getFirstChild();
@@ -112,7 +130,13 @@ public class NameConstraintBuilder {
 		    if (!this.nameDistributions.containsKey(word)) {
 			this.nameDistributions.put(word, new NameDistribution());
 		    }
-		    this.nameDistributions.get(word).otherCount += 1;
+
+		    this.nameDistributions.get(word).bFirstNameCount += bFnPercentage;
+		    this.nameDistributions.get(word).bLastNameCount += bLnPercentage;
+		    this.nameDistributions.get(word).iFirstNameCount += iFnPercentage;
+		    this.nameDistributions.get(word).iLastNameCount += iLnPercentage;
+		    this.nameDistributions.get(word).iOtherCount += iOPercentage;
+		    this.nameDistributions.get(word).otherCount += oPercentage;
 		}
 	    }
 	}
@@ -123,9 +147,11 @@ public class NameConstraintBuilder {
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    System.out.println(nameEntry.getKey());
 	    System.out.println("\tB-FN: " + nameEntry.getValue().bFirstNameCount);
-	    System.out.println("\tI-FN: " + nameEntry.getValue().iFirstNameCount);
 	    System.out.println("\tB-LN: " + nameEntry.getValue().bLastNameCount);
+	    System.out.println("\tI-FN: " + nameEntry.getValue().iFirstNameCount);
 	    System.out.println("\tI-LN: " + nameEntry.getValue().iLastNameCount);
+	    System.out.println("\tI-O: " + nameEntry.getValue().iOtherCount);
+	    System.out.println("\tO: " + nameEntry.getValue().otherCount);
 	}
     }
 
@@ -133,31 +159,31 @@ public class NameConstraintBuilder {
      * stores extracted author statistics in a file according to
      * cc.mallet.fst.semi_supervised.FSTConstraintUtil
      *
-     * the file contains lines following this example: Friedrich fn:0.4 ln:0.6
+     * the file contains lines similar to: Friedrich B-FN:0.2 B-LN:0.1 ...
      *
      * @param outputFile
      * @param bFirstNameLabel
      *            label for beginning first name distribution, is not allowed to
      *            contain colons
-     * @param iFirstNameLabel
-     *            label for intermediate first name distribution, is not allowed
-     *            to contain colons
      * @param bLastNameLabel
      *            label for beginning last name distribution, is not allowed to
      *            contain colons
+     * @param iFirstNameLabel
+     *            label for intermediate first name distribution, is not allowed
+     *            to contain colons
      * @param iLastNameLabel
      *            label for intermediate last name distribution, is not allowed
      *            to contain colons
-     * @param otherLabel
-     *            label for other distribution, is not allowed to contain colons
      * @param iOtherLabel
      *            label for intermediate other distribution, is not allowed to
      *            contain colons
+     * @param otherLabel
+     *            label for other distribution, is not allowed to contain colons
      *
      * @throws IOException
      */
-    public int writeDistributions(File outputFile, String bFirstNameLabel, String iFirstNameLabel,
-	    String bLastNameLabel, String iLastNameLabel, String otherLabel, String iOtherLabel) throws IOException {
+    public int writeDistributions(File outputFile, String bFirstNameLabel, String bLastNameLabel,
+	    String iFirstNameLabel, String iLastNameLabel, String iOtherLabel, String otherLabel) throws IOException {
 	int nameCount = 0;
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
@@ -169,26 +195,25 @@ public class NameConstraintBuilder {
 
 	    nameCount += 1;
 
-	    double bFirstNamePercentage = (double) nameEntry.getValue().bFirstNameCount / nameEntry.getValue().getSum();
-	    double iFirstNamePercentage = (double) nameEntry.getValue().iFirstNameCount / nameEntry.getValue().getSum();
-	    double bLastNamePercentage = (double) nameEntry.getValue().bLastNameCount / nameEntry.getValue().getSum();
-	    double iLastNamePercentage = (double) nameEntry.getValue().iLastNameCount / nameEntry.getValue().getSum();
-	    double otherPercentage = (double) nameEntry.getValue().otherCount / nameEntry.getValue().getSum();
+	    double bFirstNamePercentage = nameEntry.getValue().bFirstNameCount / nameEntry.getValue().getSum();
+	    double bLastNamePercentage = nameEntry.getValue().bLastNameCount / nameEntry.getValue().getSum();
+	    double iFirstNamePercentage = nameEntry.getValue().iFirstNameCount / nameEntry.getValue().getSum();
+	    double iLastNamePercentage = nameEntry.getValue().iLastNameCount / nameEntry.getValue().getSum();
+	    double iOtherPercentage = nameEntry.getValue().iOtherCount / nameEntry.getValue().getSum();
+	    double otherPercentage = nameEntry.getValue().otherCount / nameEntry.getValue().getSum();
 	    String line = name;
 	    line += " ";
 	    line += bFirstNameLabel + ":" + bFirstNamePercentage;
 	    line += " ";
-	    line += iFirstNameLabel + ":" + iFirstNamePercentage;
-	    line += " ";
 	    line += bLastNameLabel + ":" + bLastNamePercentage;
 	    line += " ";
+	    line += iFirstNameLabel + ":" + iFirstNamePercentage;
+	    line += " ";
 	    line += iLastNameLabel + ":" + iLastNamePercentage;
-
+	    line += " ";
+	    line += iOtherLabel + ":" + iOtherPercentage;
 	    line += " ";
 	    line += otherLabel + ":" + otherPercentage;
-
-	    line += " ";
-	    line += iOtherLabel + ":" + "0.0";
 
 	    line += System.lineSeparator();
 	    bufferedWriter.write(line);

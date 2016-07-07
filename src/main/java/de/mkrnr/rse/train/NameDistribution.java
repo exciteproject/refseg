@@ -2,13 +2,14 @@ package de.mkrnr.rse.train;
 
 public class NameDistribution {
 
-    public int bFirstNameCount;
-    public int iFirstNameCount;
-    public int bLastNameCount;
-    public int iLastNameCount;
-    public int otherCount;
+    public double bFirstNameCount;
+    public double iFirstNameCount;
+    public double bLastNameCount;
+    public double iLastNameCount;
+    public double otherCount;
+    public double iOtherCount;
 
-    public int getSum() {
+    public double getSum() {
 	return this.bFirstNameCount + this.iFirstNameCount + this.bLastNameCount + this.iLastNameCount
 		+ this.otherCount;
     }
