@@ -94,11 +94,6 @@
       <version>1.48</version>
     </dependency>
     <dependency>
-      <groupId>org.ahocorasick</groupId>
-      <artifactId>ahocorasick</artifactId>
-      <version>0.3.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
       <groupId>de.mkrnr.goddag</groupId>
       <artifactId>goddag</artifactId>
       <version>0.0.1-SNAPSHOT</version>
