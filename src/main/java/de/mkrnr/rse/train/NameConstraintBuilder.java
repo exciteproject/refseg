@@ -44,7 +44,7 @@ public class NameConstraintBuilder {
 	    String goddagFileId = FilenameUtils.removeExtension(goddagFile.getName());
 	    if (fileIds.contains(goddagFileId)) {
 		count++;
-		nameConstraintBuilder.extractAuthorStatistics(goddagFile, Double.parseDouble(args[2]));
+		nameConstraintBuilder.extractAuthorStatistics(goddagFile, Double.parseDouble(args[3]));
 	    }
 	}
 	System.out.println(count);
