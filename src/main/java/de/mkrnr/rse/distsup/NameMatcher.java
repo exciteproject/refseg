@@ -139,10 +139,19 @@ public class NameMatcher {
 
 	List<Node> leafNodes = this.goddagNameStructure.getLeafNodes();
 	for (int leafNodeIndex = 0; leafNodeIndex < leafNodes.size(); leafNodeIndex++) {
-	    Node lastNameParentNode = this.getParentNode(leafNodes.get(leafNodeIndex), NodeType.LAST_NAME);
-	    if (lastNameParentNode != null) {
-		this.searchAuthorsBefore(leafNodes, leafNodeIndex, lastNameParentNode);
-		this.searchAuthorsAfter(leafNodes, leafNodeIndex, lastNameParentNode);
+	    List<Node> lastNameParentNodes = new ArrayList<Node>();
+	    for (int followingLastNamesIndex = leafNodeIndex; followingLastNamesIndex < leafNodes
+		    .size(); followingLastNamesIndex++) {
+		Node lastNameParentNode = this.getParentNode(leafNodes.get(followingLastNamesIndex),
+			NodeType.LAST_NAME);
+		if (lastNameParentNode == null) {
+		    break;
+		} else {
+		    lastNameParentNodes.add(lastNameParentNode);
+		    this.searchAuthorsBefore(leafNodes, leafNodeIndex, lastNameParentNodes);
+		    this.searchAuthorsAfter(leafNodes, followingLastNamesIndex, lastNameParentNodes);
+
+		}
 	    }
 	}
 	// System.out.println(this.goddagNameStructure.toString());
@@ -163,16 +172,12 @@ public class NameMatcher {
 	return null;
     }
 
-    private boolean isName(List<Node> firstNameParentNodes, Node lastNameNode) {
-	String generatedFirstName = "";
-	for (Node firstNameNode : firstNameParentNodes) {
-	    generatedFirstName += firstNameNode.getFirstChild().getProperty(this.wordPropertyKey) + " ";
-	}
-	generatedFirstName = generatedFirstName.replaceFirst(" $", "");
+    private boolean isName(List<Node> firstNameParentNodes, List<Node> lastNameParentNodes) {
 
-	String lastName = lastNameNode.getProperty(this.wordPropertyKey);
-	if (this.namesLookup.containsKey(lastName)) {
-	    if (this.namesLookup.get(lastName).containsKey(generatedFirstName)) {
+	String firstNameString = this.nameStringFromParentNodes(firstNameParentNodes);
+	String lastNameString = this.nameStringFromParentNodes(lastNameParentNodes);
+	if (this.namesLookup.containsKey(lastNameString)) {
+	    if (this.namesLookup.get(lastNameString).containsKey(firstNameString)) {
 		return true;
 	    }
 	}
@@ -180,30 +185,40 @@ public class NameMatcher {
 
     }
 
-    private void searchAuthorsAfter(List<Node> leafNodes, int lastNameIndex, Node lastNameParentNode) {
-	List<Node> firstNamesAfter = new ArrayList<Node>();
+    private String nameStringFromParentNodes(List<Node> parentNodes) {
+	String generatedName = "";
+	for (Node firstNameNode : parentNodes) {
+	    generatedName += firstNameNode.getFirstChild().getProperty(this.wordPropertyKey) + " ";
+	}
+	generatedName = generatedName.replaceFirst(" $", "");
+	return generatedName;
+    }
+
+    private void searchAuthorsAfter(List<Node> leafNodes, int lastNameIndex, List<Node> lastNameParentNodes) {
+	List<Node> firstNameParentsAfter = new ArrayList<Node>();
 	for (int indexAfterLeafNodeIndex = lastNameIndex + 1; indexAfterLeafNodeIndex < leafNodes
 		.size(); indexAfterLeafNodeIndex++) {
 	    Node firstNameParent = this.getParentNode(leafNodes.get(indexAfterLeafNodeIndex), NodeType.FIRST_NAME);
 	    if (firstNameParent == null) {
 		break;
 	    } else {
-		firstNamesAfter.add(firstNameParent);
+		firstNameParentsAfter.add(firstNameParent);
 	    }
 	}
 
-	for (int firstNameIndex = firstNamesAfter.size() - 1; firstNameIndex >= 0; firstNameIndex--) {
-	    List<Node> currentFirstNameBefore = new ArrayList<Node>();
+	for (int firstNameIndex = firstNameParentsAfter.size() - 1; firstNameIndex >= 0; firstNameIndex--) {
+	    List<Node> currentFirstNameParentsAfter = new ArrayList<Node>();
 	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex >= 0; firstNameGenerationIndex--) {
-		currentFirstNameBefore.add(0, firstNamesAfter.get(firstNameGenerationIndex));
+		currentFirstNameParentsAfter.add(0, firstNameParentsAfter.get(firstNameGenerationIndex));
 	    }
 
-	    if (this.isName(currentFirstNameBefore, leafNodes.get(lastNameIndex))) {
+	    if (this.isName(currentFirstNameParentsAfter, lastNameParentNodes)) {
 		List<Node> nodesToTag = new ArrayList<Node>();
-		nodesToTag.add(lastNameParentNode);
-
-		for (Node currentFirstNameNode : currentFirstNameBefore) {
-		    nodesToTag.add(currentFirstNameNode);
+		for (Node lastNameParentNode : lastNameParentNodes) {
+		    nodesToTag.add(lastNameParentNode);
+		}
+		for (Node currentFirstNameParentsNode : currentFirstNameParentsAfter) {
+		    nodesToTag.add(currentFirstNameParentsNode);
 		}
 
 		this.goddagNameStructure.tagNodesAs(nodesToTag.toArray(new Node[0]), NodeType.AUTHOR.toString());
@@ -212,31 +227,32 @@ public class NameMatcher {
 
     }
 
-    private void searchAuthorsBefore(List<Node> leafNodes, int leafNodeIndex, Node lastNameParentNode) {
-	List<Node> firstNamesBefore = new ArrayList<Node>();
+    private void searchAuthorsBefore(List<Node> leafNodes, int leafNodeIndex, List<Node> lastNameParentNodes) {
+	List<Node> firstNameParentsBefore = new ArrayList<Node>();
 	for (int indexBeforeLeafNodeIndex = leafNodeIndex
 		- 1; indexBeforeLeafNodeIndex >= 0; indexBeforeLeafNodeIndex--) {
 	    Node firstNameParent = this.getParentNode(leafNodes.get(indexBeforeLeafNodeIndex), NodeType.FIRST_NAME);
 	    if (firstNameParent == null) {
 		break;
 	    } else {
-		firstNamesBefore.add(0, firstNameParent);
+		firstNameParentsBefore.add(0, firstNameParent);
 	    }
 	}
 
-	for (int firstNameIndex = 0; firstNameIndex < firstNamesBefore.size(); firstNameIndex++) {
-	    List<Node> currentFirstNameBefore = new ArrayList<Node>();
-	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex < firstNamesBefore
+	for (int firstNameIndex = 0; firstNameIndex < firstNameParentsBefore.size(); firstNameIndex++) {
+	    List<Node> currentFirstNameParentsBefore = new ArrayList<Node>();
+	    for (int firstNameGenerationIndex = firstNameIndex; firstNameGenerationIndex < firstNameParentsBefore
 		    .size(); firstNameGenerationIndex++) {
-		currentFirstNameBefore.add(firstNamesBefore.get(firstNameGenerationIndex));
+		currentFirstNameParentsBefore.add(firstNameParentsBefore.get(firstNameGenerationIndex));
 	    }
-
-	    if (this.isName(currentFirstNameBefore, leafNodes.get(leafNodeIndex))) {
+	    if (this.isName(currentFirstNameParentsBefore, lastNameParentNodes)) {
 		List<Node> nodesToTag = new ArrayList<Node>();
-		for (Node currentFirstNameNode : currentFirstNameBefore) {
-		    nodesToTag.add(currentFirstNameNode);
+		for (Node currentFirstNameParentsNode : currentFirstNameParentsBefore) {
+		    nodesToTag.add(currentFirstNameParentsNode);
 		}
-		nodesToTag.add(lastNameParentNode);
+		for (Node lastNameParentNode : lastNameParentNodes) {
+		    nodesToTag.add(lastNameParentNode);
+		}
 
 		this.goddagNameStructure.tagNodesAs(nodesToTag.toArray(new Node[0]), NodeType.AUTHOR.toString());
 	    }
