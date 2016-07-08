@@ -169,7 +169,6 @@ public class NameConstraintBuilder {
 	    }
 	}
 
-	System.out.println(totalTaggedCount);
 	double nonAuthorPercentage = (nonAuthorRatio * totalTaggedCount) / totalNonAuthorNodes;
 	if (nonAuthorPercentage > 1.0) {
 	    throw new IllegalStateException("nonAuthorPercentage is over 1.0: " + nonAuthorPercentage);
