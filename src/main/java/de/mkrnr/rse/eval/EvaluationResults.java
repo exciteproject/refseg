@@ -34,6 +34,7 @@ public class EvaluationResults {
     }
 
     private Map<String, Object> configurations;
+    private File constraintsFile;
     private Boolean converged;
     private LocalDateTime endOfExecution;
     private List<Evaluation> evaluations;
@@ -41,9 +42,7 @@ public class EvaluationResults {
     private Integer iterations;
     private LocalDateTime localDateTime;
     private File testingFile;
-
     private Long timeInMillis;
-
     private File trainingFile;
     private long memoryInBytes;
 
@@ -62,6 +61,10 @@ public class EvaluationResults {
 
     public Map<String, Object> getConfigurations() {
 	return this.configurations;
+    }
+
+    public File getConstaintsFile() {
+	return this.constraintsFile;
     }
 
     public boolean getConverged() {
@@ -102,6 +105,10 @@ public class EvaluationResults {
 
     public File getTrainingFile() {
 	return this.trainingFile;
+    }
+
+    public void setConstraintsFile(File constraintsFile) {
+	this.constraintsFile = constraintsFile;
     }
 
     public void setConverged(boolean converged) {

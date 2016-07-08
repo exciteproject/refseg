@@ -141,6 +141,7 @@ public class Main {
 
 	// write evaluations to json file
 
+	evaluationResults.setConstraintsFile(this.constraintsFile);
 	evaluationResults.setTrainingFile(this.trainingFile);
 	evaluationResults.setTestingFile(this.testingFile);
 	evaluationResults.setFeatures(this.features);
