@@ -36,13 +36,8 @@ public class NameConstraintBuilder {
 	String goddagDictionaryPath = args[1];
 	String constraintsOutputFilePath = args[2];
 	double nonAuthorRatio = Double.parseDouble(args[3]);
-	double bFnPercentage = Double.parseDouble(args[4]);
-	double bLnPercentage = Double.parseDouble(args[5]);
-	double iFnPercentage = Double.parseDouble(args[6]);
-	double iLnPercentage = Double.parseDouble(args[7]);
-	double iOPercentage = Double.parseDouble(args[8]);
-	double oPercentage = Double.parseDouble(args[9]);
-	boolean fixPercentages = Boolean.parseBoolean(args[10]);
+	boolean fixPercentages = Boolean.parseBoolean(args[4]);
+	double otherPercentage = Double.parseDouble(args[5]);
 
 	File goddagDirectory = new File(goddagDictionaryPath);
 
@@ -54,8 +49,8 @@ public class NameConstraintBuilder {
 	    fileIdsToUse.add(FilenameUtils.removeExtension(inputFile.getName()));
 	}
 
-	nameConstraintBuilder.extractAuthorStatistics(goddagDirectory, fileIdsToUse, nonAuthorRatio, bFnPercentage,
-		bLnPercentage, iFnPercentage, iLnPercentage, iOPercentage, oPercentage, fixPercentages);
+	nameConstraintBuilder.extractAuthorStatistics(goddagDirectory, fileIdsToUse, nonAuthorRatio, fixPercentages,
+		otherPercentage);
 	// nameConstraintBuilder.printContraints();
 	nameConstraintBuilder.writeDistributions(new File(constraintsOutputFilePath), "B-FN", "B-LN", "I-FN", "I-LN",
 		"I-O", "O");
@@ -76,37 +71,32 @@ public class NameConstraintBuilder {
 
     /**
      *
+     * @param goddagDirectory
      * @param fileIdsToUse
-     * @param goddagInputFile
      * @param nonAuthorRatio
      *            if 2.0: amount of non-author tags two times the amount of
      *            author tags
-     * @param bFnPercentage
-     * @param bLnPercentage
-     * @param iFnPercentage
-     * @param iLnPercentage
-     * @param iOPercentage
-     * @param oPercentage
-     * @param fixPercentages
+     * @param addAuthorPercentages
+     *            adds author percentages for non-author tags based on the
+     *            distribution of tagged authors
+     * @param otherPercentage
+     *            estimated percentage of other tags in final distribution; used
+     *            for probability distribution for non-author labels
+     *
      * @throws JsonSyntaxException
      * @throws JsonIOException
      * @throws FileNotFoundException
      */
     public void extractAuthorStatistics(File goddagDirectory, Set<String> fileIdsToUse, double nonAuthorRatio,
-	    double bFnPercentage, double bLnPercentage, double iFnPercentage, double iLnPercentage, double iOPercentage,
-	    double oPercentage, boolean fixPercentages)
+	    boolean addAuthorPercentages, double otherPercentage)
 	    throws JsonSyntaxException, JsonIOException, FileNotFoundException {
-	double totalPercentage = bFnPercentage + bLnPercentage + iFnPercentage + iLnPercentage + iOPercentage
-		+ oPercentage;
-	if ((totalPercentage - 1.0) != 0) {
-	    throw new IllegalArgumentException("percentages don't sum up to one");
-	}
 
 	int totalBFnCount = 0;
 	int totalBLnCount = 0;
 	int totalIFnCount = 0;
 	int totalILnCount = 0;
 	int totalLeafCount = 0;
+	int totalNonAuthorNodes = 0;
 
 	// go over goddag files the first time to get author tags
 	for (File goddagFile : goddagDirectory.listFiles()) {
@@ -150,28 +140,40 @@ public class NameConstraintBuilder {
 				isBeginning = false;
 			    }
 			}
+		    } else {
+			totalNonAuthorNodes += 1;
 		    }
 		}
 	    }
 	}
+	double bFnPercentage = 0.0;
+	double bLnPercentage = 0.0;
+	double iFnPercentage = 0.0;
+	double iLnPercentage = 0.0;
+	double iOPercentage = 0.0;
+	double oPercentage = 1.0;
 
-	System.out.println("totalLeafCount: " + totalLeafCount);
 	int totalTaggedCount = totalBFnCount + totalBLnCount + totalIFnCount + totalILnCount;
-	System.out.println("totalTaggedCount: " + totalTaggedCount);
-	int totalUntaggedCount = totalLeafCount - totalTaggedCount;
-	System.out.println("totalUntaggedCount: " + totalUntaggedCount);
 
-	if (fixPercentages) {
-	    System.out.println(totalBFnCount);
-	    System.out.println(totalBLnCount);
-	    System.out.println(totalIFnCount);
-	    System.out.println(totalILnCount);
-
-	    System.out.println("---");
+	double authorPercentage = 1.0 - otherPercentage;
+	if (addAuthorPercentages) {
+	    bFnPercentage = ((double) totalBFnCount / totalTaggedCount) * authorPercentage;
+	    bLnPercentage = ((double) totalBLnCount / totalTaggedCount) * authorPercentage;
+	    iFnPercentage = ((double) totalIFnCount / totalTaggedCount) * authorPercentage;
+	    iLnPercentage = ((double) totalILnCount / totalTaggedCount) * authorPercentage;
+	    iOPercentage = 0.0;
+	    oPercentage = otherPercentage;
+	    double totalOtherProbability = bFnPercentage + bLnPercentage + iFnPercentage + iLnPercentage + oPercentage;
+	    if ((Math.abs(totalOtherProbability) - 1) > 0.0001) {
+		throw new IllegalStateException("probabilities don't sum to 1: " + totalOtherProbability);
+	    }
 	}
 
-	// TODO check counts
-	double nonAuthorPercentage = (2 * totalTaggedCount) / totalLeafCount;
+	System.out.println(totalTaggedCount);
+	double nonAuthorPercentage = (nonAuthorRatio * totalTaggedCount) / totalNonAuthorNodes;
+	if (nonAuthorPercentage > 1.0) {
+	    throw new IllegalStateException("nonAuthorPercentage is over 1.0: " + nonAuthorPercentage);
+	}
 	// go over goddag files a second time to get non-author tags based on
 	// statistics
 	for (File goddagFile : goddagDirectory.listFiles()) {
@@ -181,7 +183,7 @@ public class NameConstraintBuilder {
 		GoddagNameStructure goddagNameStructure = new GoddagNameStructure(goddag);
 
 		for (Node rootChildNode : goddagNameStructure.getGoddag().getRootNode().getChildren()) {
-		    if (rootChildNode.getLabel().equals(GoddagNameStructure.NodeType.AUTHOR.toString())) {
+		    if (!rootChildNode.getLabel().equals(GoddagNameStructure.NodeType.AUTHOR.toString())) {
 
 			if (Math.random() < nonAuthorPercentage) {
 			    Node childNode = rootChildNode;
