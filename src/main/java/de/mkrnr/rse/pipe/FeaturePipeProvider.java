@@ -68,7 +68,16 @@ public class FeaturePipeProvider {
 	this.addRegexPipe("PERIODS", ".*\\..*\\..*");
 
 	// matches tokens that end with a comma
-	this.addRegexPipe("ENDSWITHCOMMA", ".*\\,");
+	this.addRegexPipe("ENDSWITHCOMMA", ".*,");
+
+	// matches tokens that end with a dash
+	this.addRegexPipe("CONTAINSDASH", ".+-.+");
+
+	// matches tokens that end with a dash
+	this.addRegexPipe("CONTAINSCOMMA", ".+,.+");
+
+	// matches tokens that end with a dash
+	this.addRegexPipe("CONTAINSPERIOD", ".+\\..+");
 
 	// matches tokens that end with a dash
 	this.addRegexPipe("ENDSWITHDASH", ".*-");
