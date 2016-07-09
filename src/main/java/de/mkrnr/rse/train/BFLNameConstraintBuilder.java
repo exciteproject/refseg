@@ -27,10 +27,10 @@ import de.mkrnr.rse.distsup.GoddagNameStructure;
 import de.mkrnr.rse.util.JsonHelper;
 
 //TODO refactor the whole class...
-public class NameConstraintBuilder {
+public class BFLNameConstraintBuilder {
 
     public static void main(String[] args) throws JsonSyntaxException, JsonIOException, IOException {
-	NameConstraintBuilder nameConstraintBuilder = new NameConstraintBuilder();
+	BFLNameConstraintBuilder nameConstraintBuilder = new BFLNameConstraintBuilder();
 
 	String jsonFileToUsePath = args[0];
 	String goddagDictionaryPath = args[1];
@@ -61,7 +61,7 @@ public class NameConstraintBuilder {
 
     private Map<String, NameDistribution> nameDistributions;
 
-    public NameConstraintBuilder() {
+    public BFLNameConstraintBuilder() {
 	GsonBuilder gsonBuilder = new GsonBuilder();
 	gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonDeserializer());
 	this.gson = gsonBuilder.create();
