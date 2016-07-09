@@ -36,8 +36,9 @@ public class NameConstraintBuilder {
 	String goddagDictionaryPath = args[1];
 	String constraintsOutputFilePath = args[2];
 	double nonAuthorRatio = Double.parseDouble(args[3]);
-	boolean fixPercentages = Boolean.parseBoolean(args[4]);
-	double otherPercentage = Double.parseDouble(args[5]);
+	int nonAuthorCount = Integer.parseInt(args[4]);
+	boolean fixPercentages = Boolean.parseBoolean(args[5]);
+	double otherPercentage = Double.parseDouble(args[6]);
 
 	File goddagDirectory = new File(goddagDictionaryPath);
 
@@ -49,8 +50,8 @@ public class NameConstraintBuilder {
 	    fileIdsToUse.add(FilenameUtils.removeExtension(inputFile.getName()));
 	}
 
-	nameConstraintBuilder.extractAuthorStatistics(goddagDirectory, fileIdsToUse, nonAuthorRatio, fixPercentages,
-		otherPercentage);
+	nameConstraintBuilder.extractAuthorStatistics(goddagDirectory, fileIdsToUse, nonAuthorRatio, nonAuthorCount,
+		fixPercentages, otherPercentage);
 	// nameConstraintBuilder.printContraints();
 	nameConstraintBuilder.writeDistributions(new File(constraintsOutputFilePath), "B-FN", "B-LN", "I-FN", "I-LN",
 		"I-O", "O");
@@ -88,7 +89,7 @@ public class NameConstraintBuilder {
      * @throws FileNotFoundException
      */
     public void extractAuthorStatistics(File goddagDirectory, Set<String> fileIdsToUse, double nonAuthorRatio,
-	    boolean addAuthorPercentages, double otherPercentage)
+	    int nonAuthorCount, boolean addAuthorPercentages, double otherPercentage)
 	    throws JsonSyntaxException, JsonIOException, FileNotFoundException {
 
 	int totalBFnCount = 0;
@@ -168,8 +169,22 @@ public class NameConstraintBuilder {
 		throw new IllegalStateException("probabilities don't sum to 1: " + totalOtherProbability);
 	    }
 	}
+	Double nonAuthorPercentage = null;
 
-	double nonAuthorPercentage = (nonAuthorRatio * totalTaggedCount) / totalNonAuthorNodes;
+	if (nonAuthorRatio > 0.0) {
+	    nonAuthorPercentage = (nonAuthorRatio * totalTaggedCount) / totalNonAuthorNodes;
+	    if (nonAuthorCount > 0) {
+		throw new IllegalArgumentException(
+			"not both nonAuthorRation and nonAtuhorCount can be set greater than 0");
+	    }
+	} else {
+	    if (nonAuthorCount > 0) {
+		nonAuthorPercentage = ((double) nonAuthorCount) / totalNonAuthorNodes;
+	    } else {
+		throw new IllegalArgumentException(
+			"either nonAuthorRation or nonAtuhorCount have to be greater than 0");
+	    }
+	}
 	if (nonAuthorPercentage > 1.0) {
 	    throw new IllegalStateException("nonAuthorPercentage is over 1.0: " + nonAuthorPercentage);
 	}
