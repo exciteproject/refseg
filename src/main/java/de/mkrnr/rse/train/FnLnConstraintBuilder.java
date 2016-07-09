@@ -212,8 +212,8 @@ public class FnLnConstraintBuilder {
 	    if (nonAuthorCount > 0) {
 		nonAuthorPercentage = ((double) nonAuthorCount) / totalNonAuthorNodes;
 	    } else {
-		throw new IllegalArgumentException(
-			"either nonAuthorRation or nonAtuhorCount have to be greater than 0");
+		// both are zero
+		nonAuthorPercentage = 0.0;
 	    }
 	}
 	if (nonAuthorPercentage > 1.0) {
