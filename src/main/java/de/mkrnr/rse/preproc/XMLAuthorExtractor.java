@@ -23,25 +23,40 @@ public class XMLAuthorExtractor {
 	Pattern tokenPattern = Pattern.compile("\\S+");
 
 	Map<String, String> mappings = new HashMap<String, String>();
-	mappings.put("firstName", "FN");
-	mappings.put("firstAndMiddleName", "FN");
-	mappings.put("middleName", "FN");
-	mappings.put("lastName", "LN");
-	mappings.put("prefix", "LN");
-	mappings.put("other", "O");
+	String inputPath = args[0];
+	String outputPath = args[1];
+	boolean onlyAuthorTags = Boolean.parseBoolean(args[2]);
+	boolean addPrefix = Boolean.parseBoolean(args[3]);
+	boolean addEndTag = Boolean.parseBoolean(args[4]);
+
+	if (onlyAuthorTags) {
+	    mappings.put("firstName", "A");
+	    mappings.put("firstAndMiddleName", "A");
+	    mappings.put("middleName", "A");
+	    mappings.put("lastName", "A");
+	    mappings.put("prefix", "A");
+	    mappings.put("other", "A");
+	} else {
+	    mappings.put("firstName", "FN");
+	    mappings.put("firstAndMiddleName", "FN");
+	    mappings.put("middleName", "FN");
+	    mappings.put("lastName", "LN");
+	    mappings.put("prefix", "LN");
+	    mappings.put("other", "O");
+	}
 
 	String authorTag = "author";
 	String otherLabel = "O";
 
-	XMLAuthorExtractor xmlTargetExtractor = new XMLAuthorExtractor(mappings, tokenPattern, otherLabel, false);
+	XMLAuthorExtractor xmlTargetExtractor = new XMLAuthorExtractor(mappings, tokenPattern, otherLabel);
 	// xmlTargetExtractor.extractAuthors(new File(args[0]), new
 	// File(args[1]));
-	xmlTargetExtractor.extractAuthorsInDir(authorTag, new File(args[0]), new File(args[1]));
+	xmlTargetExtractor.extractAuthorsInDir(authorTag, new File(inputPath), new File(outputPath), addPrefix,
+		addEndTag);
     }
 
     private CharSequenceLexer lexer;
     private String untaggedLabel;
-    private boolean setLastMark;
     private Map<String, String> mappings;
 
     /**
@@ -54,14 +69,14 @@ public class XMLAuthorExtractor {
      * @param setLastMark:
      *            if true: marks the last author element as such
      */
-    public XMLAuthorExtractor(Map<String, String> mappings, Pattern regex, String untaggedLabel, boolean setLastMark) {
+    public XMLAuthorExtractor(Map<String, String> mappings, Pattern regex, String untaggedLabel) {
 	this.mappings = mappings;
 	this.lexer = new CharSequenceLexer(regex);
 	this.untaggedLabel = untaggedLabel;
-	this.setLastMark = setLastMark;
     }
 
-    public void extractAuthors(String authorTag, File inputFile, File outputFile) {
+    public void extractAuthors(String authorTag, File inputFile, File outputFile, boolean addPrefix,
+	    boolean addEndTag) {
 	System.out.println(inputFile.getAbsolutePath());
 	try {
 	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
@@ -96,7 +111,7 @@ public class XMLAuthorExtractor {
 			if (tokenString.matches("</.*>")) {
 			    // check if closing tag matches the author tag
 			    if (authorTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
-				this.extractAuthorContent(authorContent, bufferedWriter);
+				this.extractAuthorContent(authorContent, bufferedWriter, addPrefix, addEndTag);
 				authorContent = "";
 				authorTagOpened = false;
 			    } else {
@@ -126,19 +141,22 @@ public class XMLAuthorExtractor {
 	}
     }
 
-    public void extractAuthorsInDir(String authorTag, File inputDir, File outputDir) throws FileNotFoundException {
+    public void extractAuthorsInDir(String authorTag, File inputDir, File outputDir, boolean addPrefix,
+	    boolean addEndTag) throws FileNotFoundException {
 	outputDir.mkdirs();
 	try {
 	    for (File inputFile : inputDir.listFiles()) {
 		this.extractAuthors(authorTag, inputFile,
-			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()));
+			new File(outputDir.getAbsolutePath() + File.separator + inputFile.getName()), addPrefix,
+			addEndTag);
 	    }
 	} catch (NullPointerException e) {
 	    throw new FileNotFoundException();
 	}
     }
 
-    private void extractAuthorContent(String authorContent, BufferedWriter bufferedWriter) {
+    private void extractAuthorContent(String authorContent, BufferedWriter bufferedWriter, boolean addPrefix,
+	    boolean addEndTag) {
 	CharSequenceLexer localLexer = new CharSequenceLexer(this.lexer.getPattern());
 	localLexer.setCharSequence(authorContent);
 
@@ -178,13 +196,15 @@ public class XMLAuthorExtractor {
 
 	for (int i = 0; i < authorTokenStrings.size(); i++) {
 	    String prefix = "";
-	    if (i == 0) {
-		prefix = "B-";
-	    } else {
-		if ((i == (authorTokenStrings.size() - 1)) && this.setLastMark) {
-		    prefix = "E-";
+	    if (addPrefix) {
+		if (i == 0) {
+		    prefix = "B-";
 		} else {
-		    prefix = "I-";
+		    if (addEndTag && (i == (authorTokenStrings.size() - 1))) {
+			prefix = "E-";
+		    } else {
+			prefix = "I-";
+		    }
 		}
 	    }
 	    String tagLabel = "";
