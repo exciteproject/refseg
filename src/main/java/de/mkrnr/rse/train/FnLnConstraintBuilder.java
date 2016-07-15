@@ -316,9 +316,8 @@ public class FnLnConstraintBuilder {
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    String name = nameEntry.getKey();
-	    if (name.contains(" ")) {
-		bufferedWriter.close();
-		throw new IllegalStateException("name contains space: " + name);
+	    if (name.isEmpty() || name.contains(" ")) {
+		continue;
 	    }
 
 	    nameCount += 1;
