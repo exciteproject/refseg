@@ -133,7 +133,8 @@ public class FnLnConstraintBuilder {
 			for (int childeNodeIndex = 0; childeNodeIndex < authorNodeChildren.size(); childeNodeIndex++) {
 			    Node authorChild = authorNodeChildren.get(childeNodeIndex);
 			    String nameWord = authorChild.getFirstChild().getLabel();
-			    if (!this.nameDistributions.containsKey(nameWord)) {
+			    if (!this.nameDistributions.containsKey(nameWord)
+				    && !Character.isWhitespace(nameWord.charAt(0))) {
 				this.nameDistributions.put(nameWord, new NameDistribution());
 			    }
 			    if ((authorChild.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))) {
