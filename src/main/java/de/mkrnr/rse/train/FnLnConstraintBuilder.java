@@ -240,7 +240,7 @@ public class FnLnConstraintBuilder {
 			    if (word.isEmpty()) {
 				continue;
 			    }
-			    if (!this.nameDistributions.containsKey(word)) {
+			    if (!this.nameDistributions.containsKey(word) && !Character.isWhitespace(word.charAt(0))) {
 				this.nameDistributions.put(word, new NameDistribution());
 			    }
 
