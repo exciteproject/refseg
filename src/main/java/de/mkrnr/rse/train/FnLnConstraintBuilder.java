@@ -237,10 +237,10 @@ public class FnLnConstraintBuilder {
 				childNode = childNode.getFirstChild();
 			    }
 			    String word = childNode.getLabel();
-			    if (word.isEmpty()) {
+			    if (word.isEmpty() || Character.isWhitespace(word.charAt(0))) {
 				continue;
 			    }
-			    if (!this.nameDistributions.containsKey(word) && !Character.isWhitespace(word.charAt(0))) {
+			    if (!this.nameDistributions.containsKey(word)) {
 				this.nameDistributions.put(word, new NameDistribution());
 			    }
 
