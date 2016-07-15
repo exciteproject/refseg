@@ -316,7 +316,7 @@ public class FnLnConstraintBuilder {
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    String name = nameEntry.getKey();
-	    if (name.isEmpty() || name.contains(" ") || Character.isWhitespace(name.charAt(0))) {
+	    if (name.isEmpty() || name.contains(" ") || name.contains(" ") || Character.isWhitespace(name.charAt(0))) {
 		continue;
 	    }
 
