@@ -133,8 +133,7 @@ public class FnLnConstraintBuilder {
 			for (int childeNodeIndex = 0; childeNodeIndex < authorNodeChildren.size(); childeNodeIndex++) {
 			    Node authorChild = authorNodeChildren.get(childeNodeIndex);
 			    String nameWord = authorChild.getFirstChild().getLabel();
-			    if (!this.nameDistributions.containsKey(nameWord)
-				    && !Character.isWhitespace(nameWord.charAt(0))) {
+			    if (!this.nameDistributions.containsKey(nameWord)) {
 				this.nameDistributions.put(nameWord, new NameDistribution());
 			    }
 			    if ((authorChild.getLabel().equals(GoddagNameStructure.NodeType.FIRST_NAME.toString()))) {
@@ -237,7 +236,7 @@ public class FnLnConstraintBuilder {
 				childNode = childNode.getFirstChild();
 			    }
 			    String word = childNode.getLabel();
-			    if (word.isEmpty() || Character.isWhitespace(word.charAt(0))) {
+			    if (word.isEmpty()) {
 				continue;
 			    }
 			    if (!this.nameDistributions.containsKey(word)) {
@@ -316,8 +315,9 @@ public class FnLnConstraintBuilder {
 	BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 	for (Entry<String, NameDistribution> nameEntry : this.nameDistributions.entrySet()) {
 	    String name = nameEntry.getKey();
-	    if (name.isEmpty() || name.contains(" ") || name.contains(" ") || Character.isWhitespace(name.charAt(0))) {
-		continue;
+	    if (name.contains(" ")) {
+		bufferedWriter.close();
+		throw new IllegalStateException("name contains space: " + name);
 	    }
 
 	    nameCount += 1;
