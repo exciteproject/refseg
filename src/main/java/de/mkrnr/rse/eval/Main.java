@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -14,7 +16,6 @@ import com.beust.jcommander.converters.FileConverter;
 
 import cc.mallet.fst.TransducerEvaluator;
 import cc.mallet.fst.TransducerTrainer;
-import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.pipe.SerialPipes;
 import cc.mallet.types.Instance;
 import cc.mallet.types.InstanceList;
@@ -89,6 +90,8 @@ public class Main {
 	    "--other-label" }, description = "label that is used to specitfy other instances in the training set")
     private String otherLabel = "other";
 
+    private int iterations;
+
     private void run() throws IOException {
 
 	FeaturePipeProvider featurePipeProvider = new FeaturePipeProvider(this.firstNameFile, this.lastNameFile);
@@ -112,20 +115,32 @@ public class Main {
 	    instance.lock();
 	}
 
+	// get numIterations
+	this.iterations = 0;
+	for (Configuration configuration : this.trainerConfigurations) {
+	    if (configuration.getName().equals("numIterations")) {
+		this.iterations = Integer.parseInt(configuration.getValue());
+	    }
+	}
+	if (this.iterations == 0) {
+	    throw new IllegalArgumentException("the config \"numIteratoins\" needs to be set");
+	}
+
 	List<TransducerEvaluator> trainingEvaluators = new ArrayList<TransducerEvaluator>();
 	if (this.evaluateDuringTraining) {
 	    // create list of evaluators that are passed to the trainer for
 	    // evaluations during every iteration
 
-	    ViterbiWriter viterbiTestWriter = new ViterbiWriter("crf", // output
+	    String viterbiFilePath = FilenameUtils.removeExtension(this.evaluationFile.getAbsolutePath()) + ".viterbi";
+	    FixedViterbiWriter fixedViterbiTestWriter = new FixedViterbiWriter(new File(viterbiFilePath), // output
 		    new InstanceList[] { testingInstances }, new String[] { "test" }) {
 
 		@Override
 		public boolean precondition(TransducerTrainer tt) {
-		    return (tt.getIteration() % 10) == 0;
+		    return tt.isFinishedTraining() || (tt.getIteration() == Main.this.iterations);
 		}
 	    };
-	    trainingEvaluators.add(viterbiTestWriter);
+	    trainingEvaluators.add(fixedViterbiTestWriter);
 
 	    StructuredAccuracyEvaluator structuredTestingAccuracyEvaluator = new StructuredAccuracyEvaluator(
 		    testingInstances, "testing", new String[] { "O", });
