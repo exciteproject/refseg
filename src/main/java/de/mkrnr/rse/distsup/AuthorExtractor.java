@@ -6,9 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import de.mkrnr.rse.preproc.NamePreprocessor;
+import de.mkrnr.rse.util.ListHelper;
 
 public abstract class AuthorExtractor {
 
@@ -19,6 +23,26 @@ public abstract class AuthorExtractor {
     protected Map<String, Integer> lastNamesMap;
     protected Map<String, Integer> lastNameSplitsMap;
     protected Map<String, Integer> namesMap;
+
+    public void addNameStringListToMaps(List<String> nameStringList, int maxNumberOfNames) {
+	this.initializeMaps();
+	List<String> randomNameStringSubList;
+	System.out.println("nameStringList: " + nameStringList.size());
+	if (maxNumberOfNames > 0) {
+	    randomNameStringSubList = ListHelper.getRandomSubList(nameStringList, maxNumberOfNames);
+	    System.out.println("randomNameStringSublist: " + randomNameStringSubList.size());
+	} else {
+	    randomNameStringSubList = nameStringList;
+	}
+	for (String nameString : randomNameStringSubList) {
+	    String[] nameSplit = nameString.split(", ");
+	    if (nameSplit.length == 2) {
+		String lastNames = NamePreprocessor.preprocessName(nameSplit[0]);
+		String firstNames = NamePreprocessor.preprocessName(nameSplit[1]);
+		this.addNamesToMaps(firstNames, lastNames);
+	    }
+	}
+    }
 
     private void addNameVariationsToMap(String firstNames, Map<String, Integer> firstNameVariationsMap) {
 	Set<String> firstNameVariations = Name.getFirstNameVariations(firstNames);
@@ -75,6 +99,9 @@ public abstract class AuthorExtractor {
     }
 
     protected void writeMaps(File outputDirectory) {
+	if (!outputDirectory.exists()) {
+	    outputDirectory.mkdirs();
+	}
 	this.writeMapToFile(this.firstNamesMap,
 		new File(outputDirectory.getAbsolutePath() + File.separator + "first-names.csv"));
 	this.writeMapToFile(this.firstNameVariationsMap,

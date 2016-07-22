@@ -1,6 +1,8 @@
 package de.mkrnr.rse.distsup;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
@@ -26,9 +28,15 @@ public class GNDAuthorExtractor extends AuthorExtractor {
      */
     public static void main(String[] args) {
 	File tdbDirectory = new File(args[0]);
-	GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor(tdbDirectory);
+	File outputDirectory = new File(args[1]);
+	int maxNumberOfNames = Integer.parseInt(args[2]);
+	boolean onlyDifferentiated = Boolean.parseBoolean(args[3]);
 
-	gndAuthorExtractor.extractAuthorNames(new File(args[1]));
+	GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor(tdbDirectory);
+	List<String> nameStringList = gndAuthorExtractor.extractAuthorNames(outputDirectory, onlyDifferentiated);
+
+	gndAuthorExtractor.addNameStringListToMaps(nameStringList, maxNumberOfNames);
+	gndAuthorExtractor.writeMaps(outputDirectory);
 	gndAuthorExtractor.close();
     }
 
@@ -51,27 +59,25 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 	this.dataset.close();
     }
 
-    public void extractAuthorNames(File outputDirectory) {
+    public List<String> extractAuthorNames(File outputDirectory, boolean onlyDifferentiated) {
+
+	List<String> nameStringList = new ArrayList<String>();
 	String prefixes = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n";
 	prefixes += "PREFIX gndo: <http://d-nb.info/standards/elementset/gnd#> \n";
-	String queryString = prefixes + "SELECT ?forename ?surname WHERE " + "{ "
-		+ "?person rdf:type gndo:DifferentiatedPerson . \n"
-		+ "?person gndo:preferredNameEntityForThePerson ?nameEntity . \n"
-		+ "?nameEntity gndo:forename ?forename . " + "?nameEntity gndo:surname ?surname . " + "}";
-	// String queryString = prefixes + "SELECT ?forename ?surname WHERE " +
-	// "{ " + "{"
-	// + "?person rdf:type gndo:UndifferentiatedPerson . \n" + "} UNION {"
-	// + "?person rdf:type gndo:DifferentiatedPerson . \n" + "}"
-	// + "?person gndo:preferredNameEntityForThePerson ?nameEntity ."
-	// + "?nameEntity gndo:forename ?forename . " + "?nameEntity
-	// gndo:surname ?surname . " + "}";
+	String queryString = prefixes + "SELECT ?forename ?surname WHERE " + "{ ";
+	if (onlyDifferentiated) {
+	    queryString += "?person rdf:type gndo:DifferentiatedPerson . \n";
+	} else {
+	    queryString += "{" + "?person rdf:type gndo:UndifferentiatedPerson . \n" + "} UNION {"
+		    + "?person rdf:type gndo:DifferentiatedPerson . \n" + "}";
+	}
+	queryString += "?person gndo:preferredNameEntityForThePerson ?nameEntity . \n"
+		+ "?nameEntity gndo:forename ?forename . \n" + "?nameEntity gndo:surname ?surname . " + "}";
 
 	Query query = QueryFactory.create(queryString);
 	QueryExecution qexec = QueryExecutionFactory.create(query, this.model);
 	ResultSet results = qexec.execSelect();
 
-	this.initializeMaps();
-	int count = 0;
 	while (results.hasNext()) {
 	    QuerySolution binding = results.nextSolution();
 
@@ -81,13 +87,11 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 	    String firstNames = NamePreprocessor.preprocessName(firstNameLiteral.toString());
 	    String lastNames = NamePreprocessor.preprocessName(lastNameLiteral.toString());
 
-	    this.addNamesToMaps(firstNames, lastNames);
+	    nameStringList.add(lastNames + ", " + firstNames);
 
-	    count++;
 	}
-	System.out.println(count);
 
-	this.writeMaps(outputDirectory);
+	return nameStringList;
 
     }
 

@@ -4,20 +4,27 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-
-import de.mkrnr.rse.preproc.NamePreprocessor;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SowiportAuthorExtractor extends AuthorExtractor {
 
     public static void main(String[] args) throws IOException {
+	File inputFile = new File(args[0]);
+	File outputDirectory = new File(args[1]);
+	int maxNumberOfNames = Integer.parseInt(args[2]);
 
 	SowiportAuthorExtractor sowiportAuthorExtractor = new SowiportAuthorExtractor();
-	sowiportAuthorExtractor.extractAuthorNames(new File(args[0]), new File(args[1]));
+	List<String> nameStringList = sowiportAuthorExtractor.extractAuthorNames(inputFile);
 
+	sowiportAuthorExtractor.addNameStringListToMaps(nameStringList, maxNumberOfNames);
+	sowiportAuthorExtractor.writeMaps(outputDirectory);
     }
 
-    public void extractAuthorNames(File inputFile, File outputDirectory) throws IOException {
-	this.initializeMaps();
+    public int count = 0;
+
+    public List<String> extractAuthorNames(File inputFile) throws IOException {
+	List<String> nameStringList = new ArrayList<String>();
 
 	BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
 	String line;
@@ -34,24 +41,22 @@ public class SowiportAuthorExtractor extends AuthorExtractor {
 		if (line.contains(";")) {
 		    String[] authors = line.split(";");
 		    for (String author : authors) {
-			this.addAuthor(author);
+			this.addNameStringToList(author, nameStringList);
 		    }
 		} else {
-		    this.addAuthor(line);
+		    this.addNameStringToList(line, nameStringList);
 		}
 	    }
 	}
 	bufferedReader.close();
 
-	this.writeMaps(outputDirectory);
+	return nameStringList;
     }
 
-    private void addAuthor(String nameString) {
+    private void addNameStringToList(String nameString, List<String> nameStringList) {
 	String[] nameSplit = nameString.split(", ");
 	if (nameSplit.length == 2) {
-	    String lastNames = NamePreprocessor.preprocessName(nameSplit[0]);
-	    String firstNames = NamePreprocessor.preprocessName(nameSplit[1]);
-	    this.addNamesToMaps(firstNames, lastNames);
+	    nameStringList.add(nameString);
 	}
     }
 }
