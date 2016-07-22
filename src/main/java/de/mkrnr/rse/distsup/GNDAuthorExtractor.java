@@ -32,16 +32,12 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 	int maxNumberOfNames = Integer.parseInt(args[2]);
 	boolean onlyDifferentiated = Boolean.parseBoolean(args[3]);
 
-	GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor(tdbDirectory);
-	List<String> nameStringList = gndAuthorExtractor.extractAuthorNames(outputDirectory, onlyDifferentiated);
+	GNDAuthorExtractor gndAuthorExtractor = new GNDAuthorExtractor();
+	List<String> nameStringList = gndAuthorExtractor.extractAuthorNames(tdbDirectory, onlyDifferentiated);
 
 	gndAuthorExtractor.addNameStringListToMaps(nameStringList, maxNumberOfNames);
 	gndAuthorExtractor.writeMaps(outputDirectory);
-	gndAuthorExtractor.close();
     }
-
-    private Dataset dataset;
-    private Model model;
 
     /**
      *
@@ -49,17 +45,12 @@ public class GNDAuthorExtractor extends AuthorExtractor {
      *            file path to tdb database containing the GND rdf data
      *
      */
-    public GNDAuthorExtractor(File tdbDirectory) {
-	this.dataset = TDBFactory.createDataset(tdbDirectory.getAbsolutePath());
-	this.model = this.dataset.getDefaultModel();
+    public GNDAuthorExtractor() {
     }
 
-    public void close() {
-	this.model.close();
-	this.dataset.close();
-    }
-
-    public List<String> extractAuthorNames(File outputDirectory, boolean onlyDifferentiated) {
+    public List<String> extractAuthorNames(File tdbDirectory, boolean onlyDifferentiated) {
+	Dataset dataset = TDBFactory.createDataset(tdbDirectory.getAbsolutePath());
+	Model model = dataset.getDefaultModel();
 
 	List<String> nameStringList = new ArrayList<String>();
 	String prefixes = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n";
@@ -75,7 +66,7 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 		+ "?nameEntity gndo:forename ?forename . \n" + "?nameEntity gndo:surname ?surname . " + "}";
 
 	Query query = QueryFactory.create(queryString);
-	QueryExecution qexec = QueryExecutionFactory.create(query, this.model);
+	QueryExecution qexec = QueryExecutionFactory.create(query, model);
 	ResultSet results = qexec.execSelect();
 
 	while (results.hasNext()) {
@@ -91,6 +82,8 @@ public class GNDAuthorExtractor extends AuthorExtractor {
 
 	}
 
+	model.close();
+	dataset.close();
 	return nameStringList;
 
     }
