@@ -1,8 +1,8 @@
 package de.mkrnr.rse.stat;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -15,7 +15,7 @@ import de.mkrnr.rse.distsup.GoddagNameStructure;
 
 public class GoddagNameCounter {
 
-    public static void countNames(File goddagDir) throws JsonSyntaxException, JsonIOException, FileNotFoundException {
+    public static void countNames(File goddagDir) throws JsonSyntaxException, JsonIOException, IOException {
 	GsonBuilder gsonBuilder = new GsonBuilder();
 	gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonDeserializer());
 	Gson gson = gsonBuilder.create();
@@ -24,7 +24,8 @@ public class GoddagNameCounter {
 	int authorCount = 0;
 	for (File goddagFile : goddagDir.listFiles()) {
 
-	    Goddag goddag = gson.fromJson(new FileReader(goddagFile), Goddag.class);
+	    FileReader fileReader = new FileReader(goddagFile);
+	    Goddag goddag = gson.fromJson(fileReader, Goddag.class);
 	    GoddagNameStructure goddagNameStructure = new GoddagNameStructure(goddag);
 	    for (Node rootChildNode : goddagNameStructure.getGoddag().getRootNode().getChildren()) {
 		if ("[Author]".equals(rootChildNode.getLabel())) {
@@ -41,6 +42,7 @@ public class GoddagNameCounter {
 		    }
 		}
 	    }
+	    fileReader.close();
 	}
 	System.out.println(goddagDir.getAbsolutePath());
 	System.out.println("authorCount: " + authorCount);
@@ -48,7 +50,7 @@ public class GoddagNameCounter {
 	System.out.println("lastNameCount: " + lastNameCount);
     }
 
-    public static void main(String[] args) throws JsonSyntaxException, JsonIOException, FileNotFoundException {
+    public static void main(String[] args) throws JsonSyntaxException, JsonIOException, IOException {
 	GoddagNameCounter.countNames(new File(args[0]));
     }
 }
