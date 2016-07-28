@@ -13,6 +13,7 @@ import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
+import com.google.gson.reflect.TypeToken;
 
 import de.mkrnr.rse.util.JsonHelper;
 import de.mkrnr.rse.util.ListHelper;
@@ -41,9 +42,12 @@ public class Main {
     @Parameter(names = { "-h", "--help" }, description = "print information about available parameters")
     private boolean help;
 
-    @Parameter(names = { "-input",
+    @Parameter(names = { "-input-d",
 	    "--input-dir" }, description = "directory containing text files", converter = FileConverter.class)
     private File inputDirectory;
+    @Parameter(names = { "-input-f",
+	    "--input-file" }, description = "json file containing list of files to use", converter = FileConverter.class)
+    private File inputFile;
 
     @Parameter(names = { "-output",
 	    "--output-file" }, description = "file in which the instances will be stored", converter = FileConverter.class)
@@ -76,6 +80,35 @@ public class Main {
 	if (this.filterDirectory != null) {
 	    filesToRemove = Arrays.asList(this.filterDirectory.listFiles());
 	}
+
+	if ((this.inputFile != null) && (this.inputDirectory != null)) {
+	    throw new IllegalParameterException("not both input-file and input-dir can be set");
+	}
+
+	// json file with inputs is set
+	if (this.inputFile != null) {
+	    // TODO read json file list
+	    @SuppressWarnings("unchecked")
+	    List<File> inputFiles = (List<File>) JsonHelper.readFromFile(new TypeToken<List<File>>() {
+	    }.getType(), this.inputFile);
+
+	    if (this.createInstances) {
+		if (this.labels == null) {
+		    throw new IllegalArgumentException(
+			    "labels need to be specified when creating a random instance list");
+		}
+		RandomInstanceFileBuilder.createInstanceFile(inputFiles, this.outputFile, this.labels);
+	    }
+	    if (this.mergeInstances) {
+		RandomInstanceFileBuilder.mergeInstanceFiles(inputFiles, this.outputFile);
+	    }
+
+	    File outputFilesFile = new File(
+		    FilenameUtils.removeExtension(this.outputFile.getAbsolutePath()) + "_files.json");
+	    JsonHelper.writeToFile(inputFiles, outputFilesFile);
+
+	}
+
 	if ((this.inputDirectory != null) && (this.outputFile != null)) {
 
 	    List<File> inputFiles = Arrays.asList(this.inputDirectory.listFiles());
