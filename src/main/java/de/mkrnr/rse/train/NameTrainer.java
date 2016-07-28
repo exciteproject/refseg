@@ -110,6 +110,9 @@ public class NameTrainer {
 	evaluationResults.addConfiguration(NUM_THREADS_CONFIG_LABEL, this.numTreads);
 	evaluationResults.addConfiguration(ORDER_ZERO_STATES_CONFIG_LABEL, this.orderZeroStates);
 	evaluationResults.addConfiguration(ORDER_ONE_STATES_CONFIG_LABEL, this.orderOneStates);
+
+	// TODO add serialization like this:
+	// crf.write(new File("/home/martin/test.crf"));
 	return trainer;
     }
 
