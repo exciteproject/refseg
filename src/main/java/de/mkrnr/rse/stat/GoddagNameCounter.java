@@ -55,6 +55,7 @@ public class GoddagNameCounter {
 	    }
 	    fileReader.close();
 	}
+	System.out.println("countAuthorParents:");
 	System.out.println(goddagDir.getAbsolutePath());
 	System.out.println("authorCount: " + authorCount);
 	System.out.println("leafNodesCount: " + leafNodeCount);
@@ -98,6 +99,7 @@ public class GoddagNameCounter {
 	    }
 	    fileReader.close();
 	}
+	System.out.println("countNames:");
 	System.out.println(goddagDir.getAbsolutePath());
 	System.out.println("authorCount: " + authorCount);
 	System.out.println("firstNameCount: " + firstNameCount);
@@ -106,5 +108,7 @@ public class GoddagNameCounter {
 
     public static void main(String[] args) throws JsonSyntaxException, JsonIOException, IOException {
 	GoddagNameCounter.countAuthorParents(new File(args[0]));
+	System.out.println("---");
+	GoddagNameCounter.countNames(new File(args[0]));
     }
 }
