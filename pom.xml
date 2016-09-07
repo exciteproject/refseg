@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>de.mkrnr.rse</groupId>
-  <artifactId>reference-string-extraction</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <artifactId>author-extraction</artifactId>
+  <version>0.1</version>
   <packaging>jar</packaging>
 
-  <name>reference-string-extraction</name>
+  <name>author-extraction</name>
   <url>http://maven.apache.org</url>
 
   <properties>
