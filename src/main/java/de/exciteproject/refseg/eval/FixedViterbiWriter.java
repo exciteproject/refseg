@@ -25,82 +25,82 @@ public class FixedViterbiWriter extends TransducerEvaluator {
     private File outputFile;
 
     public FixedViterbiWriter(File outputFile, InstanceList instanceList1, String description1) {
-	this(outputFile, new InstanceList[] { instanceList1 }, new String[] { description1 });
+        this(outputFile, new InstanceList[] { instanceList1 }, new String[] { description1 });
     }
 
     public FixedViterbiWriter(File outputFile, InstanceList instanceList1, String description1,
-	    InstanceList instanceList2, String description2) {
-	this(outputFile, new InstanceList[] { instanceList1, instanceList2 },
-		new String[] { description1, description2 });
+            InstanceList instanceList2, String description2) {
+        this(outputFile, new InstanceList[] { instanceList1, instanceList2 },
+                new String[] { description1, description2 });
     }
 
     public FixedViterbiWriter(File outputFile, InstanceList instanceList1, String description1,
-	    InstanceList instanceList2, String description2, InstanceList instanceList3, String description3) {
-	this(outputFile, new InstanceList[] { instanceList1, instanceList2, instanceList3 },
-		new String[] { description1, description2, description3 });
+            InstanceList instanceList2, String description2, InstanceList instanceList3, String description3) {
+        this(outputFile, new InstanceList[] { instanceList1, instanceList2, instanceList3 },
+                new String[] { description1, description2, description3 });
     }
 
     public FixedViterbiWriter(File outputFile, InstanceList[] instanceLists, String[] descriptions) {
-	super(instanceLists, descriptions);
-	this.outputFile = outputFile;
+        super(instanceLists, descriptions);
+        this.outputFile = outputFile;
     }
 
     @SuppressWarnings({ "resource", "rawtypes" })
     @Override
     public void evaluateInstanceList(TransducerTrainer transducerTrainer, InstanceList instances, String description) {
-	PrintStream viterbiOutputStream;
-	try {
-	    FileOutputStream fos = new FileOutputStream(this.outputFile);
-	    if (this.outputEncoding == null) {
-		viterbiOutputStream = new PrintStream(fos);
-	    } else {
-		viterbiOutputStream = new PrintStream(fos, true, this.outputEncoding);
-		// ((CRF)model).write (new File(viterbiOutputFilePrefix +
-		// "."+description + iteration+".model"));
-	    }
-	} catch (IOException e) {
-	    System.err.println("Couldn't open Viterbi output file '" + this.outputFile.getAbsolutePath()
-		    + "'; continuing without Viterbi output trace.");
-	    return;
-	}
+        PrintStream viterbiOutputStream;
+        try {
+            FileOutputStream fos = new FileOutputStream(this.outputFile);
+            if (this.outputEncoding == null) {
+                viterbiOutputStream = new PrintStream(fos);
+            } else {
+                viterbiOutputStream = new PrintStream(fos, true, this.outputEncoding);
+                // ((CRF)model).write (new File(viterbiOutputFilePrefix +
+                // "."+description + iteration+".model"));
+            }
+        } catch (IOException e) {
+            System.err.println("Couldn't open Viterbi output file '" + this.outputFile.getAbsolutePath()
+                    + "'; continuing without Viterbi output trace.");
+            return;
+        }
 
-	for (int i = 0; i < instances.size(); i++) {
-	    if (viterbiOutputStream != null) {
-		viterbiOutputStream.println("Viterbi path for " + description + " instance #" + i);
-	    }
-	    Instance instance = instances.get(i);
-	    Sequence input = (Sequence) instance.getData();
-	    TokenSequence sourceTokenSequence = null;
-	    if (instance.getSource() instanceof TokenSequence) {
-		sourceTokenSequence = (TokenSequence) instance.getSource();
-	    }
+        for (int i = 0; i < instances.size(); i++) {
+            if (viterbiOutputStream != null) {
+                viterbiOutputStream.println("Viterbi path for " + description + " instance #" + i);
+            }
+            Instance instance = instances.get(i);
+            Sequence input = (Sequence) instance.getData();
+            TokenSequence sourceTokenSequence = null;
+            if (instance.getSource() instanceof TokenSequence) {
+                sourceTokenSequence = (TokenSequence) instance.getSource();
+            }
 
-	    Sequence trueOutput = (Sequence) instance.getTarget();
-	    assert (input.size() == trueOutput.size());
-	    Sequence predOutput = transducerTrainer.getTransducer().transduce(input);
-	    assert (predOutput.size() == trueOutput.size());
+            Sequence trueOutput = (Sequence) instance.getTarget();
+            assert (input.size() == trueOutput.size());
+            Sequence predOutput = transducerTrainer.getTransducer().transduce(input);
+            assert (predOutput.size() == trueOutput.size());
 
-	    for (int j = 0; j < trueOutput.size(); j++) {
-		FeatureVector fv = (FeatureVector) input.get(j);
-		// viterbiOutputStream.println (tokens.charAt(j)+"
-		// "+trueOutput.get(j).toString()+
-		// '/'+predOutput.get(j).toString()+" "+ fv.toString(true));
-		if (sourceTokenSequence != null) {
-		    viterbiOutputStream.print(sourceTokenSequence.get(j).getText() + ": ");
-		}
-		String result = trueOutput.get(j).toString() + '/' + predOutput.get(j).toString();
-		while (result.toCharArray().length < 9) {
-		    result += " ";
-		}
-		viterbiOutputStream.println(result + "  " + fv.toString(true));
-	    }
-	}
+            for (int j = 0; j < trueOutput.size(); j++) {
+                FeatureVector fv = (FeatureVector) input.get(j);
+                // viterbiOutputStream.println (tokens.charAt(j)+"
+                // "+trueOutput.get(j).toString()+
+                // '/'+predOutput.get(j).toString()+" "+ fv.toString(true));
+                if (sourceTokenSequence != null) {
+                    viterbiOutputStream.print(sourceTokenSequence.get(j).getText() + ": ");
+                }
+                String result = trueOutput.get(j).toString() + '/' + predOutput.get(j).toString();
+                while (result.toCharArray().length < 9) {
+                    result += " ";
+                }
+                viterbiOutputStream.println(result + "  " + fv.toString(true));
+            }
+        }
     }
 
     @Override
     protected void preamble(TransducerTrainer tt) {
-	// We don't want to print iteration number and cost, so here we override
-	// this behavior in the superclass.
+        // We don't want to print iteration number and cost, so here we override
+        // this behavior in the superclass.
     }
 
 }

@@ -12,33 +12,33 @@ import com.google.gson.GsonBuilder;
 public class JsonHelper {
 
     public static Object readFromFile(Class<?> objectClass, File inputFile) {
-	String jsonString = null;
-	try {
-	    jsonString = FileUtils.readFileToString(inputFile);
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	return new Gson().fromJson(jsonString, objectClass);
+        String jsonString = null;
+        try {
+            jsonString = FileUtils.readFileToString(inputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new Gson().fromJson(jsonString, objectClass);
     }
 
     public static Object readFromFile(Type objectType, File inputFile) {
-	String jsonString = null;
-	try {
-	    jsonString = FileUtils.readFileToString(inputFile);
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	return new Gson().fromJson(jsonString, objectType);
+        String jsonString = null;
+        try {
+            jsonString = FileUtils.readFileToString(inputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new Gson().fromJson(jsonString, objectType);
     }
 
     public static void writeToFile(Object object, File outputFile) {
 
-	try {
-	    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-	    FileUtils.writeStringToFile(outputFile, gson.toJson(object));
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+        try {
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            FileUtils.writeStringToFile(outputFile, gson.toJson(object));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }

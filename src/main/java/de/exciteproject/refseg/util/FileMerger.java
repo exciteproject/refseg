@@ -19,22 +19,22 @@ public class FileMerger {
      * @return
      */
     public static File mergeFiles(List<File> inputFiles, File outputFile) {
-	ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-	try {
-	    for (File file : inputFiles) {
-		InputStream inputStream;
-		inputStream = new FileInputStream(file);
-		byteArrayOutputStream.write(inputStream);
-		byteArrayOutputStream.write(System.lineSeparator().getBytes());
-	    }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try {
+            for (File file : inputFiles) {
+                InputStream inputStream;
+                inputStream = new FileInputStream(file);
+                byteArrayOutputStream.write(inputStream);
+                byteArrayOutputStream.write(System.lineSeparator().getBytes());
+            }
 
-	    ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
 
-	    byteArrayOutputStream.close();
-	    ToFileStreamer.streamToFile(byteArrayInputStream, outputFile);
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	return outputFile;
+            byteArrayOutputStream.close();
+            ToFileStreamer.streamToFile(byteArrayInputStream, outputFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return outputFile;
     }
 }

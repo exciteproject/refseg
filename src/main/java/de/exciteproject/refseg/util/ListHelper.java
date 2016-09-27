@@ -19,12 +19,12 @@ public class ListHelper {
      * @return
      */
     public static <T> List<T> getRandomSubList(List<T> inputList, double percentage) {
-	if ((percentage < 0) || (percentage > 1)) {
-	    throw new IllegalArgumentException("percentage has to be between 0 and 1");
-	}
+        if ((percentage < 0) || (percentage > 1)) {
+            throw new IllegalArgumentException("percentage has to be between 0 and 1");
+        }
 
-	int numberOfElements = (int) (inputList.size() * percentage);
-	return getRandomSubList(inputList, numberOfElements);
+        int numberOfElements = (int) (inputList.size() * percentage);
+        return getRandomSubList(inputList, numberOfElements);
     }
 
     /**
@@ -37,46 +37,46 @@ public class ListHelper {
      * @return
      */
     public static <T> List<T> getRandomSubList(List<T> inputList, int numberOfFiles) {
-	if ((numberOfFiles < 0) || (numberOfFiles > inputList.size())) {
-	    throw new IllegalArgumentException("numberOfFiles has to be between 0 and size of inputList");
-	}
+        if ((numberOfFiles < 0) || (numberOfFiles > inputList.size())) {
+            throw new IllegalArgumentException("numberOfFiles has to be between 0 and size of inputList");
+        }
 
-	List<T> shuffeledList = new ArrayList<T>(inputList);
-	Collections.shuffle(shuffeledList);
-	return shuffeledList.subList(0, numberOfFiles);
+        List<T> shuffeledList = new ArrayList<T>(inputList);
+        Collections.shuffle(shuffeledList);
+        return shuffeledList.subList(0, numberOfFiles);
     }
 
     public static <T> List<T> removeElementsFromList(List<T> inputList, List<T> elementsToRemove) {
-	if (elementsToRemove == null) {
-	    return inputList;
-	}
-	List<T> filteredList = new ArrayList<T>(inputList);
-	for (Object objectToRemove : elementsToRemove) {
-	    for (int i = 0; i < filteredList.size(); i++) {
-		if (filteredList.get(i).equals(objectToRemove)) {
-		    filteredList.remove(i);
-		}
-	    }
-	}
-	return filteredList;
+        if (elementsToRemove == null) {
+            return inputList;
+        }
+        List<T> filteredList = new ArrayList<T>(inputList);
+        for (Object objectToRemove : elementsToRemove) {
+            for (int i = 0; i < filteredList.size(); i++) {
+                if (filteredList.get(i).equals(objectToRemove)) {
+                    filteredList.remove(i);
+                }
+            }
+        }
+        return filteredList;
     }
 
     public static List<File> removeFilesFromList(List<File> inputList, List<File> elementsToRemove) {
-	if (elementsToRemove == null) {
-	    return inputList;
-	}
-	List<File> filteredList = new ArrayList<File>(inputList);
-	for (File fileToCheck : elementsToRemove) {
-	    String fileToCeckNameWithoutEnding = FilenameUtils.removeExtension(fileToCheck.getName());
+        if (elementsToRemove == null) {
+            return inputList;
+        }
+        List<File> filteredList = new ArrayList<File>(inputList);
+        for (File fileToCheck : elementsToRemove) {
+            String fileToCeckNameWithoutEnding = FilenameUtils.removeExtension(fileToCheck.getName());
 
-	    for (int i = 0; i < filteredList.size(); i++) {
-		String filterFileNameWithoutEnding = FilenameUtils.removeExtension(filteredList.get(i).getName());
-		if (fileToCeckNameWithoutEnding.equals(filterFileNameWithoutEnding)) {
-		    filteredList.remove(i);
-		}
-	    }
-	}
-	return filteredList;
+            for (int i = 0; i < filteredList.size(); i++) {
+                String filterFileNameWithoutEnding = FilenameUtils.removeExtension(filteredList.get(i).getName());
+                if (fileToCeckNameWithoutEnding.equals(filterFileNameWithoutEnding)) {
+                    filteredList.remove(i);
+                }
+            }
+        }
+        return filteredList;
     }
 
 }

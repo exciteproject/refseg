@@ -18,14 +18,14 @@ import cc.mallet.util.CharSequenceLexer;
 public class CoraTargetExtractor extends Extractor {
 
     public static void main(String[] args) {
-	Pattern tokenPattern = Pattern.compile("\\S+");
+        Pattern tokenPattern = Pattern.compile("\\S+");
 
-	String[] relevantTags = new String[1];
-	relevantTags[0] = "author";
-	CoraTargetExtractor xmlTargetExtractor = new CoraTargetExtractor(tokenPattern, relevantTags, "other");
-	xmlTargetExtractor.extract(new File(args[0]), new File(args[1]));
-	// xmlTargetExtractor.extractTargetsInDir(new File(args[0]), new
-	// File(args[1]));
+        String[] relevantTags = new String[1];
+        relevantTags[0] = "author";
+        CoraTargetExtractor xmlTargetExtractor = new CoraTargetExtractor(tokenPattern, relevantTags, "other");
+        xmlTargetExtractor.extract(new File(args[0]), new File(args[1]));
+        // xmlTargetExtractor.extractTargetsInDir(new File(args[0]), new
+        // File(args[1]));
     }
 
     private CharSequenceLexer lexer;
@@ -34,68 +34,68 @@ public class CoraTargetExtractor extends Extractor {
     private boolean filterTags;
 
     public CoraTargetExtractor(Pattern regex) {
-	this.lexer = new CharSequenceLexer(regex);
-	this.filterTags = false;
+        this.lexer = new CharSequenceLexer(regex);
+        this.filterTags = false;
     }
 
     public CoraTargetExtractor(Pattern regex, String[] relevantTags, String untaggedLabel) {
-	this.lexer = new CharSequenceLexer(regex);
+        this.lexer = new CharSequenceLexer(regex);
 
-	this.relevantTags = new HashSet<String>();
-	for (String relevantTag : relevantTags) {
-	    this.relevantTags.add(relevantTag);
-	}
-	this.untaggedLabel = untaggedLabel;
-	this.filterTags = true;
+        this.relevantTags = new HashSet<String>();
+        for (String relevantTag : relevantTags) {
+            this.relevantTags.add(relevantTag);
+        }
+        this.untaggedLabel = untaggedLabel;
+        this.filterTags = true;
     }
 
     @Override
     public void extract(File inputFile, File outputFile) {
-	System.out.println(inputFile.getAbsolutePath());
-	try {
-	    BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
-	    BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-	    String line;
-	    while ((line = bufferedReader.readLine()) != null) {
-		this.lexer.setCharSequence(line);
-		String currentTag = null;
-		while (this.lexer.hasNext()) {
-		    this.lexer.next();
+        System.out.println(inputFile.getAbsolutePath());
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                this.lexer.setCharSequence(line);
+                String currentTag = null;
+                while (this.lexer.hasNext()) {
+                    this.lexer.next();
 
-		    String tokenString = this.lexer.getTokenString();
-		    // match tags
-		    if (tokenString.matches("<.*>")) {
-			// match end tag
-			if (tokenString.matches("</.*>")) {
-			    // check if closing tag matches the current tag
-			    if (currentTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
-				currentTag = null;
-			    } else {
-				bufferedWriter.close();
-				bufferedReader.close();
-				throw new IllegalStateException("XML is not well formatted: " + line);
-			    }
-			} else {
-			    currentTag = tokenString.substring(1, tokenString.length() - 1);
-			}
-		    } else {
-			if ((currentTag == null) || (this.filterTags && !this.relevantTags.contains(currentTag))) {
-			    bufferedWriter.write(tokenString + " " + this.untaggedLabel + "\n");
+                    String tokenString = this.lexer.getTokenString();
+                    // match tags
+                    if (tokenString.matches("<.*>")) {
+                        // match end tag
+                        if (tokenString.matches("</.*>")) {
+                            // check if closing tag matches the current tag
+                            if (currentTag.equals(tokenString.substring(2, tokenString.length() - 1))) {
+                                currentTag = null;
+                            } else {
+                                bufferedWriter.close();
+                                bufferedReader.close();
+                                throw new IllegalStateException("XML is not well formatted: " + line);
+                            }
+                        } else {
+                            currentTag = tokenString.substring(1, tokenString.length() - 1);
+                        }
+                    } else {
+                        if ((currentTag == null) || (this.filterTags && !this.relevantTags.contains(currentTag))) {
+                            bufferedWriter.write(tokenString + " " + this.untaggedLabel + "\n");
 
-			} else {
-			    bufferedWriter.write(tokenString + " " + currentTag + "\n");
-			}
-		    }
-		}
-	    }
-	    bufferedWriter.close();
-	    bufferedReader.close();
-	} catch (FileNotFoundException e) {
-	    System.err.println("inputFile was not found: " + inputFile.getAbsolutePath());
-	    e.printStackTrace();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+                        } else {
+                            bufferedWriter.write(tokenString + " " + currentTag + "\n");
+                        }
+                    }
+                }
+            }
+            bufferedWriter.close();
+            bufferedReader.close();
+        } catch (FileNotFoundException e) {
+            System.err.println("inputFile was not found: " + inputFile.getAbsolutePath());
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

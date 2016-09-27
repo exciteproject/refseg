@@ -14,7 +14,7 @@ public class ToFileStreamer {
 
     /**
      * Streams the content of inputStream to the file outputStream
-     * 
+     *
      * @param inputStream
      * @param outputFile
      * @throws IOException

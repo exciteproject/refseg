@@ -14,8 +14,8 @@ import cc.mallet.types.TokenSequence;
 /**
  * A class that matches the Tokens in a given TokenSequence against a given
  * regular expression. The functionality is derived from the
- * cc.mallet.pipe.tsf.RegexMatches class but removes the
- * "dealing with([a-z]+), ([a-z]+, [a-z]+), [a-z]+." functionality.
+ * cc.mallet.pipe.tsf.RegexMatches class but removes the "dealing with([a-z]+),
+ * ([a-z]+, [a-z]+), [a-z]+." functionality.
  */
 public class RegexPipe extends Pipe implements Serializable {
 

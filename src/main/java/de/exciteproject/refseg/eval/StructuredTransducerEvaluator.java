@@ -15,19 +15,19 @@ public abstract class StructuredTransducerEvaluator extends TransducerEvaluator 
     protected Set<String> otherLabels;
 
     public StructuredTransducerEvaluator(InstanceList[] instanceLists, String[] descriptions, String[] otherLabels) {
-	super(instanceLists, descriptions);
-	this.otherLabels = new HashSet<String>();
-	for (String otherLabel : otherLabels) {
-	    this.otherLabels.add(otherLabel);
-	}
-	this.evaluations = new ArrayList<Evaluation>();
+        super(instanceLists, descriptions);
+        this.otherLabels = new HashSet<String>();
+        for (String otherLabel : otherLabels) {
+            this.otherLabels.add(otherLabel);
+        }
+        this.evaluations = new ArrayList<Evaluation>();
     }
 
     @Override
     public abstract void evaluateInstanceList(TransducerTrainer transducer, InstanceList instances, String description);
 
     public List<Evaluation> getEvaluations() {
-	return this.evaluations;
+        return this.evaluations;
     }
 
 }

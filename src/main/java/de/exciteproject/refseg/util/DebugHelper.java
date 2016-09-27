@@ -9,12 +9,11 @@ import com.sun.management.UnixOperatingSystemMXBean;
 public class DebugHelper {
 
     public static long getOpenFileDescriptorCount() {
-	OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
-	if (os instanceof UnixOperatingSystemMXBean) {
-	    return ((UnixOperatingSystemMXBean) os).getOpenFileDescriptorCount();
-	} else {
-	    return -1;
-	}
-
+        OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+        if (os instanceof UnixOperatingSystemMXBean) {
+            return ((UnixOperatingSystemMXBean) os).getOpenFileDescriptorCount();
+        } else {
+            return -1;
+        }
     }
 }

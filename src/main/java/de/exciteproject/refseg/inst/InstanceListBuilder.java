@@ -14,16 +14,16 @@ import cc.mallet.types.InstanceList;
 public class InstanceListBuilder {
 
     public static InstanceList build(File file, Pipe pipe) {
-	Pattern pattern = Pattern.compile("^\\s*$");
+        Pattern pattern = Pattern.compile("^\\s*$");
 
-	InstanceList instanceList = new InstanceList(pipe);
-	try {
-	    instanceList.addThruPipe(new LineGroupIterator(
-		    new BufferedReader(new InputStreamReader(new FileInputStream(file))), pattern, true));
-	} catch (FileNotFoundException e) {
-	    e.printStackTrace();
-	}
-	return instanceList;
+        InstanceList instanceList = new InstanceList(pipe);
+        try {
+            instanceList.addThruPipe(new LineGroupIterator(
+                    new BufferedReader(new InputStreamReader(new FileInputStream(file))), pattern, true));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return instanceList;
     }
 
 }

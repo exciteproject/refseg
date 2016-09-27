@@ -7,11 +7,11 @@ import java.util.List;
 public class JsonFileListBuilder {
 
     public static void main(String[] args) {
-	File inputFileDirectory = new File(args[0]);
-	File outputFile = new File(args[1]);
-	double percentage = 0.5;
+        File inputFileDirectory = new File(args[0]);
+        File outputFile = new File(args[1]);
+        double percentage = 0.5;
 
-	JsonFileListBuilder.writeSubList(inputFileDirectory, outputFile, percentage);
+        JsonFileListBuilder.writeSubList(inputFileDirectory, outputFile, percentage);
     }
 
     /**
@@ -22,10 +22,10 @@ public class JsonFileListBuilder {
      *            percentage of inputFileDirectory that should be kept
      */
     public static void writeSubList(File inputFileDirectory, File outputFile, double percentage) {
-	List<File> inputFiles = Arrays.asList(inputFileDirectory.listFiles());
+        List<File> inputFiles = Arrays.asList(inputFileDirectory.listFiles());
 
-	List<File> filteredFiles = ListHelper.getRandomSubList(inputFiles, percentage);
+        List<File> filteredFiles = ListHelper.getRandomSubList(inputFiles, percentage);
 
-	JsonHelper.writeToFile(filteredFiles, outputFile);
+        JsonHelper.writeToFile(filteredFiles, outputFile);
     }
 }
