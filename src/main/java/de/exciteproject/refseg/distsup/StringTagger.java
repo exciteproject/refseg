@@ -45,7 +45,7 @@ public class StringTagger extends Tagger {
 
         StringTagger labelTagger = new StringTagger("[T]", wordSplitRegex, wordNormalizer);
         labelTagger.readStrings(words);
-        GoddagBuilder goddagBuilder = new GoddagBuilder(wordSplitRegex);
+        GoddagBuilder goddagBuilder = new GoddagBuilder("[R]", wordSplitRegex);
         Goddag goddag = goddagBuilder.build(inputString);
         labelTagger.tag(goddag);
 

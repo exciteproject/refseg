@@ -7,9 +7,9 @@ public class GoddagBuilder {
     private String wordSplitRegex;
     private String rootNodeLabel;
 
-    public GoddagBuilder(String wordSplitRegex) {
+    public GoddagBuilder(String rootNodeLabel, String wordSplitRegex) {
         this.wordSplitRegex = wordSplitRegex;
-        this.rootNodeLabel = "root";
+        this.rootNodeLabel = rootNodeLabel;
     }
 
     public Goddag build(String inputString) {

@@ -19,7 +19,7 @@ public class NameTagger extends Tagger {
         long endTime;
 
         String wordSplitRegex = "\\s";
-        GoddagBuilder goddagBuilder = new GoddagBuilder(wordSplitRegex);
+        GoddagBuilder goddagBuilder = new GoddagBuilder("[R]", wordSplitRegex);
 
         // String inputString = null;
         // try {
