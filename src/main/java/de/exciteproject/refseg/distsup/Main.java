@@ -8,8 +8,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
 
-import de.exciteproject.refseg.distsup.GoddagNameStructure.NodeType;
-
 public class Main {
 
     public static void main(String[] args) throws IOException {
@@ -38,14 +36,6 @@ public class Main {
             "--input-dir" }, description = "directory containing text files", converter = FileConverter.class)
     private File inputDirectory;
 
-    @Parameter(names = { "-tagged",
-            "--tagged-dir" }, description = "directory in which the tagged files are stored", converter = FileConverter.class)
-    private File taggedDirectory;
-
-    @Parameter(names = { "-matched",
-            "--matched-dir" }, description = "directory in which the matched files are stored", converter = FileConverter.class)
-    private File matchedDirectory;
-
     @Parameter(names = { "-names",
             "--names-file" }, description = "file listing names", converter = FileConverter.class)
     private File namesFile;
@@ -59,19 +49,6 @@ public class Main {
     private File lastNamesFile;
 
     private void run() throws IOException {
-        if ((this.inputDirectory != null) && (this.taggedDirectory != null)) {
-            NameTagger nameTagger = new NameTagger(true);
-
-            nameTagger.readNameMap(this.firstNamesFile, NodeType.FIRST_NAME.toString());
-            nameTagger.readNameMap(this.lastNamesFile, NodeType.LAST_NAME.toString());
-            nameTagger.tagDirectory(this.inputDirectory, this.taggedDirectory);
-
-        }
-        if ((this.taggedDirectory != null) && (this.matchedDirectory != null)) {
-            NameMatcher nameMatcher = new NameMatcher(true);
-
-            nameMatcher.generateNamesLookUp(this.namesFile);
-            nameMatcher.matchDirectory(this.taggedDirectory, this.matchedDirectory);
-        }
+        // TODO add
     }
 }

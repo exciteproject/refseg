@@ -1,44 +1,59 @@
 package de.exciteproject.refseg.distsup;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import org.apache.commons.io.FileUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import de.exciteproject.refseg.util.FileHelper;
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 
-public class NameTagger {
+public class NameTagger extends Tagger {
 
     public static void main(String[] args) throws IOException {
 
-        File firstNameFile = new File(args[0]);
-        File lastNameFile = new File(args[1]);
-
         long startTime;
         long endTime;
-        NameTagger nameTagger = new NameTagger(true);
-        startTime = System.nanoTime();
-        nameTagger.readNameMap(firstNameFile, GoddagNameStructure.NodeType.FIRST_NAME.toString());
-        nameTagger.readNameMap(lastNameFile, GoddagNameStructure.NodeType.LAST_NAME.toString());
-        endTime = System.nanoTime();
-        System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
+
+        String wordSplitRegex = "\\s";
+        GoddagBuilder goddagBuilder = new GoddagBuilder(wordSplitRegex);
+
+        // String inputString = null;
+        // try {
+        // inputString = FileHelper.readFile(inputFile);
+        // } catch (IOException e) {
+        // e.printStackTrace();
+        // }
+        String inputString = "test1 Max F Müller M test2";
+
+        Goddag goddag = goddagBuilder.build(inputString);
+
+        WordNormalizer wordNormalizer = new StartEndWordNormalizer();
+        NameTagger authorTagger = new NameTagger("[A]", "[FN]", "[LN]", wordNormalizer);
+
+        List<Name> names = new ArrayList<Name>();
+        names.add(new Name("Max", "Müller"));
+        names.add(new Name("Max Friedrich", "Müller"));
+        names.add(new Name("Friedrich", "Müller"));
+
+        authorTagger.readAuthors(names, true);
 
         startTime = System.nanoTime();
-        nameTagger.tagDirectory(new File(args[2]), new File(args[3]));
-        // nameTagger.tagFile(new File(args[2]).listFiles()[1], new
-        // File("/tmp/tagger-test.json"));
+        authorTagger.tag(goddag);
+
+        // authorTagger.readAuthors(new File(args[0]), true);
+
         endTime = System.nanoTime();
+
+        // GoddagVisualizer goddagVisualizer = new GoddagVisualizer();
+        // goddagVisualizer.visualize(goddag);
+
+        System.out.println(goddag);
+        System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
+
         System.out.println("Tagging took " + ((endTime - startTime) / 1000000) + " milliseconds");
 
         // Getting the runtime reference from system
@@ -60,118 +75,184 @@ public class NameTagger {
         System.out.println("Max Memory:" + (runtime.maxMemory() / mb));
     }
 
-    private final String wordSplitRegex = "\\s";
+    // order:Map<LastNames,Set<FirstNames>>
+    private Map<String, Set<String>> names;
+    private Set<String> firstNames;
+    private Set<String> lastNames;
 
-    private GoddagNameStructure goddagNameStructure;
+    private String nameLabel;
+    private String firstNameLabel;
+    private String lastNameLabel;
+    private WordNormalizer wordNormalizer;
 
-    private Map<String, Map<String, Integer>> nameMaps;
-    private final String wordPropertyKey = "word";
+    public NameTagger(String nameLabel, String firstNameLabel, String lastNameLabel, WordNormalizer wordNormalizer) {
+        this.firstNameLabel = firstNameLabel;
+        this.lastNameLabel = lastNameLabel;
+        this.nameLabel = nameLabel;
+        this.wordNormalizer = wordNormalizer;
 
-    private Gson gson;
-
-    public NameTagger(boolean prettyPrintJson) {
-        this.nameMaps = new HashMap<String, Map<String, Integer>>();
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        if (prettyPrintJson) {
-            gsonBuilder.setPrettyPrinting();
-        }
-        gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonSerializer());
-        gsonBuilder.registerTypeAdapter(Node.class, Node.getJsonSerializer());
-        this.gson = gsonBuilder.create();
+        this.names = new HashMap<String, Set<String>>();
+        this.firstNames = new HashSet<String>();
+        this.lastNames = new HashSet<String>();
     }
 
-    public void createNameMap(Map<String, Integer> names, boolean createFirstNameVariations, String nodeType) {
-        Map<String, Integer> nameMap = new HashMap<String, Integer>();
-        for (Entry<String, Integer> nameEntry : names.entrySet()) {
+    public void readAuthors(List<Name> names, boolean createFirstNameVariations) throws IOException {
+
+        // normalize words
+
+        for (Name name : names) {
+            Set<String> firstNameVariations;
             if (createFirstNameVariations) {
-                Set<String> firstNameVariations = Name.getFirstNameVariations(nameEntry.getKey());
-                for (String firstNameVariation : firstNameVariations) {
-                    nameMap.put(firstNameVariation, nameEntry.getValue());
-                }
+                firstNameVariations = NameVariationBuilder.getFirstNameVariations(name.getFirstName());
             } else {
-                nameMap.put(nameEntry.getKey(), nameEntry.getValue());
+                firstNameVariations = new HashSet<String>();
+                firstNameVariations.add(name.getFirstName());
+            }
+
+            String lastName = name.getLastName();
+
+            // add to firstNames
+            for (String firstNameVariation : firstNameVariations) {
+                this.firstNames.add(firstNameVariation);
+            }
+            // add to lastNames
+            this.lastNames.add(lastName);
+
+            Set<String> firstNamesOfLastName;
+            if (!this.names.containsKey(lastName)) {
+                firstNamesOfLastName = new HashSet<String>();
+                this.names.put(lastName, firstNamesOfLastName);
+            } else {
+                firstNamesOfLastName = this.names.get(lastName);
+            }
+
+            for (String firstNameVariation : firstNameVariations) {
+                firstNamesOfLastName.add(firstNameVariation);
             }
         }
-        this.nameMaps.put(nodeType, nameMap);
 
     }
 
-    public void readNameMap(File keywordFile, String nodeType) throws IOException {
-        Map<String, Integer> nameMap = new HashMap<String, Integer>();
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(keywordFile));
-        String line;
-        while ((line = bufferedReader.readLine()) != null) {
-            String[] lineSplit = line.split("\\t");
-            nameMap.put(lineSplit[0], Integer.parseInt(lineSplit[1]));
-        }
-        bufferedReader.close();
+    @Override
+    public void tag(Goddag goddag) {
 
-        this.createNameMap(nameMap, false, nodeType);
-    }
-
-    public void tagDirectory(File inputDirectory, File outputDirectory) throws IOException {
-        if (!outputDirectory.exists()) {
-            outputDirectory.mkdirs();
-        }
-        try {
-            for (File inputFile : inputDirectory.listFiles()) {
-                String[] inputFileNameSplit = inputFile.getName().split("\\.");
-                String outputFileName = inputFileNameSplit[0] + ".json";
-                this.tagFile(inputFile, new File(outputDirectory.getAbsolutePath() + File.separator + outputFileName));
+        // tag leaf nodes as first and last name
+        for (Node leafNode : goddag.getLeafNodes()) {
+            String normalizedWord = this.wordNormalizer.normalizeWord(leafNode.getLabel());
+            if (this.firstNames.contains(normalizedWord)) {
+                Node firstNameNode = goddag.createNonterminalNode(this.firstNameLabel);
+                goddag.insertNodeBetween(goddag.getRootNode(), leafNode, firstNameNode);
             }
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-        }
-    }
 
-    public void tagFile(File inputFile, File outputFile) throws IOException {
-        System.out.println("tag file: " + inputFile);
-        String inputString = null;
-        try {
-            inputString = FileHelper.readFile(inputFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Goddag goddag = this.tagString(inputString);
-
-        // GoddagVisualizer goddagVisualizer = new GoddagVisualizer();
-        // goddagVisualizer.visualize(this.goddagNameStructure.getGoddag());
-
-        // System.out.println(this.goddagNameStructure);
-        // JsonHelper.writeToFile(this.goddagNameStructure, outputFile);
-        // System.exit(1);
-
-        FileUtils.writeStringToFile(outputFile, this.gson.toJson(goddag, Goddag.class));
-    }
-
-    public Goddag tagString(String inputString) {
-        this.initializeNameStructure(inputString);
-
-        for (Entry<String, Map<String, Integer>> nameMap : this.nameMaps.entrySet()) {
-            this.tagLeafNodes(nameMap.getValue(), nameMap.getKey());
-        }
-
-        return this.goddagNameStructure.getGoddag();
-    }
-
-    private void initializeNameStructure(String inputString) {
-        this.goddagNameStructure = new GoddagNameStructure();
-        String[] inputStringSplit = inputString.split(this.wordSplitRegex);
-        for (String inputStringPart : inputStringSplit) {
-            Node leafNode = this.goddagNameStructure.addAsLeafNode(this.goddagNameStructure.getGoddag().getRootNode(),
-                    inputStringPart);
-            String inputStringPartWord = inputStringPart.replaceFirst("^(\\W)+", "").replaceFirst("(\\W+)$", "");
-            leafNode.addProperty(this.wordPropertyKey, inputStringPartWord);
-        }
-    }
-
-    private GoddagNameStructure tagLeafNodes(Map<String, Integer> nameMap, String nodeType) {
-        for (Node leafNode : this.goddagNameStructure.getLeafNodes()) {
-            if (nameMap.containsKey(leafNode.getProperty(this.wordPropertyKey))) {
-                Node nonterminalNode = this.goddagNameStructure.createMatchNode(nodeType);
-                this.goddagNameStructure.tagNodeAs(leafNode, nonterminalNode);
+            if (this.lastNames.contains(normalizedWord)) {
+                Node lastNameNode = goddag.createNonterminalNode(this.lastNameLabel);
+                goddag.insertNodeBetween(goddag.getRootNode(), leafNode, lastNameNode);
             }
         }
-        return this.goddagNameStructure;
+
+        // search for author names
+        for (int leafNodeIndex = 0; leafNodeIndex < goddag.getLeafNodes().size(); leafNodeIndex++) {
+
+            List<Node> leafNodes = goddag.getLeafNodes();
+
+            // search for fn...fn ln...ln
+            List<Node> firstFirstNames = this.searchNodesWithParentLabel(leafNodes, leafNodeIndex, this.firstNameLabel);
+            if (firstFirstNames.size() > 0) {
+                int secondLastNameStartIndex = leafNodeIndex + firstFirstNames.size();
+
+                List<Node> secondLastNames = this.searchNodesWithParentLabel(leafNodes, secondLastNameStartIndex,
+                        this.lastNameLabel);
+
+                for (int secondIndex = 0; secondIndex < secondLastNames.size(); secondIndex++) {
+                    List<Node> currentLastNames = new ArrayList<Node>();
+                    for (int i = 0; i <= secondIndex; i++) {
+                        currentLastNames.add(leafNodes.get(secondLastNameStartIndex));
+                    }
+                    if (this.searchAuthor(firstFirstNames, currentLastNames)) {
+                        Node authorNode = goddag.createNonterminalNode(this.nameLabel);
+                        this.addToAuthorNode(firstFirstNames, this.firstNameLabel, authorNode, goddag);
+                        this.addToAuthorNode(secondLastNames, this.lastNameLabel, authorNode, goddag);
+                    }
+                }
+            }
+
+            // search for ln...ln fn...fn
+            List<Node> firstLastNames = this.searchNodesWithParentLabel(leafNodes, leafNodeIndex, this.lastNameLabel);
+            if (firstLastNames.size() > 0) {
+                int secondFirstNameStartIndex = leafNodeIndex + firstLastNames.size();
+
+                List<Node> secondFirstNames = this.searchNodesWithParentLabel(leafNodes, secondFirstNameStartIndex,
+                        this.firstNameLabel);
+
+                for (int secondIndex = 0; secondIndex < secondFirstNames.size(); secondIndex++) {
+                    List<Node> currentFirstNames = new ArrayList<Node>();
+                    for (int i = 0; i <= secondIndex; i++) {
+                        currentFirstNames.add(leafNodes.get(secondFirstNameStartIndex));
+                    }
+                    if (this.searchAuthor(currentFirstNames, firstLastNames)) {
+                        Node authorNode = goddag.createNonterminalNode(this.nameLabel);
+                        this.addToAuthorNode(firstLastNames, this.lastNameLabel, authorNode, goddag);
+                        this.addToAuthorNode(secondFirstNames, this.firstNameLabel, authorNode, goddag);
+                    }
+                }
+            }
+        }
     }
+
+    private void addToAuthorNode(List<Node> nodesToAdd, String parentNodeLabel, Node authorNode, Goddag goddag) {
+        for (Node node : nodesToAdd) {
+            for (Node parentNode : node.getParents()) {
+                if (parentNode.getLabel().equals(parentNodeLabel)) {
+                    goddag.insertNodeBetween(goddag.getRootNode(), parentNode, authorNode);
+                    break;
+                }
+            }
+        }
+    }
+
+    private String concatNormalizedNodeLabels(List<Node> nodes) {
+        String result = "";
+        for (Node node : nodes) {
+            result += this.wordNormalizer.normalizeWord(node.getLabel());
+            result += " ";
+        }
+        result = result.replaceFirst("\\s$", "");
+        return result;
+    }
+
+    private boolean searchAuthor(List<Node> firstNameNodes, List<Node> lastNameNodes) {
+        String lastName = this.concatNormalizedNodeLabels(lastNameNodes);
+        if (this.names.containsKey(lastName)) {
+            String firstName = this.concatNormalizedNodeLabels(firstNameNodes);
+            if (this.names.get(lastName).contains(firstName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<Node> searchNodesWithParentLabel(List<Node> leafNodes, int startLeafNodeIndex, String parentLabel) {
+        List<Node> foundNodes = new ArrayList<Node>();
+
+        for (int leafNodeIndex = startLeafNodeIndex; leafNodeIndex < leafNodes.size(); leafNodeIndex++) {
+            Node leafNode = leafNodes.get(leafNodeIndex);
+
+            // search for parentLabel
+            boolean hasParentLabel = false;
+            for (Node parentNode : leafNode.getParents()) {
+                if (parentNode.getLabel().equals(parentLabel)) {
+                    hasParentLabel = true;
+                }
+            }
+
+            if (hasParentLabel) {
+                foundNodes.add(leafNode);
+            } else {
+                break;
+            }
+        }
+
+        return foundNodes;
+    }
+
 }

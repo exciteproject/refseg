@@ -1,4 +1,4 @@
-package de.exciteproject.refseg.distsup;
+package de.exciteproject.refseg.extract;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import de.exciteproject.refseg.preproc.NamePreprocessor;
 import de.exciteproject.refseg.util.ListHelper;
@@ -23,23 +22,6 @@ public abstract class AuthorExtractor {
     protected Map<String, Integer> lastNamesMap;
     protected Map<String, Integer> lastNameSplitsMap;
     protected Map<String, Integer> namesMap;
-
-    protected void addNameSplitToMap(String names, Map<String, Integer> map) {
-        String[] namesSplit = names.split("\\s");
-        for (String name : namesSplit) {
-            this.addNameToMap(name, map);
-        }
-    }
-
-    protected void addNamesToMaps(String firstNames, String lastNames) {
-        this.addNameToMap(firstNames, this.firstNamesMap);
-        this.addNameVariationsToMap(firstNames, this.firstNameVariationsMap);
-
-        this.addNameToMap(lastNames, this.lastNamesMap);
-        this.addNameSplitToMap(lastNames, this.lastNameSplitsMap);
-
-        this.addNameToMap(firstNames + this.separator + lastNames, this.namesMap);
-    }
 
     public void addNameStringListToMaps(List<String> nameStringList, int maxNumberOfNames) {
         this.initializeMaps();
@@ -61,6 +43,22 @@ public abstract class AuthorExtractor {
         }
     }
 
+    protected void addNameSplitToMap(String names, Map<String, Integer> map) {
+        String[] namesSplit = names.split("\\s");
+        for (String name : namesSplit) {
+            this.addNameToMap(name, map);
+        }
+    }
+
+    protected void addNamesToMaps(String firstNames, String lastNames) {
+        this.addNameToMap(firstNames, this.firstNamesMap);
+
+        this.addNameToMap(lastNames, this.lastNamesMap);
+        this.addNameSplitToMap(lastNames, this.lastNameSplitsMap);
+
+        this.addNameToMap(firstNames + this.separator + lastNames, this.namesMap);
+    }
+
     protected void addNameToMap(String name, Map<String, Integer> map) {
         if (map.containsKey(name)) {
             map.put(name, map.get(name) + 1);
@@ -70,14 +68,6 @@ public abstract class AuthorExtractor {
                 map.put(name, 1);
             }
         }
-    }
-
-    private void addNameVariationsToMap(String firstNames, Map<String, Integer> firstNameVariationsMap) {
-        Set<String> firstNameVariations = Name.getFirstNameVariations(firstNames);
-        for (String firstNameVariation : firstNameVariations) {
-            this.addNameSplitToMap(firstNameVariation, firstNameVariationsMap);
-        }
-
     }
 
     protected void initializeMaps() {

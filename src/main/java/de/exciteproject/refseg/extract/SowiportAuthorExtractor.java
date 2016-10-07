@@ -1,4 +1,4 @@
-package de.exciteproject.refseg.distsup;
+package de.exciteproject.refseg.extract;
 
 import java.io.BufferedReader;
 import java.io.File;
