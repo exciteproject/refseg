@@ -11,7 +11,7 @@ import java.util.Set;
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 
-public class NameTagger extends Tagger {
+public class NameTagger implements Tagger {
 
     public static void main(String[] args) throws IOException {
 

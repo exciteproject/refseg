@@ -17,7 +17,7 @@ import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 import de.mkrnr.goddag.visual.GoddagVisualizer;
 
-public class StringTagger extends Tagger {
+public class StringTagger implements Tagger {
 
     public static void main(String[] args) throws IOException {
 

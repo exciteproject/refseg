@@ -2,8 +2,8 @@ package de.exciteproject.refseg.distsup;
 
 import de.mkrnr.goddag.Goddag;
 
-public abstract class Tagger {
+public interface Tagger {
 
-    public abstract void tag(Goddag goddag);
+    public void tag(Goddag goddag);
 
 }
