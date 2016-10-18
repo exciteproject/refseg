@@ -6,12 +6,24 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-import org.apache.commons.io.FileUtils;
+public class FileUtils {
 
-public class FileHelper {
+    public static File getTempFile(String filePrefix, boolean deleteOnExit) {
+        String tempFileName = filePrefix + "-" + System.nanoTime();
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile(tempFileName, ".txt");
+            if (deleteOnExit) {
+                tempFile.deleteOnExit();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return tempFile;
+    }
 
     public static String readFile(File file) throws IOException {
-        return FileHelper.readFile(file, Charset.defaultCharset());
+        return FileUtils.readFile(file, Charset.defaultCharset());
     }
 
     public static String readFile(File file, Charset encoding) throws IOException {
@@ -33,7 +45,7 @@ public class FileHelper {
 
         if (directory.exists()) {
             try {
-                FileUtils.deleteDirectory(directory);
+                org.apache.commons.io.FileUtils.deleteDirectory(directory);
             } catch (IOException e) {
                 e.printStackTrace();
             }

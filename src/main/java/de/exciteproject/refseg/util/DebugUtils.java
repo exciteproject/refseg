@@ -6,7 +6,7 @@ import java.lang.management.OperatingSystemMXBean;
 import com.sun.management.UnixOperatingSystemMXBean;
 
 @SuppressWarnings("restriction")
-public class DebugHelper {
+public class DebugUtils {
 
     public static long getOpenFileDescriptorCount() {
         OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();

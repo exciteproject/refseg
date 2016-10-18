@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 
-public class ListHelper {
+public class ListUtils {
 
     /**
      *

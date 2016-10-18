@@ -28,8 +28,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.exciteproject.refseg.util.CsvHelper;
-import de.exciteproject.refseg.util.MapHelper;
+import de.exciteproject.refseg.util.CsvUtils;
+import de.exciteproject.refseg.util.MapUtils;
 
 public class PubMedReferenceFieldsExtractor {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
@@ -78,7 +78,7 @@ public class PubMedReferenceFieldsExtractor {
 
                         }
                         for (String refFieldValue : refFieldValues) {
-                            MapHelper.addCount(entry.getValue(), refFieldValue);
+                            MapUtils.addCount(entry.getValue(), refFieldValue);
                         }
                     }
 
@@ -138,8 +138,8 @@ public class PubMedReferenceFieldsExtractor {
                 Node givenNamesNode = this.getNode("given-names", nameNode.getChildNodes());
                 Node surNameNode = this.getNode("surname", nameNode.getChildNodes());
                 if ((givenNamesNode != null) && (surNameNode != null)) {
-                    String givenNames = CsvHelper.normalize(givenNamesNode.getTextContent());
-                    String surName = CsvHelper.normalize(surNameNode.getTextContent());
+                    String givenNames = CsvUtils.normalize(givenNamesNode.getTextContent());
+                    String surName = CsvUtils.normalize(surNameNode.getTextContent());
                     authorNames.add(givenNames + "\t" + surName);
                 }
             }
@@ -154,7 +154,7 @@ public class PubMedReferenceFieldsExtractor {
         for (Node citation : citations) {
             Node articleTitleNode = this.getNode(refFieldName, citation.getChildNodes());
             if (articleTitleNode != null) {
-                String normalizedField = CsvHelper.normalize(articleTitleNode.getTextContent());
+                String normalizedField = CsvUtils.normalize(articleTitleNode.getTextContent());
                 titles.add(normalizedField);
             }
         }

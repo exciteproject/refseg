@@ -15,8 +15,8 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
 import com.google.gson.reflect.TypeToken;
 
-import de.exciteproject.refseg.util.JsonHelper;
-import de.exciteproject.refseg.util.ListHelper;
+import de.exciteproject.refseg.util.JsonUtils;
+import de.exciteproject.refseg.util.ListUtils;
 
 public class Main {
 
@@ -89,7 +89,7 @@ public class Main {
         if (this.inputFile != null) {
             // TODO read json file list
             @SuppressWarnings("unchecked")
-            List<File> inputFiles = (List<File>) JsonHelper.readFromFile(new TypeToken<List<File>>() {
+            List<File> inputFiles = (List<File>) JsonUtils.readFromFile(new TypeToken<List<File>>() {
             }.getType(), this.inputFile);
 
             if (this.createInstances) {
@@ -105,23 +105,23 @@ public class Main {
 
             File outputFilesFile = new File(
                     FilenameUtils.removeExtension(this.outputFile.getAbsolutePath()) + "_files.json");
-            JsonHelper.writeToFile(inputFiles, outputFilesFile);
+            JsonUtils.writeToFile(inputFiles, outputFilesFile);
 
         }
 
         if ((this.inputDirectory != null) && (this.outputFile != null)) {
 
             List<File> inputFiles = Arrays.asList(this.inputDirectory.listFiles());
-            List<File> filteredFiles = ListHelper.removeFilesFromList(inputFiles, filesToRemove);
+            List<File> filteredFiles = ListUtils.removeFilesFromList(inputFiles, filesToRemove);
 
             if ((this.keepCount > 0) && (this.keepPercent > 0.0)) {
                 throw new IllegalParameterException("-count and -percent can't be used together");
             }
             if (this.keepPercent > 0.0) {
-                filteredFiles = ListHelper.getRandomSubList(filteredFiles, this.keepPercent);
+                filteredFiles = ListUtils.getRandomSubList(filteredFiles, this.keepPercent);
             }
             if (this.keepCount > 0) {
-                filteredFiles = ListHelper.getRandomSubList(filteredFiles, this.keepCount);
+                filteredFiles = ListUtils.getRandomSubList(filteredFiles, this.keepCount);
             }
 
             if (this.createInstances) {
@@ -137,7 +137,7 @@ public class Main {
 
             File outputFilesFile = new File(
                     FilenameUtils.removeExtension(this.outputFile.getAbsolutePath()) + "_files.json");
-            JsonHelper.writeToFile(filteredFiles, outputFilesFile);
+            JsonUtils.writeToFile(filteredFiles, outputFilesFile);
         }
     }
 }

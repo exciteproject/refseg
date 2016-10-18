@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.regex.Pattern;
 
-import de.exciteproject.refseg.util.FileHelper;
+import de.exciteproject.refseg.util.FileUtils;
 
 public class RegExReferenceSectionExtractor extends Extractor {
 
@@ -34,7 +34,7 @@ public class RegExReferenceSectionExtractor extends Extractor {
     @Override
     public void extract(File inputFile, File outputFile) {
         try {
-            String input = FileHelper.readFile(inputFile);
+            String input = FileUtils.readFile(inputFile);
             int totalLines = input.split(System.getProperty("line.separator")).length;
             BufferedReader bufferedReader = new BufferedReader(new StringReader(input));
             String line = null;

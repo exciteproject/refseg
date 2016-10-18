@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.exciteproject.refseg.util.JsonHelper;
+import de.exciteproject.refseg.util.JsonUtils;
 
 public class EvaluationResults {
 
@@ -26,11 +26,11 @@ public class EvaluationResults {
     }
 
     public static EvaluationResults readFromJson(File inputFile) {
-        return (EvaluationResults) JsonHelper.readFromFile(EvaluationResults.class, inputFile);
+        return (EvaluationResults) JsonUtils.readFromFile(EvaluationResults.class, inputFile);
     }
 
     public static void writeAsJson(EvaluationResults evaluationResults, File outputFile) {
-        JsonHelper.writeToFile(evaluationResults, outputFile);
+        JsonUtils.writeToFile(evaluationResults, outputFile);
     }
 
     private Map<String, Object> configurations;

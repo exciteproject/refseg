@@ -19,15 +19,21 @@ import pl.edu.icm.cermine.tools.timeout.TimeoutException;
 public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
 
     public static void main(String[] args) throws IOException {
+        args[0] = "/home/mkoerner/data/excite/test/pdf";
 
         File inputDir = new File(args[0]);
         for (File file : inputDir.listFiles()) {
+            System.out.println(file.getAbsolutePath());
             CermineReferenceStringExtractor cermineReferenceStringExtractor = new CermineReferenceStringExtractor();
 
             List<String> references = cermineReferenceStringExtractor.extract(file);
 
             String outputFileName = args[1] + "/" + FilenameUtils.removeExtension(file.getName()) + ".txt";
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(new File(outputFileName)));
+            File outputFile = new File(outputFileName);
+            if (!outputFile.getParentFile().exists()) {
+                outputFile.getParentFile().mkdirs();
+            }
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
             for (String reference : references) {
                 bufferedWriter.write(reference);
                 bufferedWriter.newLine();

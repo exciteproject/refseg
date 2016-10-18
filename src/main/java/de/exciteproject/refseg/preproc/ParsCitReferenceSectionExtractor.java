@@ -13,7 +13,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import de.exciteproject.refseg.util.XMLHelper;
+import de.exciteproject.refseg.util.XmlUtils;
 
 public class ParsCitReferenceSectionExtractor extends Extractor {
 
@@ -64,7 +64,7 @@ public class ParsCitReferenceSectionExtractor extends Extractor {
     public String extractReferenceSection(String labeledSections)
             throws ParserConfigurationException, SAXException, IOException {
 
-        Document document = XMLHelper.loadXMLFromString(labeledSections);
+        Document document = XmlUtils.loadXMLFromString(labeledSections);
         NodeList referencesParts = document.getElementsByTagName("reference");
         String referenceString = "";
         for (int i = 0, len = referencesParts.getLength(); i < len; i++) {

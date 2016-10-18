@@ -27,7 +27,7 @@ public class PubMedPdfDownloader {
 
         // System.out.println(pubMedReferenceExtractor.pdfMap.get("4040706"));
 
-        pubMedReferenceExtractor.downloadPdfs(new File(args[1]));
+        // pubMedReferenceExtractor.downloadPdfs(new File(args[1]));
 
     }
 

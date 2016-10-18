@@ -2,8 +2,8 @@ package de.exciteproject.refseg.distsup;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.SortedMap;
 
 import org.apache.commons.collections4.Trie;
@@ -29,7 +29,7 @@ public class StringTagger implements Tagger {
 
         String wordSplitRegex = "\\s";
 
-        Set<String> words = new HashSet<String>();
+        List<String> words = new ArrayList<String>();
 
         words.add("tes");
         words.add("test");
@@ -88,31 +88,7 @@ public class StringTagger implements Tagger {
         this.wordNormalizer = wordNormalizer;
     }
 
-    @Override
-    public void tag(Goddag goddag) {
-        for (int startIndex = 0; startIndex < goddag.getLeafNodes().size(); startIndex++) {
-            String searchString = "";
-            int currentIndex = startIndex;
-
-            SortedMap<String, Integer> trieSearchResult = null;
-            do {
-                searchString += this.wordNormalizer.normalizeWord(goddag.getLeafNodes().get(currentIndex).getLabel());
-                trieSearchResult = this.trie.prefixMap(searchString);
-                if (trieSearchResult.containsKey(searchString)) {
-                    System.out.println("test: " + searchString);
-                    // tag from startIndex until currentIndex
-                    Node tagNode = goddag.createNonterminalNode(this.label);
-                    for (int tagIndex = startIndex; tagIndex <= currentIndex; tagIndex++) {
-                        goddag.insertNodeBetween(goddag.getRootNode(), goddag.getLeafNodes().get(tagIndex), tagNode);
-                    }
-                }
-                searchString += " ";
-                currentIndex++;
-            } while ((trieSearchResult.size() > 0) && (currentIndex < goddag.getLeafNodes().size()));
-        }
-    }
-
-    private void readStrings(Set<String> strings) {
+    public void readStrings(List<String> strings) {
 
         this.trie = new PatriciaTrie<Integer>();
 
@@ -132,5 +108,28 @@ public class StringTagger implements Tagger {
             this.trie.put(normalizedSequence, 0);
         }
 
+    }
+
+    @Override
+    public void tag(Goddag goddag) {
+        for (int startIndex = 0; startIndex < goddag.getLeafNodes().size(); startIndex++) {
+            String searchString = "";
+            int currentIndex = startIndex;
+
+            SortedMap<String, Integer> trieSearchResult = null;
+            do {
+                searchString += this.wordNormalizer.normalizeWord(goddag.getLeafNodes().get(currentIndex).getLabel());
+                trieSearchResult = this.trie.prefixMap(searchString);
+                if (trieSearchResult.containsKey(searchString)) {
+                    // tag from startIndex until currentIndex
+                    Node tagNode = goddag.createNonterminalNode(this.label);
+                    for (int tagIndex = startIndex; tagIndex <= currentIndex; tagIndex++) {
+                        goddag.insertNodeBetween(goddag.getRootNode(), goddag.getLeafNodes().get(tagIndex), tagNode);
+                    }
+                }
+                searchString += " ";
+                currentIndex++;
+            } while ((trieSearchResult.size() > 0) && (currentIndex < goddag.getLeafNodes().size()));
+        }
     }
 }

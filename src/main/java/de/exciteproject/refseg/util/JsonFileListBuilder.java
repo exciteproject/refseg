@@ -24,8 +24,8 @@ public class JsonFileListBuilder {
     public static void writeSubList(File inputFileDirectory, File outputFile, double percentage) {
         List<File> inputFiles = Arrays.asList(inputFileDirectory.listFiles());
 
-        List<File> filteredFiles = ListHelper.getRandomSubList(inputFiles, percentage);
+        List<File> filteredFiles = ListUtils.getRandomSubList(inputFiles, percentage);
 
-        JsonHelper.writeToFile(filteredFiles, outputFile);
+        JsonUtils.writeToFile(filteredFiles, outputFile);
     }
 }

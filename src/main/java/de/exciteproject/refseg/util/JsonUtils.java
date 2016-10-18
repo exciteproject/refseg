@@ -9,7 +9,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-public class JsonHelper {
+public class JsonUtils {
 
     public static Object readFromFile(Class<?> objectClass, File inputFile) {
         String jsonString = null;

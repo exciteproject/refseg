@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import de.exciteproject.refseg.util.FileHelper;
+import de.exciteproject.refseg.util.FileUtils;
 
 public class PDFTextPreprocessor extends Extractor {
 
@@ -21,7 +21,7 @@ public class PDFTextPreprocessor extends Extractor {
     public void extract(File inputFile, File outputFile) throws IOException {
         String preprocessedText;
 
-        preprocessedText = FileHelper.readFile(inputFile);
+        preprocessedText = FileUtils.readFile(inputFile);
 
         preprocessedText = preprocessedText.replaceAll("/", " / ");
 

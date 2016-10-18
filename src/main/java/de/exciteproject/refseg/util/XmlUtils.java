@@ -13,21 +13,21 @@ import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-public class XMLHelper {
+public class XmlUtils {
 
     private static final Pattern XML_TAGS_PATTERN = Pattern.compile("<([^<>]+)>([^<>]+)</([^<>]+)>");
 
     // matches names in xml tags including characters before and after until
     // the first space (if existing)
     private static final Pattern XML_TAGS_WITH_CONTEXT_PATTERN = Pattern
-            .compile("\\s?([^\\s]*)" + XMLHelper.XML_TAGS_PATTERN.pattern() + "([^\\s]*)\\s?");
+            .compile("\\s?([^\\s]*)" + XmlUtils.XML_TAGS_PATTERN.pattern() + "([^\\s]*)\\s?");
 
     public static Matcher getXMLTagMatcher(String inputString) {
-        return XMLHelper.XML_TAGS_PATTERN.matcher(inputString);
+        return XmlUtils.XML_TAGS_PATTERN.matcher(inputString);
     }
 
     public static Matcher getXMLTagWithContextMatcher(String inputString) {
-        return XMLHelper.XML_TAGS_WITH_CONTEXT_PATTERN.matcher(inputString);
+        return XmlUtils.XML_TAGS_WITH_CONTEXT_PATTERN.matcher(inputString);
     }
 
     public static Document loadXMLFromString(String xml)

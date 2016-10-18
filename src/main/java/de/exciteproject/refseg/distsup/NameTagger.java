@@ -1,5 +1,6 @@
 package de.exciteproject.refseg.distsup;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -7,6 +8,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
@@ -50,6 +56,14 @@ public class NameTagger implements Tagger {
 
         // GoddagVisualizer goddagVisualizer = new GoddagVisualizer();
         // goddagVisualizer.visualize(goddag);
+
+        GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.setPrettyPrinting();
+        gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonSerializer());
+        gsonBuilder.registerTypeAdapter(Node.class, Node.getJsonSerializer());
+        Gson gson = gsonBuilder.create();
+        FileUtils.writeStringToFile(new File("/home/mkoerner/tmp/names-tagged.json"),
+                gson.toJson(goddag, Goddag.class));
 
         System.out.println(goddag);
         System.out.println("Building tries took " + ((endTime - startTime) / 1000000) + " milliseconds");
@@ -171,7 +185,7 @@ public class NameTagger implements Tagger {
                     if (this.searchAuthor(firstFirstNames, currentLastNames)) {
                         Node authorNode = goddag.createNonterminalNode(this.nameLabel);
                         this.addToAuthorNode(firstFirstNames, this.firstNameLabel, authorNode, goddag);
-                        this.addToAuthorNode(secondLastNames, this.lastNameLabel, authorNode, goddag);
+                        this.addToAuthorNode(currentLastNames, this.lastNameLabel, authorNode, goddag);
                     }
                 }
             }
@@ -192,7 +206,7 @@ public class NameTagger implements Tagger {
                     if (this.searchAuthor(currentFirstNames, firstLastNames)) {
                         Node authorNode = goddag.createNonterminalNode(this.nameLabel);
                         this.addToAuthorNode(firstLastNames, this.lastNameLabel, authorNode, goddag);
-                        this.addToAuthorNode(secondFirstNames, this.firstNameLabel, authorNode, goddag);
+                        this.addToAuthorNode(currentFirstNames, this.firstNameLabel, authorNode, goddag);
                     }
                 }
             }

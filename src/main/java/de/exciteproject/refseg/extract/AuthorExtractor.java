@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import de.exciteproject.refseg.preproc.NamePreprocessor;
-import de.exciteproject.refseg.util.ListHelper;
+import de.exciteproject.refseg.util.ListUtils;
 
 public abstract class AuthorExtractor {
 
@@ -28,7 +28,7 @@ public abstract class AuthorExtractor {
         List<String> randomNameStringSubList;
         System.out.println("nameStringList: " + nameStringList.size());
         if (maxNumberOfNames > 0) {
-            randomNameStringSubList = ListHelper.getRandomSubList(nameStringList, maxNumberOfNames);
+            randomNameStringSubList = ListUtils.getRandomSubList(nameStringList, maxNumberOfNames);
             System.out.println("randomNameStringSublist: " + randomNameStringSubList.size());
         } else {
             randomNameStringSubList = nameStringList;
