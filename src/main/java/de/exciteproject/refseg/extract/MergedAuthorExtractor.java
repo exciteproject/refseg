@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class MergedExtractor {
+public class MergedAuthorExtractor {
 
     public static void main(String[] args) throws IOException {
         File tdbDirectory = new File(args[0]);
