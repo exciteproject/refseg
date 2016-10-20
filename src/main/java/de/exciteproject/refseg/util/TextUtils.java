@@ -1,17 +1,35 @@
 package de.exciteproject.refseg.util;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
 public class TextUtils {
-    private static Pattern accentPattern = Pattern.compile("\\w(´|¨)(\\s)?");
+    private static final Map<Character, String> ACCENT_MAP;
+    private static final Pattern ACCENT_PATTERN;
+    static {
+        Map<Character, String> map = new HashMap<Character, String>();
+        map.put('¨', "uml");
+        map.put('´', "acute");
+        ACCENT_MAP = Collections.unmodifiableMap(map);
+
+        String accentPatternString = "\\w(";
+        for (Entry<Character, String> accentMapEntry : ACCENT_MAP.entrySet()) {
+            accentPatternString += accentMapEntry.getKey() + "|";
+        }
+        accentPatternString = accentPatternString.replaceFirst("\\|$", "");
+        accentPatternString += ")(\\s)?";
+        ACCENT_PATTERN = Pattern.compile(accentPatternString);
+    }
 
     public static String fixAccents(String input) {
-
         String output = input;
-        Matcher matcher = accentPattern.matcher(output);
+        Matcher matcher = ACCENT_PATTERN.matcher(output);
 
         int startIndex = 0;
         while (matcher.find(startIndex)) {
@@ -22,16 +40,10 @@ public class TextUtils {
             String sequenceToReplace = matcher.group();
 
             String htmlChar = "&" + sequenceToReplace.charAt(0);
-            switch (sequenceToReplace.charAt(1)) {
-            case '¨':
-                htmlChar += "uml";
-                break;
-            case '´':
-                htmlChar += "acute";
-                break;
-            default:
+            if (TextUtils.ACCENT_MAP.containsKey(sequenceToReplace.charAt(1))) {
+                htmlChar += TextUtils.ACCENT_MAP.get(sequenceToReplace.charAt(1));
+            } else {
                 continue;
-
             }
             htmlChar += ";";
 
@@ -46,9 +58,11 @@ public class TextUtils {
         return output;
     }
 
+    // TODO write test cases
     public static void main(String args[]) {
         String input = "A´ cs, Bo¨ hm,  Ra¨tsch, Bh¨ hm BA¨u¨ hm, Bo¨ hm Bo¨ hm ";
         System.out.println(TextUtils.fixAccents(input));
+        // System.out.println("test");
         // output: Ács, Böhm, Rätsch, Bh¨ hm BÄühm, Böhm Böhm
     }
 }
