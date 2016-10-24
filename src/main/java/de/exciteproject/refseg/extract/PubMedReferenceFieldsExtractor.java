@@ -34,7 +34,6 @@ import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
 
 import de.exciteproject.refseg.util.CsvUtils;
-import de.exciteproject.refseg.util.MapUtils;
 import de.exciteproject.refseg.util.XmlUtils;
 
 public class PubMedReferenceFieldsExtractor {
@@ -202,15 +201,21 @@ public class PubMedReferenceFieldsExtractor {
         // ftp://ftp.ncbi.nlm.nih.gov/pub/pmc/oa_non_comm_use_pdf.csv
         // pubMedReferenceExtractor.readPdfList(new File(args[0]));
 
-        Map<String, Map<String, Integer>> countsMaps = new HashMap<String, Map<String, Integer>>();
-        countsMaps.put("author", new HashMap<String, Integer>());
-        countsMaps.put("article-title", new HashMap<String, Integer>());
-        countsMaps.put("year", new HashMap<String, Integer>());
-        countsMaps.put("source", new HashMap<String, Integer>());
-        countsMaps.put("publisher-loc", new HashMap<String, Integer>());
-        countsMaps.put("publisher-name", new HashMap<String, Integer>());
-        countsMaps.put("volume_issue", new HashMap<String, Integer>());
-        countsMaps.put("fpage_lpage", new HashMap<String, Integer>());
+        List<String> tags = new ArrayList<String>();
+        tags.add("author");
+        tags.add("article-title");
+        tags.add("year");
+        tags.add("source");
+        tags.add("publisher-loc");
+        tags.add("publisher-name");
+        tags.add("volume_issue");
+        tags.add("fpage_lpage");
+        Map<String, BufferedWriter> countsMap = new HashMap<String, BufferedWriter>();
+        for (String tag : tags) {
+            countsMap.put(tag, new BufferedWriter(
+                    new FileWriter(new File(this.outputDirectory.getAbsolutePath() + "/" + tag + ".csv"))));
+        }
+
         //
         for (File pubMedXmlInputFile : this.inputFiles) {
             TarArchiveInputStream tarInput = new TarArchiveInputStream(
@@ -228,7 +233,7 @@ public class PubMedReferenceFieldsExtractor {
                         xmlContent += line + "\n";
                     }
 
-                    for (Entry<String, Map<String, Integer>> entry : countsMaps.entrySet()) {
+                    for (Entry<String, BufferedWriter> entry : countsMap.entrySet()) {
                         List<String> refFieldValues;
                         if (entry.getKey().equals("author")) {
                             refFieldValues = pubMedReferenceExtractor.getAuthorNames(xmlContent);
@@ -242,7 +247,8 @@ public class PubMedReferenceFieldsExtractor {
                             }
                         }
                         for (String refFieldValue : refFieldValues) {
-                            MapUtils.addCount(entry.getValue(), refFieldValue);
+                            entry.getValue().write(refFieldValue);
+                            entry.getValue().newLine();
                         }
                     }
 
@@ -258,10 +264,8 @@ public class PubMedReferenceFieldsExtractor {
             }
             tarInput.close();
         }
-        for (Entry<String, Map<String, Integer>> entry : countsMaps.entrySet()) {
-            pubMedReferenceExtractor.writeToFile(entry.getValue(),
-                    new File(this.outputDirectory.getAbsolutePath() + "/" + entry.getKey() + ".csv"));
-
+        for (Entry<String, BufferedWriter> countsMapEntry : countsMap.entrySet()) {
+            countsMapEntry.getValue().close();
         }
     }
 
