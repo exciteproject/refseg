@@ -2,6 +2,7 @@ package de.exciteproject.refseg.train;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 public class ConstraintCounts {
@@ -23,6 +24,16 @@ public class ConstraintCounts {
         } else {
             this.wordsCounts.get(word).put(label, count);
         }
+    }
+
+    public int getTotalCounts(String word) {
+        int totalCount = 0;
+        if (this.wordsCounts.containsKey(word)) {
+            for (Entry<String, Integer> entry : this.wordsCounts.get(word).entrySet()) {
+                totalCount += entry.getValue();
+            }
+        }
+        return totalCount;
     }
 
     public Map<String, Integer> getWordCounts(String word) {

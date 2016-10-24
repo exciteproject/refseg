@@ -13,7 +13,6 @@ public class ParentPositionCounter extends Counter {
 
     @Override
     public void count(Goddag goddag, ConstraintCounts constraintCounts) {
-        System.out.println(goddag);
         this.count(goddag.getRootNode(), 0, constraintCounts);
     }
 
