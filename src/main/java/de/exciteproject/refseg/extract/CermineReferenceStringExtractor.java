@@ -19,8 +19,6 @@ import pl.edu.icm.cermine.tools.timeout.TimeoutException;
 public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
 
     public static void main(String[] args) throws IOException {
-        args[0] = "/home/mkoerner/data/excite/test/pdf";
-
         File inputDir = new File(args[0]);
         for (File file : inputDir.listFiles()) {
             System.out.println(file.getAbsolutePath());
