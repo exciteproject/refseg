@@ -255,8 +255,6 @@ public class PubMedReferenceFieldsExtractor {
                     count++;
                     if ((count % 1000) == 0) {
                         System.out.println(count);
-                        // TODO remove
-                        break;
                     }
                 }
                 currentEntry = tarInput.getNextTarEntry();
