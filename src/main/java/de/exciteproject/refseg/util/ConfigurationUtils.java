@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ConfigurationHelper {
+public class ConfigurationUtils {
 
     public static Map<String, String> asMap(List<Configuration> configurations) {
         Map<String, String> configurationMap = new HashMap<String, String>();

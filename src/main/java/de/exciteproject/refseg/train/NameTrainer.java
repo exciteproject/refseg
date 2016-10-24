@@ -42,73 +42,6 @@ public class NameTrainer {
     private boolean orderZeroStates;
     private boolean orderOneStates;
 
-    private ArrayList<GEConstraint> getKLGEConstraints(File nameConstraintFile, InstanceList trainingInstances)
-            throws FileNotFoundException {
-        HashMap<Integer, double[][]> constraints = FSTConstraintUtil
-                .loadGEConstraints(new FileReader(nameConstraintFile), trainingInstances);
-
-        ArrayList<GEConstraint> constraintsList = new ArrayList<GEConstraint>();
-
-        OneLabelKLGEConstraints geConstraints = new OneLabelKLGEConstraints();
-        for (int fi : constraints.keySet()) {
-            double[][] dist = constraints.get(fi);
-
-            boolean allSame = true;
-            double sum = 0;
-
-            double[] prob = new double[dist.length];
-            for (int li = 0; li < dist.length; li++) {
-                prob[li] = dist[li][0];
-                if (!Maths.almostEquals(dist[li][0], dist[li][1])) {
-                    allSame = false;
-                    break;
-                } else if (Double.isInfinite(prob[li])) {
-                    prob[li] = 0;
-                }
-                sum += prob[li];
-            }
-
-            if (!allSame) {
-                throw new RuntimeException("A KL divergence penalty cannot be used with target ranges!");
-            }
-            if (!Maths.almostEquals(sum, 1)) {
-                throw new RuntimeException("Targets must sum to 1 when using a KL divergence penalty!");
-            }
-
-            geConstraints.addConstraint(fi, prob, 1);
-        }
-        constraintsList.add(geConstraints);
-        return constraintsList;
-    }
-
-    private void setConfigurations(List<Configuration> configurations) {
-
-        for (Configuration configuration : configurations) {
-            switch (configuration.getName()) {
-            case NameTrainer.GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL:
-                this.gaussianPriorVariance = Double.parseDouble(configuration.getValue());
-                break;
-            case NameTrainer.NUM_ITERATIONS_CONFIG_LABEL:
-                this.numIterations = Integer.parseInt(configuration.getValue());
-                break;
-            case NameTrainer.NUM_RESETS_CONFIG_LABEL:
-                this.numResets = Integer.parseInt(configuration.getValue());
-                break;
-            case NameTrainer.NUM_THREADS_CONFIG_LABEL:
-                this.numTreads = Integer.parseInt(configuration.getValue());
-                break;
-            case NameTrainer.ORDER_ZERO_STATES_CONFIG_LABEL:
-                this.orderZeroStates = Boolean.parseBoolean(configuration.getValue());
-                break;
-            case NameTrainer.ORDER_ONE_STATES_CONFIG_LABEL:
-                this.orderOneStates = Boolean.parseBoolean(configuration.getValue());
-                break;
-            default:
-                throw new IllegalArgumentException("configuration name not known: " + configuration.getName());
-            }
-        }
-    }
-
     public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
             File nameConstraintFile, List<Configuration> trainerConfigurations,
             List<TransducerEvaluator> trainingEvaluators, EvaluationResults evaluationResults) throws IOException {
@@ -181,6 +114,73 @@ public class NameTrainer {
         // TODO add serialization like this:
         // crf.write(new File("/home/martin/test.crf"));
         return trainer;
+    }
+
+    private ArrayList<GEConstraint> getKLGEConstraints(File nameConstraintFile, InstanceList trainingInstances)
+            throws FileNotFoundException {
+        HashMap<Integer, double[][]> constraints = FSTConstraintUtil
+                .loadGEConstraints(new FileReader(nameConstraintFile), trainingInstances);
+
+        ArrayList<GEConstraint> constraintsList = new ArrayList<GEConstraint>();
+
+        OneLabelKLGEConstraints geConstraints = new OneLabelKLGEConstraints();
+        for (int fi : constraints.keySet()) {
+            double[][] dist = constraints.get(fi);
+
+            boolean allSame = true;
+            double sum = 0;
+
+            double[] prob = new double[dist.length];
+            for (int li = 0; li < dist.length; li++) {
+                prob[li] = dist[li][0];
+                if (!Maths.almostEquals(dist[li][0], dist[li][1])) {
+                    allSame = false;
+                    break;
+                } else if (Double.isInfinite(prob[li])) {
+                    prob[li] = 0;
+                }
+                sum += prob[li];
+            }
+
+            if (!allSame) {
+                throw new RuntimeException("A KL divergence penalty cannot be used with target ranges!");
+            }
+            if (!Maths.almostEquals(sum, 1)) {
+                throw new RuntimeException("Targets must sum to 1 when using a KL divergence penalty!");
+            }
+
+            geConstraints.addConstraint(fi, prob, 1);
+        }
+        constraintsList.add(geConstraints);
+        return constraintsList;
+    }
+
+    private void setConfigurations(List<Configuration> configurations) {
+
+        for (Configuration configuration : configurations) {
+            switch (configuration.getName()) {
+            case NameTrainer.GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL:
+                this.gaussianPriorVariance = Double.parseDouble(configuration.getValue());
+                break;
+            case NameTrainer.NUM_ITERATIONS_CONFIG_LABEL:
+                this.numIterations = Integer.parseInt(configuration.getValue());
+                break;
+            case NameTrainer.NUM_RESETS_CONFIG_LABEL:
+                this.numResets = Integer.parseInt(configuration.getValue());
+                break;
+            case NameTrainer.NUM_THREADS_CONFIG_LABEL:
+                this.numTreads = Integer.parseInt(configuration.getValue());
+                break;
+            case NameTrainer.ORDER_ZERO_STATES_CONFIG_LABEL:
+                this.orderZeroStates = Boolean.parseBoolean(configuration.getValue());
+                break;
+            case NameTrainer.ORDER_ONE_STATES_CONFIG_LABEL:
+                this.orderOneStates = Boolean.parseBoolean(configuration.getValue());
+                break;
+            default:
+                throw new IllegalArgumentException("configuration name not known: " + configuration.getName());
+            }
+        }
     }
 
 }
