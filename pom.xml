@@ -43,11 +43,11 @@
       <artifactId>mallet</artifactId>
       <version>2.0.8RC3</version>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>cc.mallet</groupId>
       <artifactId>mallet-deps</artifactId>
       <version>2.0.8RC3</version>
-    </dependency>
+    </dependency> -->
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox</artifactId>
@@ -103,5 +103,27 @@
       <artifactId>commons-collections4</artifactId>
       <version>4.1</version>
     </dependency>
+  	<dependency>
+  	  <groupId>pl.edu.icm.cermine</groupId>
+  	  <artifactId>cermine-impl</artifactId>
+  	  <version>1.9</version>
+  	</dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-csv</artifactId>
+      <version>1.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.12</version>
+    </dependency>
   </dependencies>
+  <repositories>
+    <repository>
+      <id>icm</id>
+      <name>ICM repository</name>
+      <url>http://maven.icm.edu.pl/artifactory/repo</url>
+    </repository>
+  </repositories>
 </project>
