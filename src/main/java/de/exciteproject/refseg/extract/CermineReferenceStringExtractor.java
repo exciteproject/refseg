@@ -18,7 +18,7 @@ import pl.edu.icm.cermine.tools.timeout.TimeoutException;
 
 public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, AnalysisException {
         File inputDir = new File(args[0]);
         File outputDir = new File(args[1]);
 
@@ -47,15 +47,20 @@ public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
         }
     }
 
+    private ContentExtractor extractor;
+
+    public CermineReferenceStringExtractor() throws AnalysisException {
+        this.extractor = new ContentExtractor();
+    }
+
     @Override
     public List<String> extract(File pdfFile) {
         List<String> references = new ArrayList<String>();
         try {
-            ContentExtractor extractor = new ContentExtractor();
             InputStream inputStream;
             inputStream = new FileInputStream(pdfFile);
-            extractor.setPDF(inputStream);
-            List<BibEntry> result = extractor.getReferences();
+            this.extractor.setPDF(inputStream);
+            List<BibEntry> result = this.extractor.getReferences();
             for (BibEntry bibEntry : result) {
                 String referenceString = bibEntry.getText();
                 String normalizedReferenceString = this.normalizeReferenceString(referenceString);
