@@ -50,10 +50,13 @@ public class PubMedPdfDownloader {
 
     private void downloadPdfs(File outputDir) {
         for (Entry<String, String> pdfMapEntry : this.pdfMap.entrySet()) {
+            File outputFile = new File(outputDir.getAbsolutePath() + "/" + pdfMapEntry.getKey() + ".pdf");
+            if (outputFile.exists()) {
+                continue;
+            }
             System.out.println(pdfMapEntry.getValue());
             try {
-                FileUtils.copyURLToFile(new URL(this.pubmedPrefix + pdfMapEntry.getValue()),
-                        new File(outputDir.getAbsolutePath() + "/" + pdfMapEntry.getKey() + ".pdf"),
+                FileUtils.copyURLToFile(new URL(this.pubmedPrefix + pdfMapEntry.getValue()), outputFile,
                         this.connectionTimeout, this.readTimeout);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
