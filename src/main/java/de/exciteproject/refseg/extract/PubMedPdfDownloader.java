@@ -36,6 +36,10 @@ public class PubMedPdfDownloader {
     // Map<PMCID,FTPLink>
     private Map<String, String> pdfMap;
 
+    // TODO add parameters
+    private int connectionTimeout = 10000;
+    private int readTimeout = 60000;
+
     public void readPdfList(File file) throws IOException, ParserConfigurationException {
         this.pdfMap = new HashMap<String, String>();
         CSVParser parser = CSVParser.parse(file, Charset.defaultCharset(), CSVFormat.DEFAULT);
@@ -48,7 +52,8 @@ public class PubMedPdfDownloader {
         for (Entry<String, String> pdfMapEntry : this.pdfMap.entrySet()) {
             System.out.println(pdfMapEntry.getValue());
             FileUtils.copyURLToFile(new URL(this.pubmedPrefix + pdfMapEntry.getValue()),
-                    new File(outputDir.getAbsolutePath() + "/" + pdfMapEntry.getKey() + ".pdf"));
+                    new File(outputDir.getAbsolutePath() + "/" + pdfMapEntry.getKey() + ".pdf"), this.connectionTimeout,
+                    this.readTimeout);
         }
     }
 }
