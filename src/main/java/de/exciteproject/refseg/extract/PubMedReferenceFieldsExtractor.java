@@ -111,7 +111,9 @@ public class PubMedReferenceFieldsExtractor {
                 if ((givenNamesNode != null) && (surNameNode != null)) {
                     String givenNames = CsvUtils.normalize(givenNamesNode.getTextContent());
                     String surName = CsvUtils.normalize(surNameNode.getTextContent());
-                    authorNames.add(givenNames + "\t" + surName);
+                    if ((givenNames.length() > 0) && (surName.length() > 0)) {
+                        authorNames.add(givenNames + "\t" + surName);
+                    }
                 }
             }
         }
@@ -126,7 +128,9 @@ public class PubMedReferenceFieldsExtractor {
             Node articleTitleNode = XmlUtils.getNode(refFieldName, citation.getChildNodes());
             if (articleTitleNode != null) {
                 String normalizedField = CsvUtils.normalize(articleTitleNode.getTextContent());
-                titles.add(normalizedField);
+                if (normalizedField.length() > 0) {
+                    titles.add(normalizedField);
+                }
             }
         }
         return titles;
@@ -142,6 +146,10 @@ public class PubMedReferenceFieldsExtractor {
                 Node articleTitleNode = XmlUtils.getNode(refFieldName, citation.getChildNodes());
                 if (articleTitleNode != null) {
                     String normalizedField = CsvUtils.normalize(articleTitleNode.getTextContent());
+                    if (normalizedField.length() == 0) {
+                        found = false;
+                        break;
+                    }
                     values += normalizedField + "\t";
                 } else {
                     found = false;

@@ -6,7 +6,7 @@ import java.util.List;
 public class CsvUtils {
 
     public static String normalize(String inputString) {
-        return inputString.replaceAll("\t", "").replaceAll("\n", "");
+        return inputString.replaceAll("\t", "").replaceAll("\n", "").trim();
     }
 
     public static List<String> readColumn(int columnIndex, String inputString, String columnSeparator) {
