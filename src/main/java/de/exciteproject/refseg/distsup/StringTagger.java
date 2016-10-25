@@ -1,6 +1,8 @@
 package de.exciteproject.refseg.distsup;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,24 +90,26 @@ public class StringTagger implements Tagger {
         this.wordNormalizer = wordNormalizer;
     }
 
+    public void readStrings(File csvInputFile, String columnSeparator) throws IOException {
+        this.trie = new PatriciaTrie<Integer>();
+
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(csvInputFile));
+
+        String line;
+        while ((line = bufferedReader.readLine()) != null) {
+            String[] lineSplit = line.split(columnSeparator);
+            this.readString(lineSplit[0]);
+        }
+        bufferedReader.close();
+    }
+
     public void readStrings(List<String> strings) {
 
         this.trie = new PatriciaTrie<Integer>();
 
         for (String string : strings) {
 
-            String[] words = string.split(this.wordSplitRegex);
-            for (int i = 0; i < words.length; i++) {
-                words[i] = this.wordNormalizer.normalizeWord(words[i]);
-            }
-            String normalizedSequence = "";
-            for (String normalizedWord : words) {
-                normalizedSequence += normalizedWord + " ";
-
-            }
-            normalizedSequence = normalizedSequence.trim();
-
-            this.trie.put(normalizedSequence, 0);
+            this.readString(string);
         }
 
     }
@@ -131,5 +135,22 @@ public class StringTagger implements Tagger {
                 currentIndex++;
             } while ((trieSearchResult.size() > 0) && (currentIndex < goddag.getLeafNodes().size()));
         }
+    }
+
+    private void readString(String string) {
+
+        String[] words = string.split(this.wordSplitRegex);
+        for (int i = 0; i < words.length; i++) {
+            words[i] = this.wordNormalizer.normalizeWord(words[i]);
+        }
+        String normalizedSequence = "";
+        for (String normalizedWord : words) {
+            normalizedSequence += normalizedWord + " ";
+
+        }
+        normalizedSequence = normalizedSequence.trim();
+
+        this.trie.put(normalizedSequence, 0);
+
     }
 }

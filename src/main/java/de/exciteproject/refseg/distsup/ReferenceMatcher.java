@@ -3,7 +3,10 @@ package de.exciteproject.refseg.distsup;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -16,6 +19,7 @@ import com.google.gson.GsonBuilder;
 
 import de.exciteproject.refseg.util.CsvUtils;
 import de.exciteproject.refseg.util.FileUtils;
+import de.exciteproject.refseg.util.GoddagUtils;
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 
@@ -61,9 +65,25 @@ public class ReferenceMatcher {
             "--authors-file" }, description = "file listing names where given names and surenames are separated by a tab, including a tab separated count", converter = FileConverter.class)
     private File authorsFile;
 
+    @Parameter(names = { "-publisher-locs",
+            "--publisher-localizations-file" }, description = "file listing publisher localizations, including a tab separated count", converter = FileConverter.class)
+    private File publisherLocsFile;
+
+    @Parameter(names = { "-publisher-names",
+            "--publisher-names-file" }, description = "file listing publisher names, including a tab separated count", converter = FileConverter.class)
+    private File publisherNamesFile;
+
+    @Parameter(names = { "-sources",
+            "--sources" }, description = "file listing sources, including a tab separated count", converter = FileConverter.class)
+    private File sourcesFile;
+
     @Parameter(names = { "-titles",
             "--titles-file" }, description = "file listing titles, including a tab separated count", converter = FileConverter.class)
     private File titlesFile;
+
+    @Parameter(names = { "-years",
+            "--years-file" }, description = "file listing years, including a tab separated count", converter = FileConverter.class)
+    private File yearsFile;
 
     private Gson gson;
 
@@ -82,8 +102,44 @@ public class ReferenceMatcher {
 
         List<Tagger> taggers = new ArrayList<Tagger>();
 
+        Map<File, String> fileLabelMap = new HashMap<File, String>();
+        if (this.publisherLocsFile != null) {
+            // TODO set labels via parameters
+            fileLabelMap.put(this.publisherLocsFile, "PL");
+        }
+        if (this.publisherNamesFile != null) {
+            fileLabelMap.put(this.publisherNamesFile, "PN");
+        }
+        if (this.sourcesFile != null) {
+            fileLabelMap.put(this.sourcesFile, "SO");
+        }
+        if (this.titlesFile != null) {
+            fileLabelMap.put(this.titlesFile, "TI");
+        }
+
+        // build GODDAGS and write them to files
+        List<File> referenceGoddagFiles = new ArrayList<File>();
+        GoddagBuilder goddagBuilder = new GoddagBuilder("RO", wordSplitRegex);
+        for (File referenceFile : this.referenceDirectory.listFiles()) {
+
+            String[] references = FileUtils.readFile(referenceFile).split("\n");
+
+            List<Goddag> referenceGoddags = new ArrayList<Goddag>();
+            for (String reference : references) {
+                Goddag goddag = goddagBuilder.build(reference);
+
+                referenceGoddags.add(goddag);
+            }
+            String outputFileName = this.outputDirectory.getAbsolutePath() + "/"
+                    + FilenameUtils.removeExtension(referenceFile.getName()) + ".json";
+            File outputFile = new File(outputFileName);
+            org.apache.commons.io.FileUtils.writeStringToFile(outputFile,
+                    this.gson.toJson(referenceGoddags, ArrayList.class));
+            referenceGoddagFiles.add(outputFile);
+        }
+
         if (this.authorsFile != null) {
-            NameTagger authorTagger = new NameTagger("[A]", "[FN]", "[LN]", wordNormalizer);
+            NameTagger authorTagger = new NameTagger("AU", "FN", "LN", wordNormalizer);
 
             String authorsString = FileUtils.readFile(this.authorsFile);
             List<String> givenNames = CsvUtils.readColumn(0, authorsString, columnSeparator);
@@ -94,42 +150,32 @@ public class ReferenceMatcher {
             }
             authorTagger.readAuthors(authorNames, true);
 
-            taggers.add(authorTagger);
-
-        }
-        if (this.titlesFile != null) {
-            StringTagger titleTagger = new StringTagger("[T]", wordSplitRegex, wordNormalizer);
-
-            String titlesString = FileUtils.readFile(this.titlesFile);
-            List<String> titles = CsvUtils.readColumn(0, titlesString, columnSeparator);
-            titleTagger.readStrings(titles);
-
-            taggers.add(titleTagger);
-
-        }
-        GoddagBuilder goddagBuilder = new GoddagBuilder("[R]", wordSplitRegex);
-        for (File referenceFile : this.referenceDirectory.listFiles()) {
-
-            String[] references = FileUtils.readFile(referenceFile).split("\n");
-
-            List<Goddag> goddags = new ArrayList<Goddag>();
-            for (String reference : references) {
-                Goddag goddag = goddagBuilder.build(reference);
-
-                for (Tagger tagger : taggers) {
-                    tagger.tag(goddag);
-                }
-                System.out.println(goddag);
-
-                goddags.add(goddag);
-
+            for (File referenceGoddagFile : referenceGoddagFiles) {
+                this.runTagger(authorTagger, referenceGoddagFile);
             }
-            String outputFileName = this.outputDirectory.getAbsolutePath() + "/"
-                    + FilenameUtils.removeExtension(referenceFile.getName()) + ".json";
-
-            org.apache.commons.io.FileUtils.writeStringToFile(new File(outputFileName),
-                    this.gson.toJson(goddags, ArrayList.class));
-
         }
+
+        for (Entry<File, String> fileLabelEntry : fileLabelMap.entrySet()) {
+            StringTagger stringTagger = new StringTagger(fileLabelEntry.getValue(), wordSplitRegex, wordNormalizer);
+
+            System.out.println(fileLabelEntry.getKey());
+            stringTagger.readStrings(fileLabelEntry.getKey(), columnSeparator);
+
+            for (File referenceGoddagFile : referenceGoddagFiles) {
+                this.runTagger(stringTagger, referenceGoddagFile);
+            }
+        }
+
+    }
+
+    private void runTagger(Tagger tagger, File goddagFile) throws IOException {
+        Goddag[] referenceGoddags = GoddagUtils.deserializeGoddags(FileUtils.readFile(goddagFile));
+
+        for (Goddag referenceGoddag : referenceGoddags) {
+            tagger.tag(referenceGoddag);
+        }
+
+        org.apache.commons.io.FileUtils.writeStringToFile(goddagFile,
+                this.gson.toJson(referenceGoddags, Goddag[].class));
     }
 }
