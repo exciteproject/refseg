@@ -20,13 +20,20 @@ public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
 
     public static void main(String[] args) throws IOException {
         File inputDir = new File(args[0]);
+        File outputDir = new File(args[1]);
+
+        if (!outputDir.exists()) {
+            outputDir.mkdirs();
+        }
+
         for (File file : inputDir.listFiles()) {
             System.out.println(file.getAbsolutePath());
             CermineReferenceStringExtractor cermineReferenceStringExtractor = new CermineReferenceStringExtractor();
 
             List<String> references = cermineReferenceStringExtractor.extract(file);
 
-            String outputFileName = args[1] + "/" + FilenameUtils.removeExtension(file.getName()) + ".txt";
+            String outputFileName = outputDir.getAbsolutePath() + "/" + FilenameUtils.removeExtension(file.getName())
+                    + ".txt";
             File outputFile = new File(outputFileName);
             if (!outputFile.getParentFile().exists()) {
                 outputFile.getParentFile().mkdirs();
@@ -38,7 +45,6 @@ public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
             }
             bufferedWriter.close();
         }
-
     }
 
     @Override

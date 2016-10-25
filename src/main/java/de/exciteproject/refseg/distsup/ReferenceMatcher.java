@@ -100,8 +100,6 @@ public class ReferenceMatcher {
         String wordSplitRegex = "\\s";
         String columnSeparator = "\t";
 
-        List<Tagger> taggers = new ArrayList<Tagger>();
-
         Map<File, String> fileLabelMap = new HashMap<File, String>();
         if (this.publisherLocsFile != null) {
             // TODO set labels via parameters
