@@ -48,12 +48,18 @@ public class PubMedPdfDownloader {
         }
     }
 
-    private void downloadPdfs(File outputDir) throws MalformedURLException, IOException {
+    private void downloadPdfs(File outputDir) {
         for (Entry<String, String> pdfMapEntry : this.pdfMap.entrySet()) {
             System.out.println(pdfMapEntry.getValue());
-            FileUtils.copyURLToFile(new URL(this.pubmedPrefix + pdfMapEntry.getValue()),
-                    new File(outputDir.getAbsolutePath() + "/" + pdfMapEntry.getKey() + ".pdf"), this.connectionTimeout,
-                    this.readTimeout);
+            try {
+                FileUtils.copyURLToFile(new URL(this.pubmedPrefix + pdfMapEntry.getValue()),
+                        new File(outputDir.getAbsolutePath() + "/" + pdfMapEntry.getKey() + ".pdf"),
+                        this.connectionTimeout, this.readTimeout);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
