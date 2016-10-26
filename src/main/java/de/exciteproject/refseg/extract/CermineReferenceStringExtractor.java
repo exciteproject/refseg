@@ -75,6 +75,10 @@ public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
         } catch (AnalysisException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
+        } catch (Exception e) {
+            // TODO figure out why
+            // InlineImageParseException/InvocationTargetException is not caught
+            e.printStackTrace();
         }
         return references;
     }
