@@ -26,19 +26,25 @@ public class ConstraintBuilder {
         gsonBuilder.registerTypeAdapter(Goddag.class, Goddag.getJsonDeserializer());
         Gson gson = gsonBuilder.create();
 
+        // TODO Set via parameters?
         ConstraintBuilder constraintBuilder = new ConstraintBuilder("B-", "I-");
-        constraintBuilder.addNamesCounter("[A]", "[FN]");
-        constraintBuilder.addNamesCounter("[A]", "[LN]");
+        constraintBuilder.addNamesCounter("AU", "FN");
+        constraintBuilder.addNamesCounter("AU", "LN");
 
-        constraintBuilder.addStringCounter("[T]");
+        constraintBuilder.addStringCounter("TI");
+        constraintBuilder.addStringCounter("PL");
+        constraintBuilder.addStringCounter("PN");
+        constraintBuilder.addStringCounter("SO");
 
-        Goddag[] goddags = gson.fromJson(new FileReader("/home/mkoerner/tmp/goddags-tagged.json"), Goddag[].class);
-        for (Goddag goddag : goddags) {
-            System.out.println(goddag);
-            constraintBuilder.count(goddag);
+        File inputGoddagDirectory = new File(args[0]);
+        File outputDistributionFile = new File(args[1]);
+        for (File goddagFile : inputGoddagDirectory.listFiles()) {
+            Goddag[] goddags = gson.fromJson(new FileReader(goddagFile), Goddag[].class);
+            for (Goddag goddag : goddags) {
+                constraintBuilder.count(goddag);
+            }
         }
-        constraintBuilder.writeDistributions(new File("/home/mkoerner/tmp/constraints.csv"));
-
+        constraintBuilder.writeDistributions(outputDistributionFile);
     }
 
     private List<Counter> counters;
