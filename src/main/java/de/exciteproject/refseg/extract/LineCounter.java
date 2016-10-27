@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import de.exciteproject.refseg.util.CsvUtils;
 import de.exciteproject.refseg.util.MapUtils;
 
 public class LineCounter {
@@ -34,7 +33,7 @@ public class LineCounter {
         BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
         String line;
         while ((line = bufferedReader.readLine()) != null) {
-            MapUtils.addCount(countMap, CsvUtils.normalize(line));
+            MapUtils.addCount(countMap, line);
         }
         bufferedReader.close();
 
