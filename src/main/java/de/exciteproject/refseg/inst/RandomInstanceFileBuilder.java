@@ -26,11 +26,12 @@ public class RandomInstanceFileBuilder {
         for (File inputFile : inputFiles) {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
             String line;
+            int lineIndex = 0;
             while ((line = bufferedReader.readLine()) != null) {
                 String[] lineSplit = line.split("\\s+");
                 for (String word : lineSplit) {
                     if (!word.isEmpty()) {
-                        int labelIndex = (int) (Math.random() * labels.size());
+                        int labelIndex = lineIndex % labels.size();
                         bufferedWriter.write(word + " " + labels.get(labelIndex) + System.lineSeparator());
                     }
                 }
