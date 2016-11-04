@@ -32,6 +32,8 @@ public class GoddagUtils {
         return GSON.fromJson(goddagInputString, Goddag[].class);
     }
 
+    // TODO add serializeGoddags
+
     public static void main(String[] args) throws JsonSyntaxException, IOException {
 
         File goddagInputFile = new File(args[0]);

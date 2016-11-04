@@ -33,7 +33,7 @@ public class NameTagger implements Tagger {
         // } catch (IOException e) {
         // e.printStackTrace();
         // }
-        String inputString = "test1 Max F Müller M test2";
+        String inputString = "test1 Max F Müller M F test2";
 
         Goddag goddag = goddagBuilder.build(inputString);
 
@@ -43,7 +43,7 @@ public class NameTagger implements Tagger {
         List<Name> names = new ArrayList<Name>();
         names.add(new Name("Max", "Müller"));
         names.add(new Name("Max Friedrich", "Müller"));
-        names.add(new Name("Friedrich", "Müller"));
+        names.add(new Name("Friedrich", "Meier"));
 
         authorTagger.readAuthors(names, true);
 
@@ -210,6 +210,19 @@ public class NameTagger implements Tagger {
                     }
                 }
             }
+        }
+        // remove fn and ln nodes that were not matched to an author
+        List<Node> nodesToDelete = new ArrayList<Node>();
+        for (Node childNode : goddag.getRootNode().getChildren()) {
+            if (goddag.containsNonTerminalNode(childNode)) {
+                String childNodeLabel = childNode.getLabel();
+                if (childNodeLabel.equals(this.firstNameLabel) || childNodeLabel.equals(this.lastNameLabel)) {
+                    nodesToDelete.add(childNode);
+                }
+            }
+        }
+        for (Node nodeToDelete : nodesToDelete) {
+            goddag.deleteNode(nodeToDelete);
         }
     }
 

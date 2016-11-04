@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -121,13 +122,11 @@ public class ReferenceMatcher {
 
             String[] references = FileUtils.readFile(referenceFile).split("\n");
 
-            // TODO preprocess (splits after punctuation)
-            for (String reference : references) {
-                reference = ReferenceNormalizer.splitAfterPunctuation(reference);
-            }
-
             List<Goddag> referenceGoddags = new ArrayList<Goddag>();
             for (String reference : references) {
+
+                reference = ReferenceNormalizer.splitAfterPunctuation(reference);
+
                 Goddag goddag = goddagBuilder.build(reference);
 
                 referenceGoddags.add(goddag);
@@ -141,7 +140,7 @@ public class ReferenceMatcher {
         }
 
         if (this.authorsFile != null) {
-            NameTagger authorTagger = new NameTagger("AU", "FN", "LN", wordNormalizer);
+            NameTagger nameTagger = new NameTagger("AU", "FN", "LN", wordNormalizer);
 
             System.out.println("read name file");
             String authorsString = FileUtils.readFile(this.authorsFile);
@@ -151,30 +150,26 @@ public class ReferenceMatcher {
             List<String> surnames = CsvUtils.readColumn(1, authorsString, columnSeparator);
             List<Name> authorNames = new ArrayList<Name>();
             for (int i = 0; i < givenNames.size(); i++) {
-                System.out.println("given: " + givenNames.get(i));
-                System.out.println("sur: " + surnames.get(i));
                 authorNames.add(new Name(givenNames.get(i), surnames.get(i)));
             }
             System.out.println("read names into tagger");
-            authorTagger.readAuthors(authorNames, true);
+            nameTagger.readAuthors(authorNames, true);
 
+            System.out.println("run tagger");
             for (File referenceGoddagFile : referenceGoddagFiles) {
-                this.runTagger(authorTagger, referenceGoddagFile);
+                this.runTagger(nameTagger, referenceGoddagFile);
             }
         }
 
-        // for (Entry<File, String> fileLabelEntry : fileLabelMap.entrySet()) {
-        // StringTagger stringTagger = new
-        // StringTagger(fileLabelEntry.getValue(), wordSplitRegex,
-        // wordNormalizer);
-        //
-        // System.out.println(fileLabelEntry.getKey());
-        // stringTagger.readStrings(fileLabelEntry.getKey(), columnSeparator);
-        //
-        // for (File referenceGoddagFile : referenceGoddagFiles) {
-        // this.runTagger(stringTagger, referenceGoddagFile);
-        // }
-        // }
+        for (Entry<File, String> fileLabelEntry : fileLabelMap.entrySet()) {
+            StringTagger stringTagger = new StringTagger(fileLabelEntry.getValue(), wordSplitRegex, wordNormalizer);
+
+            stringTagger.readStrings(fileLabelEntry.getKey(), columnSeparator);
+
+            for (File referenceGoddagFile : referenceGoddagFiles) {
+                this.runTagger(stringTagger, referenceGoddagFile);
+            }
+        }
 
     }
 
@@ -183,6 +178,10 @@ public class ReferenceMatcher {
 
         for (Goddag referenceGoddag : referenceGoddags) {
             tagger.tag(referenceGoddag);
+        }
+
+        if (goddagFile.exists()) {
+            goddagFile.delete();
         }
 
         org.apache.commons.io.FileUtils.writeStringToFile(goddagFile,
