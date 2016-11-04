@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -122,6 +121,11 @@ public class ReferenceMatcher {
 
             String[] references = FileUtils.readFile(referenceFile).split("\n");
 
+            // TODO preprocess (splits after punctuation)
+            for (String reference : references) {
+                reference = ReferenceNormalizer.splitAfterPunctuation(reference);
+            }
+
             List<Goddag> referenceGoddags = new ArrayList<Goddag>();
             for (String reference : references) {
                 Goddag goddag = goddagBuilder.build(reference);
@@ -139,13 +143,19 @@ public class ReferenceMatcher {
         if (this.authorsFile != null) {
             NameTagger authorTagger = new NameTagger("AU", "FN", "LN", wordNormalizer);
 
+            System.out.println("read name file");
             String authorsString = FileUtils.readFile(this.authorsFile);
+            System.out.println("\tread given names");
             List<String> givenNames = CsvUtils.readColumn(0, authorsString, columnSeparator);
-            List<String> surNames = CsvUtils.readColumn(1, authorsString, columnSeparator);
+            System.out.println("\tread surnames");
+            List<String> surnames = CsvUtils.readColumn(1, authorsString, columnSeparator);
             List<Name> authorNames = new ArrayList<Name>();
             for (int i = 0; i < givenNames.size(); i++) {
-                authorNames.add(new Name(givenNames.get(i), surNames.get(i)));
+                System.out.println("given: " + givenNames.get(i));
+                System.out.println("sur: " + surnames.get(i));
+                authorNames.add(new Name(givenNames.get(i), surnames.get(i)));
             }
+            System.out.println("read names into tagger");
             authorTagger.readAuthors(authorNames, true);
 
             for (File referenceGoddagFile : referenceGoddagFiles) {
@@ -153,16 +163,18 @@ public class ReferenceMatcher {
             }
         }
 
-        for (Entry<File, String> fileLabelEntry : fileLabelMap.entrySet()) {
-            StringTagger stringTagger = new StringTagger(fileLabelEntry.getValue(), wordSplitRegex, wordNormalizer);
-
-            System.out.println(fileLabelEntry.getKey());
-            stringTagger.readStrings(fileLabelEntry.getKey(), columnSeparator);
-
-            for (File referenceGoddagFile : referenceGoddagFiles) {
-                this.runTagger(stringTagger, referenceGoddagFile);
-            }
-        }
+        // for (Entry<File, String> fileLabelEntry : fileLabelMap.entrySet()) {
+        // StringTagger stringTagger = new
+        // StringTagger(fileLabelEntry.getValue(), wordSplitRegex,
+        // wordNormalizer);
+        //
+        // System.out.println(fileLabelEntry.getKey());
+        // stringTagger.readStrings(fileLabelEntry.getKey(), columnSeparator);
+        //
+        // for (File referenceGoddagFile : referenceGoddagFiles) {
+        // this.runTagger(stringTagger, referenceGoddagFile);
+        // }
+        // }
 
     }
 
