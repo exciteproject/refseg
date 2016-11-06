@@ -111,6 +111,9 @@ public class ReferenceMatcher {
         if (this.sourcesFile != null) {
             fileLabelMap.put(this.sourcesFile, "SO");
         }
+        if (this.yearsFile != null) {
+            fileLabelMap.put(this.titlesFile, "YE");
+        }
         if (this.titlesFile != null) {
             fileLabelMap.put(this.titlesFile, "TI");
         }

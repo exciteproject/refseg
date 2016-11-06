@@ -35,6 +35,7 @@ public class ConstraintBuilder {
         constraintBuilder.addStringCounter("PL");
         constraintBuilder.addStringCounter("PN");
         constraintBuilder.addStringCounter("SO");
+        constraintBuilder.addStringCounter("YE");
 
         File inputGoddagDirectory = new File(args[0]);
         File outputDistributionFile = new File(args[1]);
