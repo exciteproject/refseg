@@ -96,6 +96,11 @@ public class ConstraintBuilder {
                 bufferedWriter.write(" " + positionNameLabel + ":"
                         + (wordCounts.getOrDefault(positionNameLabel, 0) / totalWordCounts));
             }
+                //TODO remove quick fix
+                bufferedWriter.write(" " + "O" + ":"
+                        + "0");
+
+
             bufferedWriter.newLine();
         }
         bufferedWriter.close();
