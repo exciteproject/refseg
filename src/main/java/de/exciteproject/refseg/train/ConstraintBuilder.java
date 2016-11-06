@@ -92,7 +92,7 @@ public class ConstraintBuilder {
             double totalWordCounts = this.constraintCounts.getTotalCounts(word);
             bufferedWriter.write(word);
             for (String positionNameLabel : this.positionNameLabels) {
-                bufferedWriter.write("\t" + positionNameLabel + ":"
+                bufferedWriter.write(" " + positionNameLabel + ":"
                         + (wordCounts.getOrDefault(positionNameLabel, 0) / totalWordCounts));
             }
             bufferedWriter.newLine();
