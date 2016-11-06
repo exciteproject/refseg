@@ -35,6 +35,7 @@ public class RandomInstanceFileBuilder {
                 for (String word : lineSplit) {
                     if (!word.isEmpty()) {
                         int labelIndex = lineIndex % labels.size();
+                        lineIndex++;
                         bufferedWriter.write(word + " " + labels.get(labelIndex) + System.lineSeparator());
                     }
                 }
