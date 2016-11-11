@@ -16,6 +16,8 @@ public class TextUtils {
         Map<Character, String> map = new HashMap<Character, String>();
         map.put('¨', "uml");
         map.put('´', "acute");
+        map.put('˚', "ring");
+
         ACCENT_MAP = Collections.unmodifiableMap(map);
 
         String accentPatternString = "\\w(";
