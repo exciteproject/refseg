@@ -35,6 +35,7 @@ public class ConstraintBuilder {
         constraintBuilder.addStringCounter("PL");
         constraintBuilder.addStringCounter("PN");
         constraintBuilder.addStringCounter("SO");
+        constraintBuilder.addStringCounter("YE");
 
         File inputGoddagDirectory = new File(args[0]);
         File outputDistributionFile = new File(args[1]);
@@ -92,9 +93,14 @@ public class ConstraintBuilder {
             double totalWordCounts = this.constraintCounts.getTotalCounts(word);
             bufferedWriter.write(word);
             for (String positionNameLabel : this.positionNameLabels) {
-                bufferedWriter.write("\t" + positionNameLabel + ":"
+                bufferedWriter.write(" " + positionNameLabel + ":"
                         + (wordCounts.getOrDefault(positionNameLabel, 0) / totalWordCounts));
             }
+                //TODO remove quick fix
+                bufferedWriter.write(" " + "O" + ":"
+                        + "0");
+
+
             bufferedWriter.newLine();
         }
         bufferedWriter.close();

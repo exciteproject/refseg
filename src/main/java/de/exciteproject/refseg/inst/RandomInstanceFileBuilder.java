@@ -8,6 +8,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import de.exciteproject.refseg.distsup.ReferenceNormalizer;
+
 public class RandomInstanceFileBuilder {
 
     /**
@@ -28,18 +30,18 @@ public class RandomInstanceFileBuilder {
             String line;
             int lineIndex = 0;
             while ((line = bufferedReader.readLine()) != null) {
+                line=ReferenceNormalizer.splitAfterPunctuation(line);
                 String[] lineSplit = line.split("\\s+");
                 for (String word : lineSplit) {
                     if (!word.isEmpty()) {
                         int labelIndex = lineIndex % labels.size();
+                        lineIndex++;
                         bufferedWriter.write(word + " " + labels.get(labelIndex) + System.lineSeparator());
                     }
                 }
+                bufferedWriter.newLine();
             }
             bufferedReader.close();
-            // empty line to separate the different inputFiles in the merged
-            // outputFile
-            bufferedWriter.write(System.lineSeparator());
         }
         bufferedWriter.close();
         return outputFile;
