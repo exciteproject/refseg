@@ -6,6 +6,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +30,17 @@ import pl.edu.icm.cermine.tools.timeout.TimeoutException;
  */
 public class CermineLineExtractor {
 
+    /**
+     *
+     * @param args
+     *            args[0]: directory containing pdf files and/or subfolders with
+     *            pdf files args[1]: directory in which the outputfiles are
+     *            stored args[2]: file-path as string that should be removed
+     *            from the path of the input files
+     *
+     * @throws IOException
+     * @throws AnalysisException
+     */
     public static void main(String[] args) throws IOException, AnalysisException {
         File inputDir = new File(args[0]);
         File outputDir = new File(args[1]);
@@ -34,25 +48,31 @@ public class CermineLineExtractor {
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
+        List<Path> inputFiles = new ArrayList<Path>();
 
-        for (File file : inputDir.listFiles()) {
-            System.out.println(file.getAbsolutePath());
+        // add list of files in inputDir to inputFiles
+        Files.walk(Paths.get(inputDir.getAbsolutePath())).filter(Files::isRegularFile).forEachOrdered(inputFiles::add);
+
+        for (Path inputFilePath : inputFiles) {
+            System.out.println("processing: " + inputFilePath);
+            File inputFile = inputFilePath.toFile();
             CermineLineExtractor cermineReferenceStringExtractor = new CermineLineExtractor();
 
-            List<String> references = cermineReferenceStringExtractor.extract(file);
+            File currentOutputDirectory;
+            if (args[2] == null) {
+                currentOutputDirectory = outputDir.getAbsoluteFile();
+            } else {
+                String subDirectories = inputFile.getParentFile().getAbsolutePath().replaceFirst(args[2], "");
+                currentOutputDirectory = new File(outputDir.getAbsolutePath() + File.separator + subDirectories);
 
-            String outputFileName = outputDir.getAbsolutePath() + "/" + FilenameUtils.removeExtension(file.getName())
-                    + ".txt";
-            File outputFile = new File(outputFileName);
-            if (!outputFile.getParentFile().exists()) {
-                outputFile.getParentFile().mkdirs();
+                if (!currentOutputDirectory.exists()) {
+                    currentOutputDirectory.mkdirs();
+                }
+
             }
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
-            for (String reference : references) {
-                bufferedWriter.write(reference);
-                bufferedWriter.newLine();
-            }
-            bufferedWriter.close();
+            String outputFileName = FilenameUtils.removeExtension(inputFile.getName()) + ".txt";
+            File outputFile = new File(currentOutputDirectory.getAbsolutePath() + File.separator + outputFileName);
+            cermineReferenceStringExtractor.extract(inputFile, outputFile);
         }
     }
 
@@ -62,17 +82,21 @@ public class CermineLineExtractor {
         this.extractor = new ContentExtractor();
     }
 
-    public List<String> extract(File pdfFile) {
-        List<String> strings = new ArrayList<String>();
+    /**
+     * Extracts lines of text from a PDF file in the correct reading order.
+     *
+     * @param pdfFile
+     * @param outputFile
+     */
+    public void extract(File pdfFile, File outputFile) {
         try {
             InputStream inputStream;
             inputStream = new FileInputStream(pdfFile);
             this.extractor.setPDF(inputStream);
             BxDocument bxDocument = this.extractor.getBxDocument();
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 
-            System.out.println(bxDocument.asLines());
             for (BxPage bxPage : bxDocument.asPages()) {
-
                 // System.out.println("---------------");
                 for (BxZone bxZone : bxPage) {
                     // System.out.println("---------");
@@ -83,11 +107,18 @@ public class CermineLineExtractor {
                         // System.out.println(TextUtils.fixAccents(bxLine.toText()));
                         // System.out.println(bxLine.getX() + " : " +
                         // bxLine.getY());
-                        strings.add(TextUtils.fixAccents(bxLine.toText()));
+                        String fixedString = TextUtils.fixAccents(bxLine.toText());
+                        // System.out.println(fixedString);
+                        bufferedWriter.write(fixedString);
+                        bufferedWriter.newLine();
 
                     }
                 }
+                // adds an empty line at the end of a page
+                // bufferedWriter.newLine();
+
             }
+            bufferedWriter.close();
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -102,7 +133,6 @@ public class CermineLineExtractor {
             // InlineImageParseException/InvocationTargetException is not caught
             e.printStackTrace();
         }
-        return strings;
     }
 
 }
