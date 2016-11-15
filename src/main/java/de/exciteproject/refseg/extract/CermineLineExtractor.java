@@ -59,16 +59,13 @@ public class CermineLineExtractor {
             CermineLineExtractor cermineReferenceStringExtractor = new CermineLineExtractor();
 
             File currentOutputDirectory;
-            if (args.length <= 2) {
-                currentOutputDirectory = outputDir.getAbsoluteFile();
-            } else {
-                String subDirectories = inputFile.getParentFile().getAbsolutePath().replaceFirst(args[2], "");
-                currentOutputDirectory = new File(outputDir.getAbsolutePath() + File.separator + subDirectories);
 
-                if (!currentOutputDirectory.exists()) {
-                    currentOutputDirectory.mkdirs();
-                }
+            String subDirectories = inputFile.getParentFile().getAbsolutePath().replaceFirst(inputDir.getAbsolutePath(),
+                    "");
+            currentOutputDirectory = new File(outputDir.getAbsolutePath() + File.separator + subDirectories);
 
+            if (!currentOutputDirectory.exists()) {
+                currentOutputDirectory.mkdirs();
             }
             String outputFileName = FilenameUtils.removeExtension(inputFile.getName()) + ".txt";
             File outputFile = new File(currentOutputDirectory.getAbsolutePath() + File.separator + outputFileName);
