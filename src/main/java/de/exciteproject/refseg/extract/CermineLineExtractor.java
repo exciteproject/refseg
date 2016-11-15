@@ -59,7 +59,7 @@ public class CermineLineExtractor {
             CermineLineExtractor cermineReferenceStringExtractor = new CermineLineExtractor();
 
             File currentOutputDirectory;
-            if (args[2] == null) {
+            if (args.length <= 2) {
                 currentOutputDirectory = outputDir.getAbsoluteFile();
             } else {
                 String subDirectories = inputFile.getParentFile().getAbsolutePath().replaceFirst(args[2], "");
