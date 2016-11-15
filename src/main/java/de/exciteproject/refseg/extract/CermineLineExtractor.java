@@ -34,9 +34,9 @@ public class CermineLineExtractor {
      *
      * @param args
      *            args[0]: directory containing pdf files and/or subfolders with
-     *            pdf files args[1]: directory in which the outputfiles are
-     *            stored args[2]: file-path as string that should be removed
-     *            from the path of the input files
+     *            pdf files </br>
+     *            args[1]: directory in which the outputfiles are stored,
+     *            including the subdirectories
      *
      * @throws IOException
      * @throws AnalysisException
