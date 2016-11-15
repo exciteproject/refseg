@@ -7,6 +7,11 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.converters.FileConverter;
 
+/**
+ * Class for executing the different PDF preprocessing steps
+ * <p>
+ * TODO: update/remove
+ */
 public class Main {
 
     public static void main(String[] args) {

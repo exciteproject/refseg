@@ -17,6 +17,9 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.xml.sax.SAXException;
 
+/**
+ * Class for downloading pubmed pdfs from the public FTP server.
+ */
 public class PubMedPdfDownloader {
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
         PubMedPdfDownloader pubMedReferenceExtractor = new PubMedPdfDownloader();

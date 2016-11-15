@@ -3,6 +3,11 @@ package de.exciteproject.refseg.preproc;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Abstract class for extractors. Provides an iteration over directories.
+ * <p>
+ * TODO: should extract be file based?
+ */
 public abstract class Extractor {
 
     public abstract void extract(File inputFile, File outputFile) throws IOException;

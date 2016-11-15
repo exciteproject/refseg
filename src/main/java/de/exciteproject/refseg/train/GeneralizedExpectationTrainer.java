@@ -27,7 +27,12 @@ import cc.mallet.util.Maths;
 import de.exciteproject.refseg.eval.EvaluationResults;
 import de.exciteproject.refseg.util.Configuration;
 
-public class NameTrainer {
+/**
+ * Class for training a CRF model using generalized expectation based on a
+ * constraint file with the format defined in
+ * cc.mallet.fst.semi_supervised.FSTConstraintUtil.java .
+ */
+public class GeneralizedExpectationTrainer {
 
     public static final String GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL = "gaussianPriorVariance";
     public static final String NUM_ITERATIONS_CONFIG_LABEL = "numIterations";
@@ -42,9 +47,9 @@ public class NameTrainer {
     private boolean orderZeroStates;
     private boolean orderOneStates;
 
-    public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances,
-            File nameConstraintFile, List<Configuration> trainerConfigurations,
-            List<TransducerEvaluator> trainingEvaluators, EvaluationResults evaluationResults) throws IOException {
+    public TransducerTrainer train(InstanceList trainingInstances, InstanceList testingInstances, File constraintFile,
+            List<Configuration> trainerConfigurations, List<TransducerEvaluator> trainingEvaluators,
+            EvaluationResults evaluationResults) throws IOException {
 
         // set default values
         this.gaussianPriorVariance = 10.0;
@@ -82,7 +87,7 @@ public class NameTrainer {
 
         crf.setWeightsDimensionDensely();
 
-        ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(nameConstraintFile, trainingInstances);
+        ArrayList<GEConstraint> constraintsList = this.getKLGEConstraints(constraintFile, trainingInstances);
 
         CRFTrainerByGE trainer = new CRFTrainerByGE(crf, constraintsList, this.numTreads);
         trainer.setGaussianPriorVariance(this.gaussianPriorVariance);
@@ -116,10 +121,10 @@ public class NameTrainer {
         return trainer;
     }
 
-    private ArrayList<GEConstraint> getKLGEConstraints(File nameConstraintFile, InstanceList trainingInstances)
+    private ArrayList<GEConstraint> getKLGEConstraints(File constraintFile, InstanceList trainingInstances)
             throws FileNotFoundException {
         HashMap<Integer, double[][]> constraints = FSTConstraintUtil
-                .loadGEConstraints(new FileReader(nameConstraintFile), trainingInstances);
+                .loadGEConstraints(new FileReader(constraintFile), trainingInstances);
 
         ArrayList<GEConstraint> constraintsList = new ArrayList<GEConstraint>();
 
@@ -159,22 +164,22 @@ public class NameTrainer {
 
         for (Configuration configuration : configurations) {
             switch (configuration.getName()) {
-            case NameTrainer.GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL:
+            case GeneralizedExpectationTrainer.GAUSSIAN_PRIOR_VARIANCE_CONFIG_LABEL:
                 this.gaussianPriorVariance = Double.parseDouble(configuration.getValue());
                 break;
-            case NameTrainer.NUM_ITERATIONS_CONFIG_LABEL:
+            case GeneralizedExpectationTrainer.NUM_ITERATIONS_CONFIG_LABEL:
                 this.numIterations = Integer.parseInt(configuration.getValue());
                 break;
-            case NameTrainer.NUM_RESETS_CONFIG_LABEL:
+            case GeneralizedExpectationTrainer.NUM_RESETS_CONFIG_LABEL:
                 this.numResets = Integer.parseInt(configuration.getValue());
                 break;
-            case NameTrainer.NUM_THREADS_CONFIG_LABEL:
+            case GeneralizedExpectationTrainer.NUM_THREADS_CONFIG_LABEL:
                 this.numTreads = Integer.parseInt(configuration.getValue());
                 break;
-            case NameTrainer.ORDER_ZERO_STATES_CONFIG_LABEL:
+            case GeneralizedExpectationTrainer.ORDER_ZERO_STATES_CONFIG_LABEL:
                 this.orderZeroStates = Boolean.parseBoolean(configuration.getValue());
                 break;
-            case NameTrainer.ORDER_ONE_STATES_CONFIG_LABEL:
+            case GeneralizedExpectationTrainer.ORDER_ONE_STATES_CONFIG_LABEL:
                 this.orderOneStates = Boolean.parseBoolean(configuration.getValue());
                 break;
             default:

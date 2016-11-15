@@ -17,6 +17,11 @@ import com.google.gson.GsonBuilder;
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 
+/**
+ * Class for assigning name tags to an initialized Goddag in which the leaf
+ * nodes are words in a reference string. An assigned name tag also includes a
+ * first name tag and a last name tag.
+ */
 public class NameTagger implements Tagger {
 
     public static void main(String[] args) throws IOException {

@@ -3,6 +3,9 @@ package de.exciteproject.refseg.distsup;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Class for building different variations of first names.
+ */
 public class NameVariationBuilder {
 
     public static Set<String> getFirstNameVariations(String firstName) {

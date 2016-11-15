@@ -11,6 +11,10 @@ import cc.mallet.pipe.Pipe;
 import cc.mallet.pipe.iterator.LineGroupIterator;
 import cc.mallet.types.InstanceList;
 
+/**
+ * Class for initializing an instanceList given an inputfile of instances and a
+ * Pipe
+ */
 public class InstanceListBuilder {
 
     public static InstanceList build(File file, Pipe pipe) {

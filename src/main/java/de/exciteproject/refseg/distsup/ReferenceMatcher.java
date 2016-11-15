@@ -24,10 +24,12 @@ import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 
 /**
- * Matches, for a given file or directory of files, reference strings against
- * different data sets to assign labels by creating GODDAG graphs
- *
- * @author mkoerner
+ * Class for matching, for a given file or directory of files, reference strings
+ * against different data sets to assign labels by creating Goddag graphs Class
+ * for matching a set of reference strings against different data sets. The
+ * result is a Goddag graph for every reference string that contains the
+ * reference string words as leaf nodes and the tagged matches as nonterminal
+ * nodes.
  *
  */
 public class ReferenceMatcher {

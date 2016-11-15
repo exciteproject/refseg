@@ -1,5 +1,8 @@
 package de.exciteproject.refseg.util;
 
+/**
+ * Container class for a configuration consisting of a name value pair.
+ */
 public class Configuration {
     private String name;
     private String value;

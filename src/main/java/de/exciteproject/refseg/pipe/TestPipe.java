@@ -19,6 +19,11 @@ import cc.mallet.pipe.TokenSequence2FeatureVectorSequence;
 import cc.mallet.pipe.iterator.LineGroupIterator;
 import cc.mallet.types.InstanceList;
 
+/**
+ * Testing class for the pipe creation.
+ * <p>
+ * TODO: remove
+ */
 public class TestPipe {
 
     public static void main(String[] args) throws FileNotFoundException, IOException {

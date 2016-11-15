@@ -5,6 +5,13 @@ import java.util.List;
 import de.mkrnr.goddag.Goddag;
 import de.mkrnr.goddag.Node;
 
+/**
+ * Counter for iterating a Goddag graph and counting the label of the parent of
+ * a leaf node. The position is based on the position of the leafnode relative
+ * to the parent. This is needed, for example, for title and publisher labels.
+ * <p>
+ * TODO refactoring or better documentation of count classes
+ */
 public class DirectPositionCounter extends Counter {
 
     public DirectPositionCounter(String[] tagLabelHierarchy, Positions positions, String constraintCountLabel) {

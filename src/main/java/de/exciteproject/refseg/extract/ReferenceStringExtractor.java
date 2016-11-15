@@ -5,6 +5,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Abstract class for reference string extraction, including a normalization of
+ * reference strings
+ */
 public abstract class ReferenceStringExtractor {
     private Pattern punctuationPattern;
 

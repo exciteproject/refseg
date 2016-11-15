@@ -9,7 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- * A class for extracting reference strings from the ouput files of the Cora
+ * A class for extracting reference strings from the output files of the Cora
  * Research Paper Classification data available at
  * https://people.cs.umass.edu/~mccallum/data.html
  */

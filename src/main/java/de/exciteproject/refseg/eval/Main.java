@@ -22,10 +22,14 @@ import cc.mallet.types.InstanceList;
 import de.exciteproject.refseg.inst.InstanceListBuilder;
 import de.exciteproject.refseg.pipe.FeaturePipeProvider;
 import de.exciteproject.refseg.pipe.SerialPipesBuilder;
-import de.exciteproject.refseg.train.NameTrainer;
+import de.exciteproject.refseg.train.GeneralizedExpectationTrainer;
 import de.exciteproject.refseg.util.Configuration;
 import de.exciteproject.refseg.util.ConfigurationConverter;
 
+/**
+ * Main class for running an evaluation. Contains different parameters for the
+ * input configuration
+ */
 public class Main {
 
     public static void main(String[] args) throws IOException {
@@ -148,7 +152,7 @@ public class Main {
         }
 
         EvaluationResults evaluationResults = new EvaluationResults();
-        NameTrainer nameTrainer = new NameTrainer();
+        GeneralizedExpectationTrainer nameTrainer = new GeneralizedExpectationTrainer();
         TransducerTrainer trainedTrainer = nameTrainer.train(trainingInstances, testingInstances, this.constraintsFile,
                 this.trainerConfigurations, trainingEvaluators, evaluationResults);
 

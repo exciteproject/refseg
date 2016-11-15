@@ -17,7 +17,7 @@ import cc.mallet.types.TokenSequence;
 
 /**
  * A Pipe that adds a feature with the value true if the token was found in a
- * data base for last names.
+ * data base for names.
  */
 public class NamePipe extends Pipe implements Serializable {
 

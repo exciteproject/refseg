@@ -17,6 +17,11 @@ import pl.edu.icm.cermine.ContentExtractor;
 import pl.edu.icm.cermine.exception.AnalysisException;
 import pl.edu.icm.cermine.tools.timeout.TimeoutException;
 
+/**
+ * Class for extracting references in NLM xml format using CERMINE.
+ * <p>
+ * TODO: refactor: combine with CermineReferenceStringExtractor
+ */
 public class CermineNLMReferenceStringExtractor extends ReferenceStringExtractor {
 
     public static void main(String[] args) throws IOException, AnalysisException {

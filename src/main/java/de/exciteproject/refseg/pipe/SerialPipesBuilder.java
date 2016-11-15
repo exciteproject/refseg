@@ -8,6 +8,9 @@ import cc.mallet.pipe.SerialPipes;
 import cc.mallet.pipe.SimpleTaggerSentence2TokenSequence;
 import cc.mallet.pipe.TokenSequence2FeatureVectorSequence;
 
+/**
+ * Class for building SerialPipes based on a list of featureNames
+ */
 public class SerialPipesBuilder {
 
     private FeaturePipeProvider featurePipeProvider;

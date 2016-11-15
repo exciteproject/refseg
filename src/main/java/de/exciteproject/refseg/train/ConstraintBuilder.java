@@ -18,6 +18,17 @@ import com.google.gson.JsonSyntaxException;
 
 import de.mkrnr.goddag.Goddag;
 
+/**
+ * Class for building generalized expectation constraints from tagged Goddag
+ * files.
+ * <p>
+ * Input: directory containing a file for each research paper where each file
+ * contains an json array of Goddags, one for each reference string.
+ * <p>
+ * Output: CSV file corresponding to the file format in
+ * cc.mallet.fst.semi_supervised.FSTConstraintUtil.java
+ * 
+ */
 public class ConstraintBuilder {
 
     public static void main(String[] args) throws JsonSyntaxException, JsonIOException, IOException {
@@ -96,10 +107,8 @@ public class ConstraintBuilder {
                 bufferedWriter.write(" " + positionNameLabel + ":"
                         + (wordCounts.getOrDefault(positionNameLabel, 0) / totalWordCounts));
             }
-                //TODO remove quick fix
-                bufferedWriter.write(" " + "O" + ":"
-                        + "0");
-
+            // TODO remove quick fix
+            bufferedWriter.write(" " + "O" + ":" + "0");
 
             bufferedWriter.newLine();
         }

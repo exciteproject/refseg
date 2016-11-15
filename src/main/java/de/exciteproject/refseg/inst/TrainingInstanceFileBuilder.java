@@ -10,10 +10,16 @@ import java.util.List;
 
 import de.exciteproject.refseg.distsup.ReferenceNormalizer;
 
-public class RandomInstanceFileBuilder {
+/**
+ * Class for generating instance files by segmenting input strings. Predefined
+ * labels are assigned iteratively and independent from the actual string. This
+ * "workaround" is recommended in the Mallet documentation when applying
+ * generalized expectation during the training.
+ */
+public class TrainingInstanceFileBuilder {
 
     /**
-     * Creates an instance file by randomly picking from the passed labels
+     * Creates an instance file by iteratively picking from the passed labels
      *
      * @param inputFiles
      * @param outputFile
@@ -30,7 +36,7 @@ public class RandomInstanceFileBuilder {
             String line;
             int lineIndex = 0;
             while ((line = bufferedReader.readLine()) != null) {
-                line=ReferenceNormalizer.splitAfterPunctuation(line);
+                line = ReferenceNormalizer.splitAfterPunctuation(line);
                 String[] lineSplit = line.split("\\s+");
                 for (String word : lineSplit) {
                     if (!word.isEmpty()) {

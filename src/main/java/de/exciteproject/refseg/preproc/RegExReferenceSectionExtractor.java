@@ -10,6 +10,10 @@ import java.util.regex.Pattern;
 
 import de.exciteproject.refseg.util.FileUtils;
 
+/**
+ * Class for extracting reference sections using a simple matching approach with
+ * regular expressions searching for Section headings.
+ */
 public class RegExReferenceSectionExtractor extends Extractor {
 
     private static final String REFERENCE_HEADER_REGEX = "[^\\p{IsAlphabetic}]*(Bibliography|"

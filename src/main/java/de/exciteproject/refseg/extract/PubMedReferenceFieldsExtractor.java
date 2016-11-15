@@ -36,6 +36,10 @@ import com.beust.jcommander.converters.FileConverter;
 import de.exciteproject.refseg.util.CsvUtils;
 import de.exciteproject.refseg.util.XmlUtils;
 
+/**
+ * Class for extracting structured reference string information from the Pubmed
+ * NLM XML dump.
+ */
 public class PubMedReferenceFieldsExtractor {
 
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {

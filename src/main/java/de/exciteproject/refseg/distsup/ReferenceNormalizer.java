@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
  * * Split words that are separated with punctuation (e.g. Holmes,S.E.,)
  * </p>
  *
- * @author mkoerner
  *
  */
 public class ReferenceNormalizer {

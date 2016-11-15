@@ -18,6 +18,10 @@ import com.google.gson.reflect.TypeToken;
 import de.exciteproject.refseg.util.JsonUtils;
 import de.exciteproject.refseg.util.ListUtils;
 
+/**
+ * Main class for generating instance lists with randomly assigned predefined
+ * labels.
+ */
 public class Main {
 
     public static void main(String[] args) throws IOException {
@@ -97,10 +101,10 @@ public class Main {
                     throw new IllegalArgumentException(
                             "labels need to be specified when creating a random instance list");
                 }
-                RandomInstanceFileBuilder.createInstanceFile(inputFiles, this.outputFile, this.labels);
+                TrainingInstanceFileBuilder.createInstanceFile(inputFiles, this.outputFile, this.labels);
             }
             if (this.mergeInstances) {
-                RandomInstanceFileBuilder.mergeInstanceFiles(inputFiles, this.outputFile);
+                TrainingInstanceFileBuilder.mergeInstanceFiles(inputFiles, this.outputFile);
             }
 
             File outputFilesFile = new File(
@@ -129,10 +133,10 @@ public class Main {
                     throw new IllegalArgumentException(
                             "labels need to be specified when creating a random instance list");
                 }
-                RandomInstanceFileBuilder.createInstanceFile(filteredFiles, this.outputFile, this.labels);
+                TrainingInstanceFileBuilder.createInstanceFile(filteredFiles, this.outputFile, this.labels);
             }
             if (this.mergeInstances) {
-                RandomInstanceFileBuilder.mergeInstanceFiles(filteredFiles, this.outputFile);
+                TrainingInstanceFileBuilder.mergeInstanceFiles(filteredFiles, this.outputFile);
             }
 
             File outputFilesFile = new File(

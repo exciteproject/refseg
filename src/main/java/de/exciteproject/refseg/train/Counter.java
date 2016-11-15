@@ -2,6 +2,9 @@ package de.exciteproject.refseg.train;
 
 import de.mkrnr.goddag.Goddag;
 
+/**
+ * Abstract class for counters
+ */
 public abstract class Counter {
 
     protected String[] tagLabelHieararchy;

@@ -14,10 +14,9 @@ import cc.mallet.types.Sequence;
 import cc.mallet.types.TokenSequence;
 
 /**
- * Code taken from the ViterbiWriter class in MALLET to improve the formatting
- * and file path handling
- * 
- *
+ * Class based on the ViterbiWriter class in MALLET. It also includes a
+ * constructor for specifying the outputfile destination and modified the output
+ * format.
  */
 public class FixedViterbiWriter extends TransducerEvaluator {
 

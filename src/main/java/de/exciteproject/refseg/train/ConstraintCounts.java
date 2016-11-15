@@ -5,6 +5,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * Container class for contstraint counts
+ */
 public class ConstraintCounts {
 
     private Map<String, Map<String, Integer>> wordsCounts;

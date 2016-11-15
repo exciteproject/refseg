@@ -8,8 +8,9 @@ import cc.mallet.types.InstanceList;
 import cc.mallet.types.Sequence;
 
 /**
- * Code taken from cc.mallet.fst.PerClassAccuracyEvaluator. Added storage of
- * results into Evaluation
+ * Class taken from cc.mallet.fst.PerClassAccuracyEvaluator. Added storage of
+ * results into Evaluation container class for further processing and
+ * formatting.
  */
 public class StructuredAccuracyEvaluator extends StructuredTransducerEvaluator {
 

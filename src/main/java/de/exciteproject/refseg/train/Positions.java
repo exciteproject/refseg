@@ -1,5 +1,8 @@
 package de.exciteproject.refseg.train;
 
+/**
+ * container class for specifying valid positions relative to a parent node.
+ */
 public class Positions {
 
     private boolean beginning;

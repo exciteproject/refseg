@@ -1,4 +1,4 @@
-package de.exciteproject.refseg.extract;
+package de.exciteproject.refseg.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -10,24 +10,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import de.exciteproject.refseg.util.MapUtils;
+/**
+ * Class for counting unique lines in a file.
+ */
+public class CountUtils {
 
-public class LineCounter {
-
-    public static void main(String[] args) throws IOException {
-        File inputDirectory = new File(args[0]);
-        File outputDirectory = new File(args[1]);
-        if (!outputDirectory.exists()) {
-            outputDirectory.mkdirs();
-        }
-        LineCounter valueCounter = new LineCounter();
-        for (File inputFile : inputDirectory.listFiles()) {
-            valueCounter.countUniqueLines(inputFile,
-                    new File(outputDirectory.getAbsolutePath() + "/" + inputFile.getName()));
-        }
-    }
-
-    public void countUniqueLines(File inputFile, File outputFile) throws IOException {
+    public static void countUniqueLines(File inputFile, File outputFile) throws IOException {
         Map<String, Integer> countMap = new TreeMap<String, Integer>();
 
         BufferedReader bufferedReader = new BufferedReader(new FileReader(inputFile));
@@ -43,5 +31,17 @@ public class LineCounter {
             bufferedWriter.newLine();
         }
         bufferedWriter.close();
+    }
+
+    public static void main(String[] args) throws IOException {
+        File inputDirectory = new File(args[0]);
+        File outputDirectory = new File(args[1]);
+        if (!outputDirectory.exists()) {
+            outputDirectory.mkdirs();
+        }
+        for (File inputFile : inputDirectory.listFiles()) {
+            CountUtils.countUniqueLines(inputFile,
+                    new File(outputDirectory.getAbsolutePath() + "/" + inputFile.getName()));
+        }
     }
 }

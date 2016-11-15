@@ -1,5 +1,8 @@
 package de.exciteproject.refseg.distsup;
 
+/**
+ * Container class for a name consisting of a first name and a last name string
+ */
 public class Name {
 
     private String firstName;

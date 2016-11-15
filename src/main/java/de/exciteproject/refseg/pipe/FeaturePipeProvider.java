@@ -8,11 +8,12 @@ import java.util.regex.Pattern;
 import cc.mallet.pipe.Pipe;
 import cc.mallet.pipe.tsf.OffsetConjunctions;
 
+/**
+ * Class for generating feature pipes based on regular expressions.
+ * <p>
+ * TODO: move firstname and lastname pipes to separate class
+ */
 public class FeaturePipeProvider {
-
-    public static void main(String[] args) {
-        // TODO Auto-generated method stub
-    }
 
     private HashMap<String, Pipe> featurePipes;
     private File firstNameFile;

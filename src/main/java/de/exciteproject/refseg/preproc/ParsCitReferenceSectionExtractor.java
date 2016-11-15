@@ -15,6 +15,10 @@ import org.xml.sax.SAXException;
 
 import de.exciteproject.refseg.util.XmlUtils;
 
+/**
+ * Class for extracting reference sections from extracted text documents using
+ * parsCit.
+ */
 public class ParsCitReferenceSectionExtractor extends Extractor {
 
     public static void main(String[] args) throws ParserConfigurationException, SAXException, IOException {

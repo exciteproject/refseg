@@ -6,6 +6,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+/**
+ * Container class for evaluations that encapsulates evaluation results.
+ * <p>
+ * TODO: refactor
+ */
 public class Evaluation implements Serializable {
 
     private static final long serialVersionUID = -1428096929001039702L;

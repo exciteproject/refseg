@@ -9,6 +9,12 @@ import java.util.Map;
 
 import de.exciteproject.refseg.util.JsonUtils;
 
+/**
+ * Container class for different evaluation metrics and information such as the
+ * experiment configurations, memory usage and training/testing file
+ * <p>
+ * TODO: refactor
+ */
 public class EvaluationResults {
 
     public static void main(String[] args) {

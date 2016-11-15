@@ -2,6 +2,9 @@ package de.exciteproject.refseg.util;
 
 import com.beust.jcommander.IStringConverter;
 
+/**
+ * Class for extending JCommander to handle configuration key=value pairs
+ */
 public class ConfigurationConverter implements IStringConverter<Configuration> {
     @Override
     public Configuration convert(String value) {

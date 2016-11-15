@@ -1,5 +1,8 @@
 package de.exciteproject.refseg.distsup;
 
+/**
+ * Class for normalizing the beginning and end of individual words
+ */
 public class StartEndWordNormalizer extends WordNormalizer {
 
     @Override

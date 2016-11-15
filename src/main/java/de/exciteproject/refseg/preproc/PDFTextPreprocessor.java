@@ -7,6 +7,12 @@ import java.io.IOException;
 
 import de.exciteproject.refseg.util.FileUtils;
 
+/**
+ * Class for preprocessing text.
+ * <p>
+ * TODO: move/merge with distsup.ReferenceNormalizer
+ *
+ */
 public class PDFTextPreprocessor extends Extractor {
 
     public static void main(String[] args) throws IOException {

@@ -8,6 +8,11 @@ import com.sun.management.UnixOperatingSystemMXBean;
 @SuppressWarnings("restriction")
 public class DebugUtils {
 
+    /**
+     * count currently open file descriptors
+     * 
+     * @return
+     */
     public static long getOpenFileDescriptorCount() {
         OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
         if (os instanceof UnixOperatingSystemMXBean) {

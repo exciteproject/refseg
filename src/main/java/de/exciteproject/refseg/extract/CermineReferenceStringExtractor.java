@@ -16,6 +16,10 @@ import pl.edu.icm.cermine.bibref.model.BibEntry;
 import pl.edu.icm.cermine.exception.AnalysisException;
 import pl.edu.icm.cermine.tools.timeout.TimeoutException;
 
+/**
+ * Class for extracting reference strings using CERMINE. The output is one
+ * reference string per line.
+ */
 public class CermineReferenceStringExtractor extends ReferenceStringExtractor {
 
     public static void main(String[] args) throws IOException, AnalysisException {
