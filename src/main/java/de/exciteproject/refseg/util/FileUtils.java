@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileUtils {
 
@@ -20,6 +22,25 @@ public class FileUtils {
             e.printStackTrace();
         }
         return tempFile;
+    }
+
+    /**
+     * Returns a list of all files contained in directory. Omits directories.
+     * Java 8 streaming approach was shown to be faster than e.g. commons-io
+     * here: <https://github.com/brettryan/io-recurse-tests>
+     *
+     * @param directory
+     * @return
+     * @throws IOException
+     */
+    public static List<File> listFilesRecursively(File directory) throws IOException {
+
+        List<File> files = new ArrayList<File>();
+
+        // add list of files in directory to files
+        Files.walk(Paths.get(directory.getAbsolutePath())).filter(Files::isRegularFile).map(c -> c.toFile())
+                .forEachOrdered(files::add);
+        return files;
     }
 
     public static String readFile(File file) throws IOException {

@@ -4,16 +4,13 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 
+import de.exciteproject.refseg.util.FileUtils;
 import de.exciteproject.refseg.util.TextUtils;
 import pl.edu.icm.cermine.exception.AnalysisException;
 import pl.edu.icm.cermine.structure.model.BxDocument;
@@ -47,15 +44,12 @@ public class CermineLineExtractor {
         if (!outputDir.exists()) {
             outputDir.mkdirs();
         }
-        List<Path> inputFiles = new ArrayList<Path>();
 
-        // add list of files in inputDir to inputFiles
-        Files.walk(Paths.get(inputDir.getAbsolutePath())).filter(Files::isRegularFile).forEachOrdered(inputFiles::add);
+        List<File> inputFiles = FileUtils.listFilesRecursively(inputDir);
 
         Instant start = Instant.now();
-        for (Path inputFilePath : inputFiles) {
-            System.out.println("processing: " + inputFilePath);
-            File inputFile = inputFilePath.toFile();
+        for (File inputFile : inputFiles) {
+            System.out.println("processing: " + inputFile);
             CermineLineExtractor cermineReferenceStringExtractor = new CermineLineExtractor();
 
             File currentOutputDirectory;
