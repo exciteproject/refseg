@@ -66,10 +66,10 @@ public class CermineNLMReferenceStringExtractor extends ReferenceStringExtractor
             InputStream inputStream;
             inputStream = new FileInputStream(pdfFile);
             this.extractor.setPDF(inputStream);
-            Element result = this.extractor.getNLMContent();
+            List<Element> referenceElements = this.extractor.getReferencesAsNLM();
 
             XMLOutputter outp = new XMLOutputter();
-            String s = outp.outputString(result);
+            String s = outp.outputString(referenceElements);
             System.out.println(s);
             // for (Element element : result) {
             // XMLOutputter outp = new XMLOutputter();

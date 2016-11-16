@@ -2,20 +2,19 @@ package de.exciteproject.refseg.extract;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FilenameUtils;
 
 import de.exciteproject.refseg.util.TextUtils;
-import pl.edu.icm.cermine.ContentExtractor;
 import pl.edu.icm.cermine.exception.AnalysisException;
 import pl.edu.icm.cermine.structure.model.BxDocument;
 import pl.edu.icm.cermine.structure.model.BxLine;
@@ -53,6 +52,7 @@ public class CermineLineExtractor {
         // add list of files in inputDir to inputFiles
         Files.walk(Paths.get(inputDir.getAbsolutePath())).filter(Files::isRegularFile).forEachOrdered(inputFiles::add);
 
+        Instant start = Instant.now();
         for (Path inputFilePath : inputFiles) {
             System.out.println("processing: " + inputFilePath);
             File inputFile = inputFilePath.toFile();
@@ -71,12 +71,14 @@ public class CermineLineExtractor {
             File outputFile = new File(currentOutputDirectory.getAbsolutePath() + File.separator + outputFileName);
             cermineReferenceStringExtractor.extract(inputFile, outputFile);
         }
+        Instant end = Instant.now();
+        System.out.println("Done. Execution time: " + Duration.between(start, end));
     }
 
-    private ContentExtractor extractor;
+    private CerminePdfExtractor cerminePdfExtractor;
 
     public CermineLineExtractor() throws AnalysisException {
-        this.extractor = new ContentExtractor();
+        this.cerminePdfExtractor = new CerminePdfExtractor();
     }
 
     /**
@@ -87,10 +89,8 @@ public class CermineLineExtractor {
      */
     public void extract(File pdfFile, File outputFile) {
         try {
-            InputStream inputStream;
-            inputStream = new FileInputStream(pdfFile);
-            this.extractor.setPDF(inputStream);
-            BxDocument bxDocument = this.extractor.getBxDocument();
+            BxDocument bxDocument = this.cerminePdfExtractor.extractWithResolvedReadingOrder(pdfFile);
+
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(outputFile));
 
             for (BxPage bxPage : bxDocument.asPages()) {
