@@ -46,11 +46,11 @@ public class CermineLineExtractor {
         }
 
         List<File> inputFiles = FileUtils.listFilesRecursively(inputDir);
+        CermineLineExtractor cermineReferenceStringExtractor = new CermineLineExtractor();
 
         Instant start = Instant.now();
         for (File inputFile : inputFiles) {
             System.out.println("processing: " + inputFile);
-            CermineLineExtractor cermineReferenceStringExtractor = new CermineLineExtractor();
 
             File currentOutputDirectory;
 
@@ -58,11 +58,17 @@ public class CermineLineExtractor {
                     "");
             currentOutputDirectory = new File(outputDir.getAbsolutePath() + File.separator + subDirectories);
 
+            String outputFileName = FilenameUtils.removeExtension(inputFile.getName()) + ".txt";
+            File outputFile = new File(currentOutputDirectory.getAbsolutePath() + File.separator + outputFileName);
+
+            // skip computation if outputFile already exists
+            if (outputFile.exists()) {
+                continue;
+            }
+
             if (!currentOutputDirectory.exists()) {
                 currentOutputDirectory.mkdirs();
             }
-            String outputFileName = FilenameUtils.removeExtension(inputFile.getName()) + ".txt";
-            File outputFile = new File(currentOutputDirectory.getAbsolutePath() + File.separator + outputFileName);
             cermineReferenceStringExtractor.extract(inputFile, outputFile);
         }
         Instant end = Instant.now();
