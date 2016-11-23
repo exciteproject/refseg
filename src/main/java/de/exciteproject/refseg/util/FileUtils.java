@@ -10,6 +10,17 @@ import java.util.List;
 
 public class FileUtils {
 
+    public static void copyFiles(List<File> filesToCopy, File inputDirectory, File outputDirectory) throws IOException {
+        if (!outputDirectory.exists()) {
+            outputDirectory.mkdirs();
+        }
+        for (File fileToCopy : filesToCopy) {
+            File destinationFile = new File(outputDirectory.getAbsolutePath()
+                    + fileToCopy.getAbsolutePath().replaceFirst(inputDirectory.getAbsolutePath(), ""));
+            org.apache.commons.io.FileUtils.copyFile(fileToCopy, destinationFile);
+        }
+    }
+
     public static File getTempFile(String filePrefix, boolean deleteOnExit) {
         String tempFileName = filePrefix + "-" + System.nanoTime();
         File tempFile = null;
